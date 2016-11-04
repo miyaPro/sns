@@ -28,6 +28,7 @@ Route::resource('master', 'MasterController');
 Route::any('dashboard/{user?}', 'ServiceController@dashboard');
 Route::resource('page', 'PageController');
 Route::post('/page/{id}/social/graph', ['uses' => 'PageController@getGraphData', 'as' => 'site.analytic.graph']);
+Route::post('/page/{id}/social/graphPost', ['uses' => 'PageController@getGraphDataPost', 'as' => 'site.analytic.graphPost']);
 Route::post('/', ['uses' => 'Auth\ResetPasswordController@sendMail', 'as' => 'user.reset']);
 
 // router config twitter

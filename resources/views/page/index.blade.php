@@ -39,6 +39,36 @@
                 </header>
                 <div class="panel-body">
                     @if(isset($pageInfo))
+                        <?php  $conditionPost = config('constants.condition_filter_post')?>
+                        <?php  $conditionPage = config('constants.condition_filter_page')?>
+                        @unset($conditionPage[array_search('posts', $conditionPage)])
+
+                        @if($serviceCode == config('constants.service.instagram'))
+                            @unset($conditionPage[array_search('favourites', $conditionPage)])
+
+                            @unset($conditionPost[array_search('shares', $conditionPost)])
+                            @unset($conditionPost[array_search('retweets', $conditionPost)])
+                            @unset($conditionPost[array_search('favorites', $conditionPost)])
+                        @elseif($serviceCode == config('constants.service.facebook'))
+                            @unset($conditionPage[array_search('favourites', $conditionPage)])
+                            @unset($conditionPage[array_search('followers', $conditionPage)])
+
+                            @unset($conditionPost[array_search('favorite', $conditionPost)])
+                            @unset($conditionPost[array_search('retweets', $conditionPost)])
+                        @elseif($serviceCode == config('constants.service.twitter'))
+                            @unset($conditionPage[array_search('favourites', $conditionPage)])
+
+                            @unset($conditionPost[array_search('likes', $conditionPost)])
+                            @unset($conditionPost[array_search('comments', $conditionPost)])
+                            @unset($conditionPost[array_search('shares', $conditionPost)])
+                        @endif
+                        @foreach ($conditionPage as $i => $value)
+                            <?php $conditionPage[$i] = trans('field.'.$nameService.'_'.$value.'_count'); ?>
+                        @endforeach
+                        @foreach ($conditionPost as $i => $value)
+                            <?php $conditionPost[$i] = trans('field.'.$nameService.'_'.'post_'.$value.'_count'); ?>
+                        @endforeach
+
                         <section class="panel">
                             <div class="panel-body profile-information">
 
@@ -104,23 +134,9 @@
                         <section class="panel">
                             <div class="panel-body service-first">
                                 <div class="row">
-                                    @if(isset($pageInfo))
-                                        <div class="condition col-md-1">
-                                            @unset($condition[array_search('posts', $condition)])
-                                            @if($serviceCode == config('constants.service.instagram'))
-                                                @unset($condition[array_search('favourites', $condition)])
-                                            @elseif($serviceCode == config('constants.service.facebook'))
-                                                @unset($condition[array_search('favourites', $condition)])
-                                                @unset($condition[array_search('followers', $condition)])
-                                            @elseif($serviceCode == config('constants.service.twitter'))
-                                                @unset($condition[array_search('favourites', $condition)])
-                                            @endif
-                                            @foreach ($condition as $i => $value)
-                                                <?php $condition[$i] = trans('field.'.$nameService.'_'.$value.'_count'); ?>
-                                            @endforeach
-                                            {!! Form::select('typeDraw',  $condition, null, ['class' => 'typeDraw form-control','id' => 'typeDraw']) !!}
-                                        </div>
-                                    @endif
+                                    <div class="condition col-md-1">
+                                        {!! Form::select('typeDrawPage',  $conditionPage, null, ['class' => 'typeDrawPage form-control','id' => 'typeDrawPage']) !!}
+                                    </div>
                                 </div>
                                 <div id="chartContainer1" class="row"></div>
                             </div>
@@ -128,9 +144,12 @@
                         <section class="panel">
                             <div class="panel-heading">{{ trans('field.post_detail') }}</div>
                             <div class="panel-body service-first">
-                                <div id="chartContainer2" class="row" style="height: 350px"></div>
-                            </div>
-                            <div class="panel-body service-first">
+                                <div class="row">
+                                    <div class="condition col-md-1">
+                                        {!! Form::select('typeDrawPost',  $conditionPost, null, ['class' => 'typeDrawPost form-control','id' => 'typeDrawPost']) !!}
+                                    </div>
+                                </div>
+                                <div id="chartContainer2" class="row"></div>
                                 @if(@$serviceCode == config('constants.service.facebook'))
                                     @foreach(@$listPosts as $post)
                                         <div class="alert alert alert-info clearfix">
@@ -138,7 +157,7 @@
                                                 <ul class="clearfix notification-meta">
                                                     <li class="pull-left notification-sender">
                                                         <p class="post-content text-center">{{@str_limit(@$post->content, 100)}}</p>
-                                                        <p><i class="fa fa-comment" aria-hidden="true"></i>&nbsp;
+                                                        <p class="post-icon"><i class="fa fa-comment" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->comment_count}}&nbsp;&nbsp;&nbsp;
                                                             <i class="fa fa-heart third-city" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->like_count}}&nbsp;&nbsp;&nbsp;
@@ -164,15 +183,20 @@
                                             <div class="notification-info post-info">
                                                 <ul class="clearfix notification-meta">
                                                     <li class="pull-left notification-sender">
-                                                        @if(isset($post->image_thumbnail))
-                                                            <img src="{{$post->image_thumbnail}}" style="width: 150px; height: 150px;">
-                                                        @endif
-                                                        <p class="post-content text-center">{{@str_limit(@$post->content, 100)}}</p>
-                                                        <p><i class="fa fa-retweet" aria-hidden="true"></i>&nbsp;
-                                                            {{@$post->retweet_count}}&nbsp;&nbsp;&nbsp;
-                                                            <i class="fa fa-heart third-city" aria-hidden="true"></i>&nbsp;
-                                                            {{@$post->favorite_count}}
-                                                        </p>
+                                                        <div class="photo">
+                                                            @if(isset($post->image_thumbnail))
+                                                                <img src="{{$post->image_thumbnail}}">
+                                                            @endif
+                                                        </div>
+                                                        <div class="subject">{{@str_limit(@$post->content, 100)}}</div>
+                                                        <div class="message">
+                                                            <p class="post-icon"><i class="fa fa-retweet" aria-hidden="true"></i>&nbsp;
+                                                                {{@$post->retweet_count}}&nbsp;&nbsp;&nbsp;
+                                                                <i class="fa fa-heart third-city" aria-hidden="true"></i>&nbsp;
+                                                                {{@$post->favorite_count}}
+                                                            </p>
+                                                        </div>
+
                                                     </li>
                                                     <li class="clearfix pull-right">
                                                         <p>{{ trans('field.post_created_time') }} :
@@ -193,10 +217,10 @@
                                                 <ul class="clearfix notification-meta">
                                                     <li class="pull-left notification-sender">
                                                         @if(isset($post->image_thumbnail))
-                                                            <img src="{{$post->image_thumbnail}}" style="width: 150px; height: 150px;">
+                                                            <img src="{{$post->image_thumbnail}}">
                                                         @endif
                                                         <p class="post-content text-center">{{@str_limit(@$post->content, 100)}}</p>
-                                                        <p><i class="fa fa-comment" aria-hidden="true"></i>&nbsp;
+                                                        <p class="post-icon"><i class="fa fa-comment" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->comment_count}}&nbsp;&nbsp;&nbsp;
                                                             <i class="fa fa-heart third-city" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->like_count}}
@@ -225,23 +249,24 @@
 
     <script>
         $(function() {
-            var urlGraph = '{{ URL::route('site.analytic.graph',  ["$pageInfo->page_id"]) }}';
+            var urlGraphPage = '{{ URL::route('site.analytic.graph',  ["$pageInfo->page_id"]) }}';
+            var urlGraphPost = '{{ URL::route('site.analytic.graphPost',  ["$pageInfo->page_id"]) }}';
             var chart,chartPost;
-            $('#typeDraw').css('width','200px');
+            $('#typeDrawPage, #typeDrawPost').css('width','200px');
             var graphDraw = function () {
-                var typeDraw = parseInt($('#typeDraw').val());
-                var dataResponse = [];
+                var typeDrawPage= parseInt($('#typeDrawPage').val());
+                var typeDrawPost = parseInt($('#typeDrawPost').val());
+                var dataGraph = [];
                 var dateFrom = $('#inputDateFrom');
                 var dateTo = $('#inputDateTo');
-                if(typeDraw>=0){
+                if(typeDrawPage >= 0){
                     $.ajax({
                         url: urlGraph,
                         data: {
                             "_token"    : "{{ csrf_token() }}",
                             'dateFrom'  : dateFrom.val(),
                             'dateTo'    : dateTo.val(),
-                            "typeDraw"  : typeDraw
-
+                            "typeDraw"  : typeDrawPage,
                         },
                         type: 'POST',
                         context: this,
@@ -249,20 +274,47 @@
                         success: function (data) {
                             if(data.success){
                                 var dataResponse = data.contentCount;
-                                chart.options.labels = [$('#typeDraw option:selected').html()];
-                                if(dataResponse.length >= 0) {
-                                    for (var i = 0; i < dataResponse.length; i++) {
-                                        if (typeof dataResponse[i]['count'] == 'undefined' || dataResponse[i]['count'] == '') {
-                                            dataResponse[i]['count'] = 0;
-                                        }
+                                chart.options.labels = [$('#typeDrawPage option:selected').html()];
+                                    for (var item in dataResponse) {
+                                        dataGraph.push({
+                                            date : item,
+                                            count : dataResponse[item]['count_compare']
+                                        })
                                     }
-                                }
-                                chart.setData(dataResponse);
+                                chart.setData(dataGraph);
                             }
                         }
                     })
                 }else{
                     chart.setData([]);
+                }
+                return;
+                if(typeDrawPost >= 0){
+                    $.ajax({
+                        url: urlGraph,
+                        data: {
+                            "_token"    : "{{ csrf_token() }}",
+                            'dateFrom'  : dateFrom.val(),
+                            'dateTo'    : dateTo.val()
+                        },
+                        type: 'POST',
+                        context: this,
+                        dataType: 'Json',
+                        success: function (data) {
+                            if(data.success){
+                                var dataResponse = data.contentCount;
+                                chart.options.labels = [$('#typeDrawPage option:selected').html()];
+                                for (var item in dataResponse) {
+                                    console.log(dataResponse);
+                                    dataGraph.push({
+                                        date : item,
+                                        count : dataResponse[item]['count_compare']
+                                    })
+                                }
+                                chart.setData(dataGraph);
+                            }
+                        }
+                    })
                 }
             }
             var generateGraph = function(element_id, data){
@@ -286,7 +338,7 @@
                 });
             }
 
-            $('#typeDraw').on('change', function (e) {
+            $('#typeDrawPage, #typeDrawPost').on('change', function (e) {
                 e.preventDefault;
                 graphDraw();
             });

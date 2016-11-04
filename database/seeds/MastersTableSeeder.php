@@ -69,6 +69,14 @@ class MastersTableSeeder extends Seeder
                     'name_ja'       => 'Instagram',
                     'name_en'       => 'Instagram',
                     'active_flg'    => '1',
+                ],
+                [
+                    'group'         => 'services',
+                    'code'          => '004',
+                    'name_vn'       => 'Snapchat',
+                    'name_ja'       => 'Snapchat',
+                    'name_en'       => 'Snapchat',
+                    'active_flg'    => '1',
                 ]
             ]
         );

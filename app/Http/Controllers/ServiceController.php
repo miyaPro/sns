@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Repositories\MasterRepository;
 use App\Repositories\AuthRepository;
 use App\Repositories\ServiceRepository;
+use App\Repositories\PageRepository;
+use App\Repositories\PageDetailRepository;
 use App\Http\Requests;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Artisan;
@@ -17,6 +19,8 @@ class ServiceController extends Controller
     protected $repUser;
     protected $repAuth;
     protected $repService;
+    protected $repPage;
+    protected $repPageDetail;
     protected $contractStatus;
     protected $services;
     /**
@@ -28,12 +32,16 @@ class ServiceController extends Controller
         MasterRepository $master,
         UserRepository $user,
         AuthRepository $auth,
-        ServiceRepository $service
+        ServiceRepository $service,
+        PageRepository $page,
+        PageDetailRepository $pageDetail
     )
     {
         $this->repMaster    = $master;
         $this->repUser      = $user;
         $this->repAuth      = $auth;
+        $this->repPage      = $page;
+        $this->repPageDetail = $pageDetail;
         $this->repService   = $service;
         $this->middleware(['auth']);
     }
@@ -67,8 +75,25 @@ class ServiceController extends Controller
             $toDate     = date('Y-m-d' ,strtotime($inputs['to']));
             //get data pages by date
             $pageData       = $this->repService->getListPage($user_id);
-            $totalPageData  = $this->repService->getTotalPage($user_id, $fromDate, $toDate);
             $pagePerDayData = $this->repService->getListPageDetail($user_id, null, $fromDate, $toDate);
+            //get total page detail by date
+            $totalPageData      = [];
+            foreach ($user->auth as $auth) {
+                $pages = $this->repPage->getAllByField('auth_id', $auth->id);
+                foreach ($pages as $page) {
+                    $pageDetail = $this->repPageDetail->getTotalPage($page->id, $fromDate, $toDate);
+                    $totalPageData[] = [
+                        'page_id'           => $page->id,
+                        'page_name'         => $page->name,
+                        'page_link'         => $page->link,
+                        'service_code'      => $auth->service_code,
+                        'friends_count'     => @$pageDetail->friends_count ? $pageDetail->friends_count : 0,
+                        'posts_count'       => @$pageDetail->posts_count ? $pageDetail->posts_count : 0,
+                        'followers_count'   => @$pageDetail->followers_count ? $pageDetail->followers_count : 0,
+                        'favourites_count'  => @$pageDetail->favourites_count ? $pageDetail->favourites_count : 0
+                    ];
+                }
+            }
 
             $pageList = $pagePerDay = $totalPage = [];
             //prepare data
@@ -81,7 +106,7 @@ class ServiceController extends Controller
                 $dataByday[$page->service_code][$page->page_id][$page->date] = (array) $page;
             }
             foreach ($totalPageData as $page) {
-                $totalPage[$page->service_code][$page->page_id] = (array) $page;
+                $totalPage[$page['service_code']][$page['page_id']] = $page;
             }
 
             //list page and data for them
@@ -102,14 +127,14 @@ class ServiceController extends Controller
                     }
                 }
             }
-            return view('service.dashboard')->with([
+            return response(view('service.dashboard')->with([
                 'services'      => $services,
                 'dates'         => $inputs,
                 'user'          => $user,
                 'pageList'      => $pageList,
                 'pagePerDay'    => $pagePerDay,
                 'totalPage'     => $totalPage,
-            ]);
+            ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));
         }

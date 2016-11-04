@@ -137,7 +137,8 @@ class PageController extends Controller
         //$data['count'] = 0;
         $pageDetail = $this->repPageDetail->getPageByDate($page_id, $startDate, $endDate);
         $condition = config('constants.condition_filter_page');
-        for($i=0;$i <= $days; $i++) {
+        /*data graph page*/
+        /*for($i=0;$i <= $days; $i++) {
             $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
             if (!$this->repPageDetail->getOneByField('date', $day)){
                 $data[] = [
@@ -146,40 +147,104 @@ class PageController extends Controller
                 ];
             }
 
+        }*/
+        for($i=0;$i <= $days; $i++) {
+            $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
+            $data[$day] = [
+                'count' => 0,
+                'count_compare' => 0,
+            ];
         }
-        foreach ($pageDetail as $key=>$detail) {
-
-            if ($countType == array_search('friends', $condition)) {
-                $data[] = [
-                    'date' => $detail->date,
-                    'count' => $detail->friends_count
-                ];
-            }
-            if ($countType == array_search('posts', $condition)) {
-                $data[] = [
-                    'date' => $detail->date,
-                    'count' => $detail->posts_count
-                ];
-            }
-            if ($countType == array_search('followers', $condition)) {
-                $data[] = [
-                    'date' => $detail->date,
-                    'count' => $detail->followers_count
-                ];
-            }
-            if ($countType == array_search('favourites', $condition)) {
-                $data[] = [
-                    'date' => $detail->date,
-                    'count' => $detail->favourites_count
-                ];
-            }
-
+        /*foreach ($pageDetail as $key=>$detail) {
+            $val_condition = $condition[$countType].'_count';
+            $data[] = [
+                'date' => $detail->date,
+                'count' => $detail->$val_condition
+            ];
         }
         $data[] = sort($data);
-        array_pop($data);
+        array_pop($data);*/
+        foreach ($pageDetail as $key=>$detail) {
+            if ($key == 0) {
+                $data[$detail->date]['count_compare'] = 0;
+            } else {
+                $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($detail->date)));
+                $val_condition = $condition[$countType].'_count';
+                $data[$detail->date]['count'] = $detail->$val_condition;
+                $beforeDayVal   = $data[$beforeDate]['count'];
+                $thisDayVal     = $data[$detail->date]['count'];
+
+                $data[$detail->date]['count_compare'] = $thisDayVal - $beforeDayVal;
+
+            }
+        }
+        foreach ($data as $date=>$val) {
+            foreach ($val as $key=>$value) {
+                if ($key == 'count') {
+                    unset($data[$date][$key]);
+                }
+            }
+        }
+
+        /*data graph post*/
+        $listPostByDate = $this->repPostTw->getListPostByDate($page_id, null, $startDate, $endDate);
+        $columns = [
+            'retweet_count',
+            'favorite_count'
+        ];
+        $aaa['twitter'] = $this->getGraphDataPost($listPostByDate, $columns, $startDate, $days);
+        ////
+        $listPostByDate = $this->repPostFb->getListPostByDate($page_id, null, $startDate, $endDate);
+        $columns = [
+            'like_count',
+            'comment_count',
+            'share_count'
+        ];
+        $aaa['facebook'] = $this->getGraphDataPost($listPostByDate, $columns, $startDate, $days);
+
 //        Log::info(print_r($data), true));
+//        Log::info($like);
 //        echo json_encode(array('success' => true, 'contentCount' => $data));exit();
         return Response::json(array('success' => true, 'contentCount' => $data), 200);
 
+    }
+
+    public function getGraphDataPost($list, $columns = [], $startDate, $days){
+        $postPerDay = [];
+        for($i=0;$i <= $days; $i++) {
+            $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
+            $postPerDay[$day] = [];
+            foreach ($columns as $column) {
+                $postPerDay[$day][$column] = 0;
+                $postPerDay[$day][$column.'_compare'] = 0;
+            }
+        }
+        foreach ($list as $i => $postDetail) {
+            foreach ($columns as $column) {
+                $postPerDay[$postDetail->date][$column] += $postDetail->$column;
+            }
+            if($i == 0) {
+                foreach ($columns as $column) {
+                    $postPerDay[$postDetail->date][$column.'_compare'] = 0;
+                }
+            } else {
+                $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
+                if ($postDetail->date != $beforeDate) {
+                    foreach ($columns as $column) {
+                        $beforeDayVal   = $postPerDay[$beforeDate][$column];
+                        $thisDayVal     = $postPerDay[$postDetail->date][$column];
+                        $postPerDay[$postDetail->date][$column.'_compare'] = $thisDayVal - $beforeDayVal;
+                    }
+                }
+            }
+        }
+        foreach ($postPerDay as $date => $data) {
+            foreach ($data as $key => $val) {
+                if(in_array($key, $columns)) {
+                    unset($postPerDay[$date][$key]);
+                }
+            }
+        }
+        return $postPerDay;
     }
 }

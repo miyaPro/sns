@@ -37,7 +37,6 @@ elixir(function (mix) {
         'public/css/bucketadmin/style.css',
         'public/css/bucketadmin/style-responsive.css',
         'resources/assets/build/app.css',
-        // 'public/css/jquery.fancybox.css',
         paths.bootstrap_select + '/dist/css/bootstrap-select.css'
     ], 'public/css/app.css','./');
 

@@ -27,6 +27,7 @@ return [
         'services'          => 'services',
     ],
     'condition_filter_page' => ['friends', 'followers', 'favourites', 'posts'],
+    'condition_filter_post' => ['likes', 'comments', 'shares', 'retweets', 'favorites'],
 
 ];
 

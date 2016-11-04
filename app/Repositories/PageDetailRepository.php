@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\PageDetail;
+use Illuminate\Support\Facades\DB;
 
 class PageDetailRepository extends BaseRepository
 {
@@ -15,19 +16,7 @@ class PageDetailRepository extends BaseRepository
     {
         $this->model = $page;
     }
-    /**
-     * Save the User.
-     * @param  Array  $inputs
-     * @return void
-     */
-    private function save($model, $inputs)
-    {
-        $model->friends_count             = $inputs['friends_count'];
-        $model->posts_count               = $inputs['posts_count'];
-        $model->followers_count           = $inputs['followers_count'];
-        $model->favourites_count          = $inputs['favourites_count'];
-        $model->save();
-    }
+
     /**
      * Create a company.
      *
@@ -41,6 +30,20 @@ class PageDetailRepository extends BaseRepository
         $model->date                      = $inputs['date'];
         $this->save($model, $inputs);
         return $model;
+    }
+
+    /**
+     * Save the User.
+     * @param  Array  $inputs
+     * @return void
+     */
+    private function save($model, $inputs)
+    {
+        $model->friends_count             = $inputs['friends_count'];
+        $model->posts_count               = $inputs['posts_count'];
+        $model->followers_count           = $inputs['followers_count'];
+        $model->favourites_count          = $inputs['favourites_count'];
+        $model->save();
     }
 
     public function update($model, $inputs)
@@ -82,5 +85,21 @@ class PageDetailRepository extends BaseRepository
         return $model->get();
     }
 
+    public function getTotalPage($page_id, $start_date = null, $end_date = null) {
+        $model = new $this->model();
+        $model = $model->select(
+                DB::raw('SUM(friends_count) as friends_count'),
+                DB::raw('SUM(posts_count) as posts_count'),
+                DB::raw('SUM(followers_count) as followers_count'),
+                DB::raw('SUM(favourites_count) as favourites_count')
+            )
+            ->where('page_id', $page_id)
+        ;
+        if ($start_date && $end_date) {
+            $model = $model->Where('date', '>=', $start_date);
+            $model = $model->Where('date', '<=', $end_date);
+        }
+        return $model->first();
+    }
 
 }

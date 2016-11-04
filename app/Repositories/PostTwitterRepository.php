@@ -93,4 +93,26 @@ class PostTwitterRepository extends BaseRepository
             ->select(DB::raw('Max(pd.date) as max_date'));
         return $model->first();
     }
+
+    public function getListPostByDate($page_id, $date = null, $date_from = null, $date_to = null)
+    {
+        $model = new $this->model();
+        $model = $model->where('page_id', $page_id)
+            ->join('post_twitter_details as pd', 'post_twitters.id', '=', 'pd.post_id')
+            ->select(
+                'post_twitters.id as post_id',
+                'pd.retweet_count',
+                'pd.favorite_count',
+                'pd.date'
+            );
+        if($date) {
+            $model->where('pd.date', $date);
+        }
+        if($date_from && $date_to) {
+            $model->where('pd.date', '>=', $date_from);
+            $model->where('pd.date', '<=' , $date_to);
+            $model->orderby('pd.date');
+        }
+        return $model->get();
+    }
 }

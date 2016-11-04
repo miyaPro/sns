@@ -12526,16 +12526,17 @@ button.close {
 .post-info.notification-info {
   margin-left: 0px;
   margin-top: 0px; }
-
-.post-info.notification-info img {
-  border-radius: 10px; }
-
-.post-info .post-content {
-  margin-top: 5px; }
-
-.post-info .notification-meta p {
-  color: black;
-  font-size: 13px; }
+  .post-info.notification-info img {
+    border-radius: 10px;
+    width: 150px;
+    height: 150px; }
+  .post-info.notification-info .post-content {
+    margin-top: 5px; }
+  .post-info.notification-info .notification-meta p {
+    color: black;
+    font-size: 15px; }
+  .post-info.notification-info .post-icon {
+    font-size: 17px !important; }
 
 /*# sourceMappingURL=app.css.map */
 

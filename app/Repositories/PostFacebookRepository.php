@@ -85,4 +85,28 @@ class PostFacebookRepository extends BaseRepository
         return $model->first();
     }
 
+
+    public function getListPostByDate($page_id, $date = null, $date_from = null, $date_to = null)
+    {
+        $model = new $this->model();
+        $model = $model->where('page_id', $page_id)
+            ->join('post_facebook_details as pd', 'post_facebooks.id', '=', 'pd.post_id')
+            ->select(
+                'post_facebooks.id as post_id',
+                'pd.like_count',
+                'pd.comment_count',
+                'pd.share_count',
+                'pd.date'
+            );
+        if($date) {
+            $model->where('pd.date', $date);
+        }
+        if($date_from && $date_to) {
+            $model->where('pd.date', '>=', $date_from);
+            $model->where('pd.date', '<=' , $date_to);
+            $model->orderby('pd.date');
+        }
+        return $model->get();
+    }
+
 }
