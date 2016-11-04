@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'site_title'      => 'WevNAL CTA System',
+    'client'          => 'ユーザ',
+    'user'            => 'ユーザ',
+    'user_register'   => 'ユーザ登録',
+    'action'          => 'アクション',
+    'confirm'         => '確認',
+    'home'            => 'ホームページ',
+    'page'            => 'パターン',
+    'profile'         => '情報',
+    'edit'            => '編集',
+    'click_count'     => 'クリック数',
+    'click'           => 'クリック',
+    'site'            => 'サイト',
+    'image'           => 'ga',
+    'px'              => 'px',
+    'seconds'         => '秒',
+    'cookie_expire'   => '再表示期間',
+    'of'              => '',
+    'csv'             => 'CSV',
+    'pdf'             => 'PDF',
+    'master'             => 'Master',
+];

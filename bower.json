@@ -1,0 +1,17 @@
+{
+  "name": "sns",
+  "description": "sns project",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "vendor/bower_dl",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^1.9.1",
+    "bootstrap": "^3.3.6",
+    "font-awesome": "fontawesome#^4.6.3",
+    "bootstrap-select": "*"
+  }
+}

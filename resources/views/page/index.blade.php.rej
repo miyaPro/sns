@@ -1,0 +1,28 @@
+diff a/resources/views/page/index.blade.php b/resources/views/page/index.blade.php	(rejected hunks)
+@@ -91,22 +91,22 @@
+                                             <div class="col-md-3 col-profile">
+                                                 <h5>{{trans('page.friends_count')}}</h5>
+                                                 <i class="fa fa-users fa-3x first-city"></i>
+-                                                <div class="statistics">{{@$pageInfo->friends_count}}</div>
++                                                <div class="statistics">{{ $pageInfo->friends_count or '0';}}</div>
+                                             </div>
+                                             <div class="col-md-3 col-profile">
+                                                 <h5>{{trans('page.posts_count')}}</h5>
+                                                 <i class="fa fa-pencil-square-o fa-3x second-city"></i>
+-                                                <div class="statistics">{{@$pageInfo->posts_count}}</div>
++                                                <div class="statistics">{{ $pageInfo->posts_count or '0'}}</div>
+                                             </div>
+                                             <div class="col-md-3 col-profile">
+                                                 <h5>{{trans('page.followers_count')}}</h5>
+                                                 <i class="fa fa-plus-square fa-3x third-city"></i>
+-                                                <div class="statistics">{{@$pageInfo->followers_count}}</div>
++                                                <div class="statistics">{{ $pageInfo->followers_count or '0'}}</div>
+                                             </div>
+                                             <div class="col-md-3 col-profile">
+                                                 <h5>{{trans('page.favourites_count')}}</h5>
+                                                 <i class="fa fa-star-o fa-3x fourth-city"></i>
+-                                                <div class="statistics">{{@$pageInfo->favourites_count}}</div>
++                                                <div class="statistics">{{ $pageInfo->favourites_count or '0'}}</div>
+                                             </div>
+                                         </div>
+                                     </div>
