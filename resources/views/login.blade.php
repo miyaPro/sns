@@ -27,10 +27,62 @@
     <![endif]-->
 
     <link rel="shortcut icon" href="{{{ URL::asset('favicon.ico') }}}">
+    <style>
+        .wrapper-page {
+            margin: 5% auto;
+            position: relative;
+            width: 420px;
+        }
+        body {
+            background: #ebeff2 !important;
+            font-family: 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding-bottom: 65px;
+            overflow-x: hidden;
+            color: #797979;
+        }
+        .wrapper-page .card-box {
+            border: 1px solid rgba(54, 64, 74, 0.1);
+        }
+
+        .card-box {
+            padding: 20px;
+            border: 1px solid rgba(54, 64, 74, 0.05);
+            -webkit-border-radius: 5px;
+            border-radius: 5px;
+            -moz-border-radius: 5px;
+            background-clip: padding-box;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+        }
+        .text-custom {
+            color: #5fbeaa !important;
+        }
+        .panel-heading {
+            background: #fff;
+        }
+        .form-signin{
+            max-width: 420px;
+            margin: 10px auto;
+        }
+        .form-control{
+            height: 38px;
+        }
+        .add-on {
+            margin-top: -41px;
+        }
+    </style>
 </head>
 <body class="login-body">
     <div class="container">
-        @yield('content')
+        <div class="wrapper-page">
+            <p align="center">
+                <a href="/" title="Wevnal.co.jp">
+                    <img src="{{ asset('images/logo-mini.png') }}"/>
+                </a>
+            </p>
+            @yield('content')
+        </div>
     </div>
 </body>
 <!-- Scripts -->

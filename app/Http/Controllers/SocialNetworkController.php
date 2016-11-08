@@ -16,6 +16,7 @@ use Session;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Artisan;
 
 
 /**
@@ -82,8 +83,11 @@ class SocialNetworkController extends Controller
                     'access_token'      =>$accessToken
                 ];
                 $this->repAuth->update($authUser, $inputs);
-                $process = new Process('php '.env('ARTISAN_PATCH').'artisan'.$authUser['account_id']);
-                $process->start();
+//                $process = new Process('php '.env('ARTISAN_PATCH').'artisan'.$authUser['account_id']);
+//                $process->start();
+                Artisan::call('facebook', [
+                    'account_id' => $inputs['account_id']
+                ]);
             }
             else{
                 $inputs = [
@@ -95,8 +99,11 @@ class SocialNetworkController extends Controller
                     'service_code'      => config('constants.service.facebook')
                 ];
                 $this->repAuth->store($inputs);
-                $process = new Process('php '.env('ARTISAN_PATCH').'artisan '.$inputs['account_id']);
-                $process->start();
+//                $process = new Process('php '.env('ARTISAN_PATCH').'artisan '.$inputs['account_id']);
+//                $process->start();
+                Artisan::call('facebook', [
+                    'account_id' => $inputs['account_id']
+                ]);
             }
         } catch(FacebookResponseException $e) {
             return redirect('/dashboard')->with('alert-danger', trans('message.error_permission_facebook'));
@@ -144,8 +151,11 @@ class SocialNetworkController extends Controller
             }else{
                 $this->repAuth->update($oauth, $input);
             }
-            $process = new Process('php '.env('ARTISAN_PATH').'artisan instagram '.$input['account_id']);
-            $process->start();
+//            $process = new Process('php '.env('ARTISAN_PATH').'artisan instagram '.$input['account_id']);
+//            $process->start();
+            Artisan::call('instagram', [
+                'account_id' => $input['account_id']
+            ]);
         }else{
             Session::flash('alert-danger', trans('message.error_get_access_token_instagram'));
         }
@@ -252,9 +262,17 @@ class SocialNetworkController extends Controller
             $twitter = $this->repAuth->store($input);
         }
 
-        $process = new Process('php '.env('ARTISAN_PATH').'artisan twitter '.$input['account_id']);
-        $process->start();
+//        $process = new Process('php '.env('ARTISAN_PATH').'artisan twitter '.$input['account_id']);
+//        $process->start();
+        Artisan::call('twitter', [
+            'account_id' => $input['account_id']
+        ]);
         return redirect('/dashboard');
+
+    }
+
+    public function handleSnapchat()
+    {
 
     }
 

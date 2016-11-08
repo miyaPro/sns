@@ -1,48 +1,26 @@
-@extends('layouts.reset')
+@extends('login')
+@section('title') {{{ trans('default.reset_password_title') }}} :: @parent @stop
 
-<!-- Main Content -->
+
 @section('content')
-<div class="container">
-    @include('flash')
-    <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-            <div class="panel panel-default">
-                <div class="panel-heading">{{{ trans('passwords.confirm')}}}</div>
-                <div class="panel-body">
-                    @if (session('status'))
-                        <div class="alert alert-success">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
-                    <form class="form-horizontal" role="form" method="POST" action="{{ url('/password/email') }}">
-
-                        {{ csrf_field() }}
-                        <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                            <label for="email" class="col-md-3 control-label">{{{ trans('passwords.emailAddress') }}}</label>
-
-                            <div class="col-md-8">
-                                <input id="email" type="text" class="form-control" name="email" value="{{ old('email') }}" >
-
-                                @if ($errors->has('email'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('email') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-md-6 col-md-offset-3">
-                                <button type="submit" class="btn btn-primary">
-                                    {{{ trans('button.reset_btn')}}}
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+    {!! Form::open(['url' => '/password/email', 'class' => 'form-horizontal', 'role' => 'form']) !!}
+    <div class=" card-box">
+        <div class="panel-heading">
+            <h3 class="text-center text-uppercase">{{{ trans('default.reset_password_title') }}}</h3>
+        </div>
+        <div class="panel-body">
+            @include('errors.list')
+            <div class="form-group">
+                <div class="col-md-10">
+                        {!! Form::text('email', null, ['id' => 'inputEmail', 'class' => "form-control", 'placeholder' => trans('field.email')]) !!}
+                      <span class="input-group-btn add-on">
+                         <button class="btn btn-sm btn-primary " type="submit">{{{ trans('button.reset_btn') }}}</button>
+                      </span>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    {!! Form::close() !!}
 @endsection
+
+

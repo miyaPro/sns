@@ -1,13 +1,3 @@
-
-// Fonts
-@import url(https://fonts.googleapis.com/css?family=Raleway:300,400,600);
-
-// Variables
-@import "variables";
-
-// Bootstrap
-@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
-
 .overlay{
   position: absolute;
   top: 0;
@@ -106,6 +96,9 @@
     padding-bottom: 20px;
   }
   .page_name_box {
+    .wk-progress {
+      width: auto;
+    }
     .tm {
       display: inline-block;
       font-size: 18px;
@@ -245,4 +238,8 @@
   .post-icon{
     font-size: 17px !important;
   }
+}
+
+a.logo {
+  margin: 10px 0 0 25px;
 }

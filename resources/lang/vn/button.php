@@ -26,5 +26,5 @@ return [
     'download_report' => 'Tải về báo cáo',
     'grant_access'    => 'Cấp quyền truy cập',
     'reset'           => 'Đặt lại mật khẩu',
-    'reset_btn'           => 'Send Password Reset Link'
+    'reset_btn'           => 'Xác Nhận'
 ];

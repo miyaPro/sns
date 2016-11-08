@@ -3,7 +3,7 @@
     <div class="brand">
         <a href="{!! URL::to('/') !!}" class="logo">
             <div class="admin-header-title">
-                <img src="{{ asset('images/WevNALLogo_w.png') }}" width="180px"/>
+                <img src="{{ asset('images/logo-mini2.png') }}" width="180px"/>
             </div>
         </a>
         <div class="sidebar-toggle-box">

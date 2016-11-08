@@ -7,6 +7,9 @@ use App\Repositories\AuthRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PageDetailRepository;
+use App\Repositories\PostFacebookRepository;
+use App\Repositories\PostTwitterRepository;
+use App\Repositories\PostInstagramRepository;
 use App\Http\Requests;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Artisan;
@@ -21,7 +24,9 @@ class ServiceController extends Controller
     protected $repService;
     protected $repPage;
     protected $repPageDetail;
-    protected $contractStatus;
+    protected $repPostFb;
+    protected $repPostTw;
+    protected $repPostIg;
     protected $services;
     /**
      * Display a listing of the resource.
@@ -34,15 +39,21 @@ class ServiceController extends Controller
         AuthRepository $auth,
         ServiceRepository $service,
         PageRepository $page,
-        PageDetailRepository $pageDetail
+        PageDetailRepository $pageDetail,
+        PostFacebookRepository $postFb,
+        PostTwitterRepository $postTw,
+        PostInstagramRepository $postIg
     )
     {
-        $this->repMaster    = $master;
-        $this->repUser      = $user;
-        $this->repAuth      = $auth;
-        $this->repPage      = $page;
-        $this->repPageDetail = $pageDetail;
-        $this->repService   = $service;
+        $this->repMaster        = $master;
+        $this->repUser          = $user;
+        $this->repAuth          = $auth;
+        $this->repPage          = $page;
+        $this->repPageDetail    = $pageDetail;
+        $this->repService       = $service;
+        $this->repPostFb        = $postFb;
+        $this->repPostTw        = $postTw;
+        $this->repPostIg        = $postIg;
         $this->middleware(['auth']);
     }
 
@@ -59,12 +70,6 @@ class ServiceController extends Controller
         $user           = $this->repUser->getById($user_id);
         if($user) {
             $inputs         = $request->all();
-            $services       = [];
-            foreach ($user->auth as $auth) {
-                if($auth->access_token) {
-                    $services[] = $auth->service_code;
-                }
-            }
             if(!@$inputs['to']) {
                 $inputs['to']   = date('Y/m/d');
             }
@@ -73,70 +78,71 @@ class ServiceController extends Controller
             }
             $fromDate   = date('Y-m-d' ,strtotime($inputs['from']));
             $toDate     = date('Y-m-d' ,strtotime($inputs['to']));
+            $services   = [];
+            $pageList   = [];
+            $postByDay  = [];
             //get data pages by date
-            $pageData       = $this->repService->getListPage($user_id);
-            $pagePerDayData = $this->repService->getListPageDetail($user_id, null, $fromDate, $toDate);
-            //get total page detail by date
-            $totalPageData      = [];
             foreach ($user->auth as $auth) {
+                if($auth->access_token) {
+                    $services[] = $auth->service_code;
+                }
+                switch ($auth->service_code) {
+                    case config('constants.service.facebook'): {
+                        $repPost    = $this->repPostFb;
+                        $columns    = ['like_count', 'comment_count', 'share_count'];
+                    } break;
+                    case config('constants.service.twitter'): {
+                        $repPost    = $this->repPostTw;
+                        $columns    = ['retweet_count', 'favorite_count'];
+                    } break;
+                    case config('constants.service.instagram'): {
+                        $repPost    = $this->repPostIg;
+                        $columns    = ['like_count', 'comment_count'];
+                    } break;
+                    default: return redirect('dashboard')->with('alert-danger', trans('message.exiting_service'));
+                }
                 $pages = $this->repPage->getAllByField('auth_id', $auth->id);
                 foreach ($pages as $page) {
-                    $pageDetail = $this->repPageDetail->getTotalPage($page->id, $fromDate, $toDate);
-                    $totalPageData[] = [
-                        'page_id'           => $page->id,
-                        'page_name'         => $page->name,
-                        'page_link'         => $page->link,
-                        'service_code'      => $auth->service_code,
-                        'friends_count'     => @$pageDetail->friends_count ? $pageDetail->friends_count : 0,
-                        'posts_count'       => @$pageDetail->posts_count ? $pageDetail->posts_count : 0,
-                        'followers_count'   => @$pageDetail->followers_count ? $pageDetail->followers_count : 0,
-                        'favourites_count'  => @$pageDetail->favourites_count ? $pageDetail->favourites_count : 0
-                    ];
-                }
-            }
-
-            $pageList = $pagePerDay = $totalPage = [];
-            //prepare data
-            $timeFrom   = strtotime($inputs['from']);
-            $timeto     = strtotime($inputs['to']);
-            $days       = floor(($timeto - $timeFrom) / (60*60*24));
-            $dataByday  = [];
-
-            foreach ($pagePerDayData as $page) {
-                $dataByday[$page->service_code][$page->page_id][$page->date] = (array) $page;
-            }
-            foreach ($totalPageData as $page) {
-                $totalPage[$page['service_code']][$page['page_id']] = $page;
-            }
-
-            //list page and data for them
-            $dataItem['friends_count']      = 0;
-            $dataItem['posts_count']        = 0;
-            $dataItem['followers_count']    = 0;
-            $dataItem['favourites_count']   = 0;
-            foreach ($pageData as $page) {
-                $pageList[$page->service_code][$page->page_id] = (array) $page;
-                //set data per days
-                for($i=0;$i <= $days; $i++) {
-                    $day = date('Y-m-d' ,strtotime("+".$i." day", $timeFrom));
-                    if(isset($dataByday[$page->service_code][$page->page_id][$day])) {
-                        $pagePerDay[$page->service_code][$page->page_id][] = $dataByday[$page->service_code][$page->page_id][$day];
-                    } else {
-                        $dataItem['date'] = $day;
-                        $pagePerDay[$page->service_code][$page->page_id][] = $dataItem;
-                    }
+                    //info page
+                    $pageList[$auth->service_code][$page->id] = $page;
+                    //post data by page
+                    $postDetail = $repPost->getListPostByDate($page->id, null, $fromDate, $toDate);
+                    $postByDay[$auth->service_code][$page->id] = $this->getData($postDetail, $columns, $fromDate, $toDate);
                 }
             }
             return response(view('service.dashboard')->with([
                 'services'      => $services,
                 'dates'         => $inputs,
-                'user'          => $user,
                 'pageList'      => $pageList,
-                'pagePerDay'    => $pagePerDay,
-                'totalPage'     => $totalPage,
+                'postByDay'     => $postByDay,
             ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));
         }
+    }
+
+    public function getData($listDetail, $columns = [], $startDate, $endDate){
+        $data = [];
+        $days = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
+        for($i=0; $i <= $days; $i++) {
+            $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
+            $data[$day]['total']    = 0;
+            $data[$day]['compare']  = 0;
+        }
+        foreach ($listDetail as $i => $postDetail) {
+            //total of columns
+            foreach ($columns as $column) {
+                $data[$postDetail->date]['total'] += $postDetail->$column;
+            }
+            //calculation after first item
+            if ($startDate != $postDetail->date){
+                $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
+                $beforeDayVal   = $data[$beforeDate]['total'];
+                $thisDayVal     = $data[$postDetail->date]['total'];
+                $compare        = $thisDayVal - $beforeDayVal;
+                $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
+            }
+        }
+        return $data;
     }
 }

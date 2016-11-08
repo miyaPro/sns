@@ -37,14 +37,14 @@ return [
     'facebook' => [
         'client_id' => '1485803355037503',
         'client_secret' => 'd3f00dd3272c78eea02f044371cbfac0',
-        'redirect' => 'http://sns.local.vn/social/handleFacebookCallback',
+        'redirect' => config('app.url').'/social/handleFacebookCallback',
 
     ],
 
     'twitter' => [
         'client_id' => 'fh9ldFH21zBnmxvBAqBU7MyDc',
         'client_secret' => 'kqTyWUh4WPPXZkAI6bybfLezN2STb2y6M1HL1MekaXTuSFgjvh',
-        'redirect' => 'http://sns.local.vn/social/handleTwitterCallback',
+        'redirect' => config('app.url').'/social/handleTwitterCallback',
     ],
 
 ];

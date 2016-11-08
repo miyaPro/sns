@@ -38,8 +38,6 @@ Route::get('/social/handleTwitter', 'SocialNetworkController@handleTwitter');
 Route::get('/social/handleTwitterCallback', 'SocialNetworkController@handleTwitterCallback');
 Route::get('/social/handleInstagramCallback', 'SocialNetworkController@handleInstagramCallback');
 Route::get('/social/handleInstagram', 'SocialNetworkController@handleInstagram');
-//Route::get('/account/reset-password/{token?}', 'Auth\ResetPasswordController');
-Route::get('/reset-password/email', 'Auth\ResetPasswordController@show');
-Route::post('/password/email', 'Auth\ResetPasswordController@sendMail');
+Route::post('/password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail');
 
 

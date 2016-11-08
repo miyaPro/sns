@@ -34,5 +34,6 @@ return [
     'error_do_not_get_page_instagram'   =>'Lỗi không thể lấy được thông tin page trên instagram',
     'error_page_not_found'  => 'Lỗi không tồn tại trang',
     'exiting_service'  => 'Không có dịch vụ tương ứng!',
+    'page_not_found'  => 'Không có trang nào.',
 
 ];

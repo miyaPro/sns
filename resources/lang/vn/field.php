@@ -68,4 +68,8 @@ return [
     'post_created_time'      => 'Create',
     'post_updated_time'      => 'Update',
     'post_detail'    => 'Thông tin danh sách bài post',
+    'condition_filter_total' => 'Total',
+    'condition_filter_daily' => 'Daily',
+    'number_like_comment_share'    => 'Tổng số like, comment, share',
+
 ];

@@ -118,6 +118,7 @@ class CommandInstagram extends Command
             $this->getPageDetail($data, $page);
             $this->getPost($page, $auth);
         }else{
+            $this->repAuth->resetAccessToken($auth->id);
             $this->error('message',trans('error_do_not_get_page_instagram'));
         }
     }

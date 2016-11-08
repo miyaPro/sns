@@ -41,6 +41,7 @@
                     @if(isset($pageInfo))
                         <?php  $conditionPost = config('constants.condition_filter_post')?>
                         <?php  $conditionPage = config('constants.condition_filter_page')?>
+                        <?php  $condition     = array_map(function($val) { return trans('field.condition_filter_'.$val); }, config('constants.condition_filter'));?>
                         @unset($conditionPage[array_search('posts', $conditionPage)])
 
                         @if($serviceCode == config('constants.service.instagram'))
@@ -134,8 +135,11 @@
                         <section class="panel">
                             <div class="panel-body service-first">
                                 <div class="row">
-                                    <div class="condition col-md-1">
+                                    <div class="condition col-md-2">
                                         {!! Form::select('typeDrawPage',  $conditionPage, null, ['class' => 'typeDrawPage form-control','id' => 'typeDrawPage']) !!}
+                                    </div>
+                                    <div class="condition col-md-2">
+                                        {!! Form::select('typeDrawSubPage',  $condition, null, ['class' => 'typeDrawSubPage form-control','id' => 'typeDrawSubPage']) !!}
                                     </div>
                                 </div>
                                 <div id="chartContainer1" class="row"></div>
@@ -145,8 +149,11 @@
                             <div class="panel-heading">{{ trans('field.post_detail') }}</div>
                             <div class="panel-body service-first">
                                 <div class="row">
-                                    <div class="condition col-md-1">
+                                    <div class="condition col-md-2">
                                         {!! Form::select('typeDrawPost',  $conditionPost, null, ['class' => 'typeDrawPost form-control','id' => 'typeDrawPost']) !!}
+                                    </div>
+                                    <div class="condition col-md-2">
+                                        {!! Form::select('typeDrawSubPost',  $condition, null, ['class' => 'typeDrawSubPost form-control','id' => 'typeDrawSubPost']) !!}
                                     </div>
                                 </div>
                                 <div id="chartContainer2" class="row"></div>
@@ -157,11 +164,11 @@
                                                 <ul class="clearfix notification-meta">
                                                     <li class="pull-left notification-sender">
                                                         <p class="post-content text-center">{{@str_limit(@$post->content, 100)}}</p>
-                                                        <p class="post-icon"><i class="fa fa-comment" aria-hidden="true"></i>&nbsp;
+                                                        <p class="post-icon"><i class="fa fa-comment first-city" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->comment_count}}&nbsp;&nbsp;&nbsp;
-                                                            <i class="fa fa-heart third-city" aria-hidden="true"></i>&nbsp;
+                                                            <i class="fa fa-thumbs-o-up second-city" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->like_count}}&nbsp;&nbsp;&nbsp;
-                                                            <i class="fa fa-share" aria-hidden="true"></i>&nbsp;
+                                                            <i class="fa fa-share third-city" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->share_count}}
                                                         </p>
                                                     </li>
@@ -190,13 +197,12 @@
                                                         </div>
                                                         <div class="subject">{{@str_limit(@$post->content, 100)}}</div>
                                                         <div class="message">
-                                                            <p class="post-icon"><i class="fa fa-retweet" aria-hidden="true"></i>&nbsp;
+                                                            <p class="post-icon"><i class="fa fa-retweet first-city" aria-hidden="true"></i>&nbsp;
                                                                 {{@$post->retweet_count}}&nbsp;&nbsp;&nbsp;
-                                                                <i class="fa fa-heart third-city" aria-hidden="true"></i>&nbsp;
+                                                                <i class="fa fa-heart second-city" aria-hidden="true"></i>&nbsp;
                                                                 {{@$post->favorite_count}}
                                                             </p>
                                                         </div>
-
                                                     </li>
                                                     <li class="clearfix pull-right">
                                                         <p>{{ trans('field.post_created_time') }} :
@@ -220,9 +226,9 @@
                                                             <img src="{{$post->image_thumbnail}}">
                                                         @endif
                                                         <p class="post-content text-center">{{@str_limit(@$post->content, 100)}}</p>
-                                                        <p class="post-icon"><i class="fa fa-comment" aria-hidden="true"></i>&nbsp;
+                                                        <p class="post-icon"><i class="fa fa-comment first-city" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->comment_count}}&nbsp;&nbsp;&nbsp;
-                                                            <i class="fa fa-heart third-city" aria-hidden="true"></i>&nbsp;
+                                                            <i class="fa fa-heart second-city" aria-hidden="true"></i>&nbsp;
                                                             {{@$post->like_count}}
                                                         </p>
                                                     </li>
@@ -246,114 +252,168 @@
             </section>
         </div>
     </div>
-
+@endsection
+@section('scripts')
     <script>
-        $(function() {
-            var urlGraphPage = '{{ URL::route('site.analytic.graph',  ["$pageInfo->page_id"]) }}';
-            var urlGraphPost = '{{ URL::route('site.analytic.graphPost',  ["$pageInfo->page_id"]) }}';
-            var chart,chartPost;
-            $('#typeDrawPage, #typeDrawPost').css('width','200px');
-            var graphDraw = function () {
-                var typeDrawPage= parseInt($('#typeDrawPage').val());
-                var typeDrawPost = parseInt($('#typeDrawPost').val());
-                var dataGraph = [];
-                var dateFrom = $('#inputDateFrom');
-                var dateTo = $('#inputDateTo');
-                if(typeDrawPage >= 0){
-                    $.ajax({
-                        url: urlGraph,
-                        data: {
-                            "_token"    : "{{ csrf_token() }}",
-                            'dateFrom'  : dateFrom.val(),
-                            'dateTo'    : dateTo.val(),
-                            "typeDraw"  : typeDrawPage,
-                        },
-                        type: 'POST',
-                        context: this,
-                        dataType: 'Json',
-                        success: function (data) {
-                            if(data.success){
+        @if(isset($pageInfo))
+           $(function() {
+                var urlGraphPage = '{{ URL::route('site.analytic.graph',  ["$pageInfo->page_id"]) }}';
+                var urlGraphPost = '{{ URL::route('site.analytic.graphPost',  ["$pageInfo->page_id"]) }}';
+                var chartPage,chartPost;
+                var conditionPost = <?php echo json_encode ($conditionPost); ?>;
+                $('#typeDrawPage, #typeDrawPost').css('width','200px');
+                var graphDraw = function (typeDraw) {
+                    var typeDrawPage= parseInt($('#typeDrawPage').val());
+                    var typeDrawPost = parseInt($('#typeDrawPost').val());
+                    var typeDrawSubPost = parseInt($('#typeDrawSubPost').val());
+                    var typeDrawSubPage = parseInt($('#typeDrawSubPage').val());
+                    var dataGraph = [];
+                    var dateFrom = $('#inputDateFrom');
+                    var dateTo = $('#inputDateTo');
+                    if(typeDraw == 1 || typeDraw == 2){
+                        $.ajax({
+                            url: typeDraw ==1 ? urlGraphPage : urlGraphPost,
+                            data: {
+                                "_token"    : "{{ csrf_token() }}",
+                                'dateFrom'  : dateFrom.val(),
+                                'dateTo'    : dateTo.val(),
+                                "typeDraw"  : typeDrawPage,
+                            },
+                            type: 'POST',
+                            context: this,
+                            dataType: 'Json',
+                            success: function (data) {
                                 var dataResponse = data.contentCount;
-                                chart.options.labels = [$('#typeDrawPage option:selected').html()];
-                                    for (var item in dataResponse) {
-                                        dataGraph.push({
-                                            date : item,
-                                            count : dataResponse[item]['count_compare']
-                                        })
+                                dataGraph = [];
+                                if(data.success){
+                                    if(typeDraw == 1){
+                                        loadGraphPage(dataResponse, dataGraph, typeDrawSubPage);
+                                    }else{
+                                        loadGraphPost(dataResponse, dataGraph, typeDrawSubPost);
                                     }
-                                chart.setData(dataGraph);
-                            }
-                        }
-                    })
-                }else{
-                    chart.setData([]);
-                }
-                return;
-                if(typeDrawPost >= 0){
-                    $.ajax({
-                        url: urlGraph,
-                        data: {
-                            "_token"    : "{{ csrf_token() }}",
-                            'dateFrom'  : dateFrom.val(),
-                            'dateTo'    : dateTo.val()
-                        },
-                        type: 'POST',
-                        context: this,
-                        dataType: 'Json',
-                        success: function (data) {
-                            if(data.success){
-                                var dataResponse = data.contentCount;
-                                chart.options.labels = [$('#typeDrawPage option:selected').html()];
-                                for (var item in dataResponse) {
-                                    console.log(dataResponse);
-                                    dataGraph.push({
-                                        date : item,
-                                        count : dataResponse[item]['count_compare']
-                                    })
                                 }
-                                chart.setData(dataGraph);
                             }
+                        })
+                    }else{
+                        $.ajax({
+                            url: urlGraphPage,
+                            data: {
+                                "_token"    : "{{ csrf_token() }}",
+                                'dateFrom'  : dateFrom.val(),
+                                'dateTo'    : dateTo.val(),
+                                "typeDraw"  : typeDrawPage,
+                            },
+                            type: 'POST',
+                            context: this,
+                            dataType: 'Json',
+                            success: function (data) {
+                                dataGraph = [];
+                                if(data.success){
+                                    var dataResponse = data.contentCount;
+                                    loadGraphPage(dataResponse,dataGraph, typeDrawSubPage);
+                                }
+                            }
+                        })
+                        $.ajax({
+                            url: urlGraphPost,
+                            data: {
+                                "_token"    : "{{ csrf_token() }}",
+                                'dateFrom'  : dateFrom.val(),
+                                'dateTo'    : dateTo.val()
+                            },
+                            type: 'POST',
+                            context: this,
+                            dataType: 'Json',
+                            success: function (data) {
+                                dataGraph = [];
+                                if(data.success){
+                                    var dataResponse = data.contentCount;
+                                    loadGraphPost(dataResponse, dataGraph, typeDrawSubPost);
+                                }
+                            }
+                        })
+                    }
+                }
+                var generateGraph = function(element_id, data){
+                    return Morris.Area({
+                        element: element_id,
+                        data: data,
+                        xkey: 'date',
+                        ykeys: ['count'],
+                        labels: ['count'],
+                        lineColors: ['#058DC7'],
+                        hideHover: 'auto',
+                        resize: true,
+                        parseTime:false,
+                        lineWidth: 5,
+                        pointSize: 5,
+                        smooth: false,
+                        behaveLikeLine: true,
+                        fillOpacity: '0.2',
+                        xLabelFormat: function(d) {d = new Date(d.label); return (d.getMonth()+1)+'/'+d.getDate();},
+                        yLabelFormat: function(y){return y != Math.round(y)?'':y;},
+                    });
+                }
+                var loadGraphPage = function(dataResponse, dataGraph, typeDrawSubPage){
+                    chartPage.options.labels = [$('#typeDrawPage option:selected').html()];
+                    if(typeDrawSubPage == '0'){
+                        for (var item in dataResponse) {
+                            dataGraph.push({
+                                date: item,
+                                count: dataResponse[item]['count']
+                            })
                         }
-                    })
+                    }else{
+                        for (var item in dataResponse) {
+                            dataGraph.push({
+                                date : item,
+                                count : dataResponse[item]['count_compare']
+                            })
+                        }
+                    }
+                    chartPage.setData(dataGraph);
                 }
-            }
-            var generateGraph = function(element_id, data){
-                return Morris.Area({
-                    element: element_id,
-                    data: data,
-                    xkey: 'date',
-                    ykeys: ['count'],
-                    labels: ['count'],
-                    lineColors: ['#058DC7'],
-                    hideHover: 'auto',
-                    resize: true,
-                    parseTime:false,
-                    lineWidth: 5,
-                    pointSize: 5,
-                    smooth: false,
-                    behaveLikeLine: true,
-                    fillOpacity: '0.2',
-                    xLabelFormat: function(d) {d = new Date(d.label); return (d.getMonth()+1)+'/'+d.getDate();},
-                    yLabelFormat: function(y){return y != Math.round(y)?'':y;},
-                });
-            }
+                var loadGraphPost = function(dataResponse, dataGraph, typeDrawSubPost){
+                    chartPost.options.labels = [$('#typeDrawSubPost option:selected').html()];
+                    if(typeDrawSubPost == '0'){
+                        for (var item in dataResponse) {
+                            dataGraph.push({
+                                date: item,
+                                count: dataResponse[item]['total']
+                            })
+                        }
+                    }else{
+                        for (var item in dataResponse) {
+                            dataGraph.push({
+                                date : item,
+                                count : dataResponse[item]['compare']
+                            })
+                        }
 
-            $('#typeDrawPage, #typeDrawPost').on('change', function (e) {
-                e.preventDefault;
-                graphDraw();
-            });
-            chart=generateGraph('chartContainer1',[]);
-            chartPost = generateGraph('chartContainer2',[
-                {'date' : '2016-10-21', 'count' : 20}
-            ])
-            graphDraw();
-            $('.btn-submit').on('click',function () {
-                var dateFrom = $('#inputDateFrom'), dateTo = $('#inputDateTo');
-                if(Date.parse(dateFrom.val())<=Date.parse(dateTo.val())){
-                    graphDraw();
+                    }
+                    chartPost.setData(dataGraph)
                 }
-                return false;
+                $('#typeDrawPage, #typeDrawSubPost, #typeDrawSubPage').on('change', function (e) {
+                    e.preventDefault;
+                    var _id = $(this).attr('id');
+                    if(_id == 'typeDrawPage' || _id == 'typeDrawSubPage'){
+                        graphDraw(1);
+                    }else{
+                        graphDraw(2);
+                    }
+                });
+                chartPage = generateGraph('chartContainer1',[]);
+                chartPost = generateGraph('chartContainer2',[])
+                graphDraw(3);
+                $('.btn-submit').on('click',function () {
+                    var dateFrom = $('#inputDateFrom'), dateTo = $('#inputDateTo');
+                    if(Date.parse(dateFrom.val())<=Date.parse(dateTo.val())){
+                        graphDraw(3);
+                    }
+                    return false;
+                })
+
             })
-        })
+        @endif
     </script>
 @endsection

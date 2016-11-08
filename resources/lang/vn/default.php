@@ -2,6 +2,7 @@
 
 return [
     'site_title'      => 'WevNAL SNS System',
+    'reset_password_title' => 'Reset Password',
     'client'          => 'Client',
     'user'            => 'User',
     'user_register'   => 'Thêm tài khoản mới',

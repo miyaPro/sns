@@ -54,60 +54,39 @@
                 <div class="panel-body service tab-content tasi-tab">
                     @foreach(config('constants.service')  as $service_name => $service_code)
                         <div id="{{{ $service_name }}}" class="tab-pane {{{ ($service_name == 'facebook')  ? 'active' : '' }}}">
-                            @if(in_array($service_code, $services))
-                                @if(isset($pageList[$service_code]))
-                                    <div class="service-content">
+                            <div class="service-content">
+                                @if(in_array($service_code, $services))
+                                    @if(isset($pageList[$service_code]))
                                         @foreach($pageList[$service_code] as $page)
                                             <section class="panel">
                                                 <div class="panel-body page_name_box">
-                                                    <div class="wk-progress tm-membr col-md-6">
+                                                    <div class="wk-progress tm-membr col-md-8">
                                                         <div class="tm-avatar">
                                                             <img src="{{{ @$page['avatar_url'] }}}" alt="">
                                                         </div>
                                                         <div class="col-md-7 col-xs-7">
-                                                            <span class="tm">{{{ @$page['page_name'] }}}</span>
+                                                            <span class="tm">{{{ @$page['name'] }}}</span>
                                                         </div>
                                                         <div class="col-md-3 col-xs-3 btn-view">
-                                                            <a href="{!! URL::to('page/'.$page['page_id']) !!}" class="btn btn-white">{{{ trans('button.view') }}}</a>
+                                                            <a href="{!! URL::to('page/'.$page['id']) !!}" class="btn btn-white">{{{ trans('button.view') }}}</a>
                                                         </div>
                                                     </div>
-                                                    @if(isset($totalPage[$service_code]) && isset($totalPage[$service_code][$page['page_id']]))
-                                                        <?php $thisToday = $totalPage[$service_code][$page['page_id']]; ?>
-                                                    @endif
-                                                    <div class="page-detail">
-                                                        <ul class="clearfix location-earning-stats">
-                                                            <li class="stat-divider change_graph" data-show="friends" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
-                                                                {{{ trans('field.'.$service_name.'_friends_count') }}}
-                                                                <span class="first-item">{{{ @$thisToday['friends_count'] ? number_format($thisToday['friends_count'], 0, '.', '.') : 0 }}}</span>
-                                                            </li>
-                                                            @if(config('constants.service.facebook') != $service_code)
-                                                                <li class="stat-divider change_graph" data-show="followers" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
-                                                                    {{{ trans('field.'.$service_name.'_followers_count') }}}
-                                                                    <span class="third-item">{{{ @$thisToday['followers_count'] ? number_format($thisToday['followers_count'], 0, '.', '.') : 0 }}}</span>
-                                                                </li>
-                                                                {{--@if(config('constants.service.instagram') != $service_code)--}}
-                                                                {{--<li class="change_graph" data-show="favourites" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">--}}
-                                                                {{--{{{ trans('field.'.$service_name.'_favourites_count') }}}--}}
-                                                                {{--<span class="fourth-item">{{{ @$thisToday['favourites_count'] ? number_format($thisToday['favourites_count'], 0, '.', '.') : 0 }}}</span>--}}
-                                                                {{--</li>--}}
-                                                                {{--@endif--}}
-                                                            @endif
-                                                            <li class="stat-divider change_graph" data-show="posts" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
-                                                                {{{ trans('field.'.$service_name.'_posts_count') }}}
-                                                                <span class="second-item">{{{ @$thisToday['posts_count'] ? number_format($thisToday['posts_count'], 0, '.', '.') : 0 }}}</span>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
                                                     <div class="col-md-12 graph-box">
-                                                        <div class="graph" id="graph_line_{{ $service_name.'_'.$page['page_id'] }}"></div>
+                                                        <div class="graph" id="graph_line_{{ $service_name.'_'.$page['id'] }}"></div>
                                                     </div>
                                                 </div>
                                             </section>
                                         @endforeach
-                                    </div>
-                                @endif
-                            @else
-                                <div class="service-content">
+                                    @else
+                                        <section class="panel col-md-12">
+                                            <div class="panel-body clearfix add-btn">
+                                                <div class="btn-group">
+                                                    <h5> {{{ trans('message.page_not_found')}}}</h5>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    @endif
+                                @else
                                     <section class="panel col-md-12">
                                         <div class="panel-body clearfix add-btn">
                                             <div class="btn-group">
@@ -115,8 +94,8 @@
                                             </div>
                                         </div>
                                     </section>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -125,56 +104,23 @@
 @endsection
 @section('scripts')
     <script>
-        var graph_label = [];
-        //prepare label per analytics
-        @foreach(config('constants.service') as $service_name => $service_code)
-            @foreach(config('constants.condition_filter_page') as $item)
-                graph_label['{{{ $service_name.'_'.$item }}}']    = ['{{{ trans('field.'.$service_name.'_'.$item.'_count') }}}'];
-            @endforeach
-        @endforeach
-
-        $('.change_graph').on('click', function (e) {
-            var data_show       = $(this).data('show'),
-                page            = $(this).data('page'),
-                service_name    = $(this).data('service-name'),
-                service_code    = $(this).data('service-code');
-            load_graph(data_show, page, service_name, service_code);
-        });
-        function load_graph(data_show, page, service_name, service_code) {
-            var pagePerDay      = '<?php echo json_encode($pagePerDay) ?>',
-                    data        = [],
-                    element_id  = 'graph_line_' +service_name + '_' + page,
-            pagePerDay          = JSON.parse(pagePerDay);
-            if(pagePerDay[service_code] != void 0 && pagePerDay[service_code][page] != void 0) {
-                var page_data = pagePerDay[service_code][page];
-                for(var i = 0; i < page_data.length; i++) {
-                    data.push({
-                        date: page_data[i]['date'],
-                        value: page_data[i][data_show + '_count']
-                    });
-                }
-            }
-            $('#' + element_id).html('');
-            generate_graph(element_id, graph_label[service_name + '_' + data_show], data);
-        }
-
-        //init loader using friends
+        //create graph for post detail data
         $(function(){
             <?php $i = 0; ?>
             @foreach(config('constants.service') as $service_name => $service_code)
                 @if(isset($pageList[$service_code]))
                     @foreach($pageList[$service_code] as $page_id => $page)
                         var data        = [],
-                            label       = ['{{{ trans('field.'.$service_name.'_friends_count') }}}'],
+                            label       = ['{{{ trans('field.number_like_comment_share') }}}'],
                             element_id  = 'graph_line_{{ $service_name.'_'.$page_id }}';
                         @if($i > 0)
                             $('#{{{ $service_name }}}').css('display', 'block');
                         @endif
-                        @if(isset($pagePerDay[$service_code]) && isset($pagePerDay[$service_code][$page_id]))
-                            @foreach($pagePerDay[$service_code][$page_id] as $pageData)
+                        @if(isset($postByDay[$service_code]) && isset($postByDay[$service_code][$page_id]))
+                            @foreach($postByDay[$service_code][$page_id] as $date => $post)
                                 data.push({
-                                    date: '{{{ $pageData['date'] }}}',
-                                    value: '{{{ $pageData['friends_count'] }}}'
+                                    date: '{{{ $date }}}',
+                                    value: '{{{ $post['compare'] }}}'
                                 });
                             @endforeach
                         @endif
