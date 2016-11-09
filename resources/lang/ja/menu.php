@@ -8,5 +8,6 @@ return [
     'site_add' => 'サイト追加',
     'setting'    => '個人設定',
     'analytic_report' => 'Analytics結果',
-    'master_list'   => 'Danh sách Master',
+    'master_list'   => 'マスタ管理',
+    'dashboard'     => 'ダッシュボード',
 ];

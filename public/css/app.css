@@ -6618,9 +6618,13 @@ div.tagsinput span.tag {
   font-size: 15px; }
 
 .panel-body.service-first .search-box {
-  padding: 15px 30px 0 30px; }
+  padding: 5px 0 0 0;
+  float: right; }
+  .panel-body.service-first .search-box .control-label {
+    line-height: 20px;
+    font-weight: normal; }
   .panel-body.service-first .search-box .input-group {
-    float: right; }
+    float: left; }
     .panel-body.service-first .search-box .input-group input {
       border-radius: 4px; }
     .panel-body.service-first .search-box .input-group .btn {
@@ -6694,9 +6698,6 @@ div.tagsinput span.tag {
       margin-left: -5px;
       padding: 5px 15px;
       min-width: 120px; }
-    .service-content .page-detail ul .change_graph:hover {
-      background-color: #D0EDFA;
-      cursor: pointer; }
   .service-content .graph-box {
     float: left;
     width: 100%; }
@@ -6729,6 +6730,15 @@ div.tagsinput span.tag {
   z-index: 1000;
   border-radius: 5px; }
 
+@media (max-width: 991px) {
+  .panel-body.service-first .search-box .control-label {
+    float: left; }
+  .panel-body.service-first .search-box .input-group {
+    width: 60%; }
+  .panel-body.service-first .button-box {
+    float: left;
+    margin-left: 10px; } }
+
 @media (max-width: 767px) {
   .nav-tabs.nav-justified > li > a {
     border-right: none !important; }
@@ -6737,15 +6747,23 @@ div.tagsinput span.tag {
     -webkit-border-radius: 4px 4px 0 0 !important; }
   .panel-body.service-first .search-box {
     display: inline; }
+    .panel-body.service-first .search-box .control-label {
+      float: left; }
     .panel-body.service-first .search-box .input-group {
-      width: 100%;
-      display: block;
+      width: 60%;
       margin: 0; }
-      .panel-body.service-first .search-box .input-group label {
-        padding: 10px 15px;
-        margin: 0; }
       .panel-body.service-first .search-box .input-group button.btn-primary {
         margin: 15px 20px 0 0; } }
+
+@media (max-width: 432px) {
+  .panel-body.service-first .search-box {
+    padding: 0; }
+    .panel-body.service-first .search-box .input-group {
+      width: 100%; }
+    .panel-body.service-first .search-box .button-box {
+      float: right;
+      margin: 10px 0;
+      padding: 0; } }
 
 .profile-information .profile-pic img {
   margin-top: 0px;

@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use Cookie;
 
 class PageController extends Controller
 {
@@ -135,6 +136,8 @@ class PageController extends Controller
         }
         $days           = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
         $data           = array();
+        Cookie::queue('date_search', [$startDate, $endDate]);
+        $startDate = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
         $pageDetail     = $this->repPageDetail->getPageByDate($page_id, $startDate, $endDate);
         $condition      = config('constants.condition_filter_page');
         /*data graph page*/
@@ -157,6 +160,9 @@ class PageController extends Controller
 
             }
         }
+        if(@$data[$startDate]) {
+            unset($data[$startDate]);
+        }
 
 //        Log::info(print_r($data), true));
 //        echo json_encode(array('success' => true, 'contentCount' => $data));exit();
@@ -168,6 +174,8 @@ class PageController extends Controller
     {
         $startDate  = $request->get('dateFrom');
         $endDate    = $request->get('dateTo');
+        Cookie::queue('date_search', [$startDate, $endDate]);
+        $startDate = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
         $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
 
         $serviceOfPage = $this->repPage->checkServicePage($page_id)->service_code;
@@ -209,12 +217,15 @@ class PageController extends Controller
             }
             $startDate = date('Y-m-d' ,strtotime($startDate));
             if ($startDate != $postDetail->date){
-                $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
+                $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
                 $beforeDayVal   = $postPerDay[$beforeDate]['total'];
                 $thisDayVal     = $postPerDay[$postDetail->date]['total'];
                 $compare        = $thisDayVal - $beforeDayVal;
                 $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
             }
+        }
+        if(@$postPerDay[$startDate]) {
+            unset($postPerDay[$startDate]);
         }
 
         return Response::json(array('success' => true, 'contentCount' => $postPerDay), 200);

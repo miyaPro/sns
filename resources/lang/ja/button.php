@@ -23,5 +23,8 @@ return [
     'show' => '表示',
     'select_file' => 'ファイル選択',
     'preview' => 'プレビュー',
-    'download_report' => 'レポートダウンロード'
+    'download_report' => 'レポートダウンロード',
+    'reset_btn'           => '確認',
+    'grant_access'    => 'アカウントに接続',
+    'send' => '送信'
 ];

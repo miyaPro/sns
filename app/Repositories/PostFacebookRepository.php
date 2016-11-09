@@ -25,7 +25,9 @@ class PostFacebookRepository extends BaseRepository
     {
         $post->link                      = $inputs['link'];
         $post->created_time              = $inputs['created_time'];
-        $post->message                   = $inputs['message'];
+        $post->content                   = $inputs['content'];
+        $post->type                      = $inputs['type'];
+        $post->image_thumbnail           = $inputs['image_thumbnail'];
         $post->save();
         return $post;
     }
@@ -64,7 +66,9 @@ class PostFacebookRepository extends BaseRepository
                 'post_facebooks.id as post_id',
                 'post_facebooks.link',
                 'post_facebooks.created_time',
-                'post_facebooks.message',
+                'post_facebooks.content',
+                'post_facebooks.image_thumbnail',
+                'post_facebooks.type',
                 'pd.id',
                 'pd.like_count',
                 'pd.comment_count',
@@ -73,7 +77,7 @@ class PostFacebookRepository extends BaseRepository
                 'pd.updated_at'
             )
             ->where('pd.date', $date)
-            ->orderBy('post_facebooks.created_time', 'desc')
+            ->orderBy('post_facebooks.created_time', 'DESC')
             ->limit(10);
         return $model->get();
     }

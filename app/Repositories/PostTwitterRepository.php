@@ -82,7 +82,7 @@ class PostTwitterRepository extends BaseRepository
                            'pd.updated_at'
                        )
                        ->where('pd.date', $date)
-                       ->orderBy('post_twitters.id', 'asc')
+                       ->orderBy('post_twitters.created_time', 'DESC')
                        ->limit(10);
         return $model->get();
     }

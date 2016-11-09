@@ -78,9 +78,7 @@ class ServiceController extends Controller
             }
             $fromDate   = date('Y-m-d' ,strtotime($inputs['from']));
             $toDate     = date('Y-m-d' ,strtotime($inputs['to']));
-            $services   = [];
-            $pageList   = [];
-            $postByDay  = [];
+            $services   = $pageList = $postByDay = $totalPage = [];
             //get data pages by date
             foreach ($user->auth as $auth) {
                 if($auth->access_token) {
@@ -99,7 +97,7 @@ class ServiceController extends Controller
                         $repPost    = $this->repPostIg;
                         $columns    = ['like_count', 'comment_count'];
                     } break;
-                    default: return redirect('dashboard')->with('alert-danger', trans('message.exiting_service'));
+                    default: $request->session()->flash('alert-danger', trans('message.exiting_service'));
                 }
                 $pages = $this->repPage->getAllByField('auth_id', $auth->id);
                 foreach ($pages as $page) {
@@ -108,6 +106,15 @@ class ServiceController extends Controller
                     //post data by page
                     $postDetail = $repPost->getListPostByDate($page->id, null, $fromDate, $toDate);
                     $postByDay[$auth->service_code][$page->id] = $this->getData($postDetail, $columns, $fromDate, $toDate);
+
+                    //get total from page detail
+                    $pageDetail = $this->repPageDetail->getLastDate($page->id, $fromDate, $toDate);
+                    $totalPage[$auth->service_code][$page->id] = [
+                        'friends_count'     => @$pageDetail->friends_count ? $pageDetail->friends_count : 0,
+                        'posts_count'       => @$pageDetail->posts_count ? $pageDetail->posts_count : 0,
+                        'followers_count'   => @$pageDetail->followers_count ? $pageDetail->followers_count : 0,
+                        'favourites_count'  => @$pageDetail->favourites_count ? $pageDetail->favourites_count : 0
+                    ];
                 }
             }
             return response(view('service.dashboard')->with([
@@ -115,6 +122,7 @@ class ServiceController extends Controller
                 'dates'         => $inputs,
                 'pageList'      => $pageList,
                 'postByDay'     => $postByDay,
+                'totalPage'     => $totalPage,
             ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));
@@ -122,8 +130,9 @@ class ServiceController extends Controller
     }
 
     public function getData($listDetail, $columns = [], $startDate, $endDate){
-        $data = [];
-        $days = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
+        $data       = [];
+        $startDate  = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
+        $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
         for($i=0; $i <= $days; $i++) {
             $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
             $data[$day]['total']    = 0;
@@ -142,6 +151,9 @@ class ServiceController extends Controller
                 $compare        = $thisDayVal - $beforeDayVal;
                 $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
             }
+        }
+        if(@$data[$startDate]) {
+            unset($data[$startDate]);
         }
         return $data;
     }

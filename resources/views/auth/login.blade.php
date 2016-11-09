@@ -16,7 +16,7 @@
             {!! Form::checkbox('remember', null, false) !!} &nbsp;{{{ trans('button.remember_me') }}}
             <button class="btn btn-lg btn-login btn-block" type="submit">{{{ trans('button.login') }}}</button>
             <br />
-            <a href="{{url("/password/reset")}}" class="text-dark"><i class="fa fa-lock m-r-5"></i> {{{ trans('button.reset')}}}</a>
+            <a href="{{url("/password/reset")}}" class="text-dark"><i class="fa fa-lock m-r-5"></i> {{{ trans('default.forget_password')}}}</a>
         </div>
     </div>
     {!! Form::close() !!}

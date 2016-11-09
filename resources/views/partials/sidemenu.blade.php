@@ -5,13 +5,13 @@
             <ul class="sidebar-menu" id="nav-accordion">
                 @if(Auth::user()->authority == $authority['admin'])
                     <li>
-                        <a href="{!! URL::to('master') !!}" class="{{ Request::is('master') ? 'active' : '' }}">
-                            <i class="fa fa-qrcode"></i> <span>{{{ trans('menu.master_list') }}}</span>
+                        <a href="{!! URL::to('user') !!}" class="{{ Request::is('user') ? 'active' : '' }}">
+                            <i class="fa fa-users"></i> <span>{{{ trans('menu.user_list') }}}</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{!! URL::to('user') !!}" class="{{ Request::is('user') ? 'active' : '' }}">
-                            <i class="fa fa-users"></i> <span>{{{ trans('menu.user_list') }}}</span>
+                        <a href="{!! URL::to('master') !!}" class="{{ Request::is('master') ? 'active' : '' }}">
+                            <i class="fa fa-qrcode"></i> <span>{{{ trans('menu.master_list') }}}</span>
                         </a>
                     </li>
                 @else

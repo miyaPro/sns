@@ -73,7 +73,7 @@ class SocialNetworkController extends Controller
         try {
             $accessToken = $helper->getAccessToken();
             $response =
-                $fb->get('/me?fields=id,name,email,accounts{about,link,name,id,category,access_token,posts{message,likes,comments,created_time},fan_count,new_like_count,likes}', $accessToken);
+                $fb->get('/me?fields=id,name,email', $accessToken);
             $user = $response->getGraphUser();
             $authUser = $this->repAuth->getAuth($user['id'], config('constants.service.facebook'));
             $user_id = Auth::user()->id;
@@ -86,7 +86,7 @@ class SocialNetworkController extends Controller
 //                $process = new Process('php '.env('ARTISAN_PATCH').'artisan'.$authUser['account_id']);
 //                $process->start();
                 Artisan::call('facebook', [
-                    'account_id' => $inputs['account_id']
+                    'account_id' => $authUser['account_id']
                 ]);
             }
             else{

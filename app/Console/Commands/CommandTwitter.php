@@ -148,26 +148,23 @@ class CommandTwitter extends Command
             }else{
                 $post = $this->repPostTwitter->store($inputs, $page->id);
             }
-            $this->getPostDetail($posts_twitter, $post);
+            $this->getPostDetail($posts, $post);
         }
     }
 
     public function getPostDetail($posts_twitter, $post)
     {
         $current_date        = Carbon::today()->toDateString();
-        foreach ($posts_twitter as $detail)
-        {
-            $postDetail = $this->repPostTwitterDetail->getByDate($post->id, $current_date);
-            $inputs = [
-                'retweet_count'     => $detail->retweet_count,
-                'favorite_count'    => $detail->favorite_count,
-            ];
-            if($postDetail){
-                $this->repPostTwitterDetail->update($postDetail, $inputs);
-            }else{
-                $inputs['date'] = $current_date;
-                $this->repPostTwitterDetail->store($inputs, $post->id);
-            }
+        $postDetail = $this->repPostTwitterDetail->getByDate($post->id, $current_date);
+        $inputs = [
+            'retweet_count'     => $posts_twitter->retweet_count,
+            'favorite_count'    => $posts_twitter->favorite_count,
+        ];
+        if($postDetail){
+            $this->repPostTwitterDetail->update($postDetail, $inputs);
+        }else{
+            $inputs['date'] = $current_date;
+            $this->repPostTwitterDetail->store($inputs, $post->id);
         }
     }
 }

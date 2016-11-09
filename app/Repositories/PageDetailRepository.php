@@ -85,19 +85,13 @@ class PageDetailRepository extends BaseRepository
         return $model->get();
     }
 
-    public function getTotalPage($page_id, $start_date = null, $end_date = null) {
+    public function getLastDate($page_id, $startDate = null, $endDate = null) {
         $model = new $this->model();
-        $model = $model->select(
-                DB::raw('SUM(friends_count) as friends_count'),
-                DB::raw('SUM(posts_count) as posts_count'),
-                DB::raw('SUM(followers_count) as followers_count'),
-                DB::raw('SUM(favourites_count) as favourites_count')
-            )
-            ->where('page_id', $page_id)
-        ;
-        if ($start_date && $end_date) {
-            $model = $model->Where('date', '>=', $start_date);
-            $model = $model->Where('date', '<=', $end_date);
+        $model = $model->where('page_id', $page_id)
+        ->orderby('date', 'desc');
+        if ($startDate && $endDate) {
+            $model = $model->where('date', '>=', $startDate);
+            $model = $model->where('date', '<=', $endDate);
         }
         return $model->first();
     }

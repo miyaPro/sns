@@ -20,18 +20,18 @@
         <div class="col-md-12">
             <section class="panel">
                 <div class="panel-body service-first">
-                    <div class="search-box">
+                    <div class="form-group">
                         {!! Form::open(['class' => 'form-horizontal frm-search', 'method' => 'POST']) !!}
-                        <div class="form-group input-group input-large">
-                            {!! Form::label('inputDateFrom', trans('field.from'), ['class' => 'col-sm-1 control-label']) !!}
-                            <div class="col-sm-4 input-box">
+                        <div class="search-box col-md-6">
+                            {!! Form::label('inputDateFrom', trans('field.date_range'), ['class' => 'control-label col-md-2']) !!}
+                            <div class="input-group input-large col-md-8" data-date="" data-date-format="yyyy/mm/dd">
                                 {!! Form::text('from', @$dates['from'], ['id' => 'inputDateFrom','class' => 'form-control default-date-picker dpd1']) !!}
-                            </div>
-                            {!! Form::label('inputDateTo', trans('field.to'), ['class' => 'col-sm-1 control-label']) !!}
-                            <div class="col-sm-4 input-box">
+                                {!! Form::label('inputDateTo', trans('field.to'), ['class' => 'input-group-addon']) !!}
                                 {!! Form::text('to', @$dates['to'], ['id' => 'inputDateTo','class' => 'form-control default-date-picker dpd2']) !!}
                             </div>
-                            <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                            <div class="col-md-2 button-box">
+                                <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                            </div>
                         </div>
                         {!! Form::close() !!}
                     </div>
@@ -70,6 +70,33 @@
                                                         <div class="col-md-3 col-xs-3 btn-view">
                                                             <a href="{!! URL::to('page/'.$page['id']) !!}" class="btn btn-white">{{{ trans('button.view') }}}</a>
                                                         </div>
+                                                    </div>
+                                                    @if(isset($totalPage[$service_code]) && isset($totalPage[$service_code][$page['id']]))
+                                                        <?php $thisToday = $totalPage[$service_code][$page['id']]; ?>
+                                                    @endif
+                                                    <div class="page-detail">
+                                                        <ul class="clearfix location-earning-stats">
+                                                            <li class="stat-divider change_graph" data-show="friends" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
+                                                                {{{ trans('field.'.$service_name.'_friends_count') }}}
+                                                                <span class="first-item">{{{ @$thisToday['friends_count'] ? number_format($thisToday['friends_count'], 0, '.', '.') : 0 }}}</span>
+                                                            </li>
+                                                            @if(config('constants.service.facebook') != $service_code)
+                                                                <li class="stat-divider change_graph" data-show="followers" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
+                                                                    {{{ trans('field.'.$service_name.'_followers_count') }}}
+                                                                    <span class="third-item">{{{ @$thisToday['followers_count'] ? number_format($thisToday['followers_count'], 0, '.', '.') : 0 }}}</span>
+                                                                </li>
+                                                                {{--@if(config('constants.service.instagram') != $service_code)--}}
+                                                                {{--<li class="change_graph" data-show="favourites" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">--}}
+                                                                {{--{{{ trans('field.'.$service_name.'_favourites_count') }}}--}}
+                                                                {{--<span class="fourth-item">{{{ @$thisToday['favourites_count'] ? number_format($thisToday['favourites_count'], 0, '.', '.') : 0 }}}</span>--}}
+                                                                {{--</li>--}}
+                                                                {{--@endif--}}
+                                                            @endif
+                                                            <li class="stat-divider change_graph" data-show="posts" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
+                                                                {{{ trans('field.'.$service_name.'_posts_count') }}}
+                                                                <span class="second-item">{{{ @$thisToday['posts_count'] ? number_format($thisToday['posts_count'], 0, '.', '.') : 0 }}}</span>
+                                                            </li>
+                                                        </ul>
                                                     </div>
                                                     <div class="col-md-12 graph-box">
                                                         <div class="graph" id="graph_line_{{ $service_name.'_'.$page['id'] }}"></div>
@@ -111,7 +138,7 @@
                 @if(isset($pageList[$service_code]))
                     @foreach($pageList[$service_code] as $page_id => $page)
                         var data        = [],
-                            label       = ['{{{ trans('field.number_like_comment_share') }}}'],
+                            label       = ['{{{ trans('field.post_engagement') }}}'],
                             element_id  = 'graph_line_{{ $service_name.'_'.$page_id }}';
                         @if($i > 0)
                             $('#{{{ $service_name }}}').css('display', 'block');

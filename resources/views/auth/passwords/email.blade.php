@@ -1,12 +1,12 @@
 @extends('login')
-@section('title') {{{ trans('default.reset_password_title') }}} :: @parent @stop
+@section('title') {{{ trans('default.forget_password') }}} :: @parent @stop
 
 
 @section('content')
     {!! Form::open(['url' => '/password/email', 'class' => 'form-horizontal', 'role' => 'form']) !!}
     <div class=" card-box">
         <div class="panel-heading">
-            <h3 class="text-center text-uppercase">{{{ trans('default.reset_password_title') }}}</h3>
+            <h3 class="text-center text-uppercase">{{{ trans('default.forget_password') }}}</h3>
         </div>
         <div class="panel-body">
             @include('errors.list')

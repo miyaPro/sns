@@ -14,9 +14,9 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        'App\Console\Commands\CommandFacebook',
-        'App\Console\Commands\CommandInstagram',
-        'App\Console\Commands\CommandTwitter',
+        \App\Console\Commands\CommandFacebook::class,
+        \App\Console\Commands\CommandTwitter::class,
+        \App\Console\Commands\CommandInstagram::class,
     ];
 
     /**

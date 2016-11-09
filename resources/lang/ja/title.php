@@ -19,4 +19,6 @@ return [
     'master' => 'Danh sách Master',
     'master_register' => 'Thêm Master mới',
     'master_edit' => 'Sửa thông tin Master',
+    'dashboard'     => 'ダッシュボード',
+    'info_detail'     => 'SNS 詳細',
 ];

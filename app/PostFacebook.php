@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PostFacebook extends Model
 {
-    protected $fillable = ['page_id', 'link', 'sns_post_id', 'created_time', 'message'];
+    protected $fillable = ['page_id', 'link', 'sns_post_id', 'created_time', 'message', 'type', 'image_thumbnail'];
 
     /**
      * Get the Post that owns the page.

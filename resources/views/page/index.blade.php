@@ -23,56 +23,72 @@
                     <h4>{{{ trans('title.info_detail').' '.$nameService }}}</h4>
                     <div style="float: right; margin-top: -40px;">
                         {!! Form::open(['class' => 'form-horizontal frm-search', 'method' => 'POST']) !!}
-                        <div class="form-group input-group input-large">
-                            {!! Form::label('inputDateFrom', trans('field.from'), ['class' => 'col-sm-1 control-label']) !!}
-                            <div class="col-sm-4 input-box">
-                                {!! Form::text('from', isset($dates['from'])?$dates['from']:date('Y/m/d',strtotime('-2 weeks')), ['id' => 'inputDateFrom','class' => 'form-control default-date-picker dpd1']) !!}
+                        <div class="form-group input-group input-large row">
+
+                            {!! Form::label('inputDateFrom', trans('field.date_range'), ['class' => 'control-label col-md-2 pull-left']) !!}
+                            <div class="input-group input-large col-md-8 pull-left" data-date="" data-date-format="yyyy/mm/dd">
+                                {!! Form::text('from', !empty(request()->cookie('date_search')[0])? request()->cookie('date_search')[0]: date('Y/m/d'), ['id' => 'inputDateFrom','class' => 'form-control default-date-picker dpd1']) !!}
+                                {!! Form::label('inputDateTo', trans('field.to'), ['class' => 'input-group-addon']) !!}
+                                {!! Form::text('to', !empty(request()->cookie('date_search')[1])? request()->cookie('date_search')[1]: date('Y/m/d', strtotime(@$date['to']." -2 weeks")), ['id' => 'inputDateTo','class' => 'form-control default-date-picker dpd2']) !!}
                             </div>
-                            {!! Form::label('inputDateTo', trans('field.to'), ['class' => 'col-sm-1 control-label']) !!}
-                            <div class="col-sm-4 input-box">
-                                {!! Form::text('to', isset($dates['to'])?$dates['to']:date('Y/m/d',time()), ['id' => 'inputDateTo','class' => 'form-control default-date-picker dpd2']) !!}
+                            <div class="col-md-2 pull-right">
+                                <button class="btn btn-primary btn-submit"><i class="fa fa-search"></i></button>
                             </div>
-                            <button class="btn btn-primary btn-submit" type="submit"><i class="fa fa-search"></i></button>
                         </div>
                         {!! Form::close() !!}
                     </div>
                 </header>
                 <div class="panel-body">
                     @if(isset($pageInfo))
-                        <?php  $conditionPost = config('constants.condition_filter_post')?>
                         <?php  $conditionPage = config('constants.condition_filter_page')?>
                         <?php  $condition     = array_map(function($val) { return trans('field.condition_filter_'.$val); }, config('constants.condition_filter'));?>
+                        <?php $postDetailService = array(
+                                config('constants.service.facebook') => array(
+                                        'fa-comment first-city'        => 'comment_count',
+                                        'fa-thumbs-o-up second-city'   => 'like_count',
+                                        'fa-share third-city'          => 'share_count'
+                                ),
+                                config('constants.service.twitter') => array(
+                                        'fa-retweet first-city'        => 'retweet_count',
+                                        'fa-heart second-city'         => 'favorite_count'
+                                ),
+                                config('constants.service.instagram') => array(
+                                        'fa-comment first-city'        => 'comment_count',
+                                        'fa-heart second-city'         => 'like_count'
+                                )
+                        );
+                        $pageDetailService = array(
+                                config('constants.service.facebook') => array(
+                                        'first-city'        => 'friends_count',
+                                        'second-city'       => 'posts_count',
+                                ),
+                                config('constants.service.twitter') => array(
+                                        'first-city'        => 'friends_count',
+                                        'third-city'        => 'followers_count',
+                                        'second-city'       => 'posts_count'
+                                ),
+                                config('constants.service.instagram') => array(
+                                        'first-city'        => 'friends_count',
+                                        'third-city'        => 'followers_count',
+                                        'second-city'       =>  'posts_count'
+                                )
+                        );
+                        ?>
                         @unset($conditionPage[array_search('posts', $conditionPage)])
-
                         @if($serviceCode == config('constants.service.instagram'))
                             @unset($conditionPage[array_search('favourites', $conditionPage)])
-
-                            @unset($conditionPost[array_search('shares', $conditionPost)])
-                            @unset($conditionPost[array_search('retweets', $conditionPost)])
-                            @unset($conditionPost[array_search('favorites', $conditionPost)])
                         @elseif($serviceCode == config('constants.service.facebook'))
                             @unset($conditionPage[array_search('favourites', $conditionPage)])
                             @unset($conditionPage[array_search('followers', $conditionPage)])
-
-                            @unset($conditionPost[array_search('favorite', $conditionPost)])
-                            @unset($conditionPost[array_search('retweets', $conditionPost)])
                         @elseif($serviceCode == config('constants.service.twitter'))
                             @unset($conditionPage[array_search('favourites', $conditionPage)])
-
-                            @unset($conditionPost[array_search('likes', $conditionPost)])
-                            @unset($conditionPost[array_search('comments', $conditionPost)])
-                            @unset($conditionPost[array_search('shares', $conditionPost)])
                         @endif
                         @foreach ($conditionPage as $i => $value)
                             <?php $conditionPage[$i] = trans('field.'.$nameService.'_'.$value.'_count'); ?>
                         @endforeach
-                        @foreach ($conditionPost as $i => $value)
-                            <?php $conditionPost[$i] = trans('field.'.$nameService.'_'.'post_'.$value.'_count'); ?>
-                        @endforeach
 
                         <section class="panel">
                             <div class="panel-body profile-information">
-
                                 <div class="col-md-2">
                                     <div class="profile-pic">
                                         <img src="{{ $pageInfo->avatar_url or elixir('images/profile.png') }}" alt="">
@@ -89,47 +105,19 @@
                                 <div class="col-md-5">
                                     <div class="profile-statistics">
                                         <ul class="clearfix location-earning-stats">
-                                            @if($serviceCode == config('constants.service.instagram'))
-                                                <li class="stat-divider service-type">
-                                                    {{trans('field.instagram_friends_count')}}
-                                                    <span class="statistics first-city">{{ @number_format($pageInfo->friends_count)}}</span>
-                                                </li>
-                                                <li class="stat-divider service-type">
-                                                    {{trans('field.instagram_followers_count')}}
-                                                    <span class="statistics third-city">{{ @number_format($pageInfo->followers_count)}}</span>
-                                                </li>
-                                                <li class="stat-divider service-type">
-                                                    {{trans('field.instagram_posts_count')}}
-                                                    <span class="statistics second-city">{{ @number_format($pageInfo->posts_count)}}</span>
-                                                </li>
-                                            @elseif($serviceCode == config('constants.service.twitter'))
-                                                <li class="stat-divider  service-type">
-                                                    {{trans('field.twitter_friends_count')}}
-                                                    <span class="statistics first-city">{{ @number_format($pageInfo->friends_count)}}</span>
-                                                </li>
-                                                <li class="stat-divider service-type">
-                                                    {{trans('field.twitter_followers_count')}}
-                                                    <span class="statistics third-city">{{ @number_format($pageInfo->followers_count)}}</span>
-                                                </li>
-                                                <li class="stat-divider service-type">
-                                                    {{trans('field.twitter_posts_count')}}
-                                                    <span class="statistics second-city">{{ @number_format($pageInfo->posts_count)}}</span>
-                                                </li>
-                                            @else
-                                                <li class="stat-divider service-type">
-                                                    {{trans('field.facebook_friends_count')}}
-                                                    <span class="statistics first-city">{{ @number_format($pageInfo->friends_count)}}</span>
-                                                </li>
-                                                <li class="stat-divider service-type">
-                                                    {{trans('field.facebook_posts_count')}}
-                                                    <span class="statistics second-city">{{ @number_format($pageInfo->posts_count)}}</span>
-                                                </li>
+                                            @if(isset( $pageDetailService[$serviceCode]))
+                                                @foreach( $pageDetailService[$serviceCode] as $key => $value)
+                                                    <?php $field = 'instagram_'.$value;?>
+                                                    <li class="stat-divider service-type">
+                                                        {{trans('field.instagram_'.$value)}}
+                                                        <span class="statistics {{$key}}">{{ @number_format($pageInfo->$value)}}</span>
+                                                    </li>
+                                                @endforeach
                                             @endif
                                         </ul>
                                     </div>
                                 </div>
                             </div>
-
                         </section>
 
                         <section class="panel">
@@ -146,105 +134,49 @@
                             </div>
                         </section>
                         <section class="panel">
-                            <div class="panel-heading">{{ trans('field.post_detail') }}</div>
+                            <div class="panel-heading">{{ trans('field.post_engagement') }}</div>
                             <div class="panel-body service-first">
                                 <div class="row">
-                                    <div class="condition col-md-2">
-                                        {!! Form::select('typeDrawPost',  $conditionPost, null, ['class' => 'typeDrawPost form-control','id' => 'typeDrawPost']) !!}
-                                    </div>
                                     <div class="condition col-md-2">
                                         {!! Form::select('typeDrawSubPost',  $condition, null, ['class' => 'typeDrawSubPost form-control','id' => 'typeDrawSubPost']) !!}
                                     </div>
                                 </div>
                                 <div id="chartContainer2" class="row"></div>
-                                @if(@$serviceCode == config('constants.service.facebook'))
-                                    @foreach(@$listPosts as $post)
-                                        <div class="alert alert alert-info clearfix">
-                                            <div class="notification-info post-info">
-                                                <ul class="clearfix notification-meta">
-                                                    <li class="pull-left notification-sender">
-                                                        <p class="post-content text-center">{{@str_limit(@$post->content, 100)}}</p>
-                                                        <p class="post-icon"><i class="fa fa-comment first-city" aria-hidden="true"></i>&nbsp;
-                                                            {{@$post->comment_count}}&nbsp;&nbsp;&nbsp;
-                                                            <i class="fa fa-thumbs-o-up second-city" aria-hidden="true"></i>&nbsp;
-                                                            {{@$post->like_count}}&nbsp;&nbsp;&nbsp;
-                                                            <i class="fa fa-share third-city" aria-hidden="true"></i>&nbsp;
-                                                            {{@$post->share_count}}
-                                                        </p>
-                                                    </li>
-                                                    <li class="clearfix pull-right">
-                                                        <p>{{ trans('field.post_created_time') }} :
-                                                            {{(@$post->created_time)}}
-                                                        </p>
-                                                        <p>{{ trans('field.post_updated_time') }} :
-                                                            {{(@$post->updated_at)}}
-                                                        </p>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                @elseif(@$serviceCode == config('constants.service.twitter'))
-                                    @foreach(@$listPosts as $post)
-                                        <div class="alert alert alert-info clearfix">
-                                            <div class="notification-info post-info">
-                                                <ul class="clearfix notification-meta">
-                                                    <li class="pull-left notification-sender">
-                                                        <div class="photo">
-                                                            @if(isset($post->image_thumbnail))
-                                                                <img src="{{$post->image_thumbnail}}">
-                                                            @endif
-                                                        </div>
-                                                        <div class="subject">{{@str_limit(@$post->content, 100)}}</div>
-                                                        <div class="message">
-                                                            <p class="post-icon"><i class="fa fa-retweet first-city" aria-hidden="true"></i>&nbsp;
-                                                                {{@$post->retweet_count}}&nbsp;&nbsp;&nbsp;
-                                                                <i class="fa fa-heart second-city" aria-hidden="true"></i>&nbsp;
-                                                                {{@$post->favorite_count}}
-                                                            </p>
-                                                        </div>
-                                                    </li>
-                                                    <li class="clearfix pull-right">
-                                                        <p>{{ trans('field.post_created_time') }} :
-                                                            {{(@$post->created_time)}}
-                                                        </p>
-                                                        <p>{{ trans('field.post_updated_time') }} :
-                                                            {{(@$post->updated_at)}}
-                                                        </p>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    @foreach(@$listPosts as $post)
-                                        <div class="alert alert alert-info clearfix">
-                                            <div class="notification-info post-info">
-                                                <ul class="clearfix notification-meta">
-                                                    <li class="pull-left notification-sender">
+                            </div>
+                            <div class="panel-heading">{{ trans('field.post_list') }}</div>
+                            <div class="panel-body service-first">
+                                @foreach(@$listPosts as $post)
+                                    <div class="alert alert alert-info clearfix">
+                                        <div class="notification-info post-info">
+                                            <ul class="clearfix notification-meta">
+                                                <li class="pull-left notification-sender">
+                                                    <div class="photo">
                                                         @if(isset($post->image_thumbnail))
                                                             <img src="{{$post->image_thumbnail}}">
                                                         @endif
-                                                        <p class="post-content text-center">{{@str_limit(@$post->content, 100)}}</p>
-                                                        <p class="post-icon"><i class="fa fa-comment first-city" aria-hidden="true"></i>&nbsp;
-                                                            {{@$post->comment_count}}&nbsp;&nbsp;&nbsp;
-                                                            <i class="fa fa-heart second-city" aria-hidden="true"></i>&nbsp;
-                                                            {{@$post->like_count}}
-                                                        </p>
-                                                    </li>
-                                                    <li class="clearfix pull-right">
-                                                        <p>{{ trans('field.post_created_time') }} :
-                                                            {{(@$post->created_time)}}
-                                                        </p>
-                                                        <p>{{ trans('field.post_updated_time') }} :
-                                                            {{(@$post->updated_at)}}
-                                                        </p>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                                    </div>
+                                                    <p class="post-content">{{@str_limit(@$post->content, 100)}}</p>
+                                                    <p class="post-icon">
+                                                        @if(isset($postDetailService[$serviceCode]))
+                                                            @foreach($postDetailService[$serviceCode] as $key => $value)
+                                                                <i class="fa {{$key}}" aria-hidden="true"></i>&nbsp;
+                                                                {!! @$post->$value !!}&nbsp;&nbsp;&nbsp;
+                                                            @endforeach
+                                                        @endif
+                                                    </p>
+                                                </li>
+                                                <li class="clearfix pull-right">
+                                                    <p>{{ trans('field.created_time') }} :
+                                                        {{(@$post->created_time)}}
+                                                    </p>
+                                                    <p>{{ trans('field.updated_time') }} :
+                                                        {{(@$post->updated_at)}}
+                                                    </p>
+                                                </li>
+                                            </ul>
                                         </div>
-                                    @endforeach
-                                @endif
+                                    </div>
+                                @endforeach
                             </div>
                         </section>
                     @endif
@@ -260,11 +192,9 @@
                 var urlGraphPage = '{{ URL::route('site.analytic.graph',  ["$pageInfo->page_id"]) }}';
                 var urlGraphPost = '{{ URL::route('site.analytic.graphPost',  ["$pageInfo->page_id"]) }}';
                 var chartPage,chartPost;
-                var conditionPost = <?php echo json_encode ($conditionPost); ?>;
-                $('#typeDrawPage, #typeDrawPost').css('width','200px');
+                $('#typeDrawPage').css('width','200px');
                 var graphDraw = function (typeDraw) {
                     var typeDrawPage= parseInt($('#typeDrawPage').val());
-                    var typeDrawPost = parseInt($('#typeDrawPost').val());
                     var typeDrawSubPost = parseInt($('#typeDrawSubPost').val());
                     var typeDrawSubPage = parseInt($('#typeDrawSubPage').val());
                     var dataGraph = [];
@@ -374,7 +304,7 @@
                     chartPage.setData(dataGraph);
                 }
                 var loadGraphPost = function(dataResponse, dataGraph, typeDrawSubPost){
-                    chartPost.options.labels = [$('#typeDrawSubPost option:selected').html()];
+                    chartPost.options.labels = ["{{trans('field.post_engagement')}}"];
                     if(typeDrawSubPost == '0'){
                         for (var item in dataResponse) {
                             dataGraph.push({
@@ -407,7 +337,7 @@
                 graphDraw(3);
                 $('.btn-submit').on('click',function () {
                     var dateFrom = $('#inputDateFrom'), dateTo = $('#inputDateTo');
-                    if(Date.parse(dateFrom.val())<=Date.parse(dateTo.val())){
+                    if(Date.parse(dateFrom.val()) <= Date.parse(dateTo.val())){
                         graphDraw(3);
                     }
                     return false;

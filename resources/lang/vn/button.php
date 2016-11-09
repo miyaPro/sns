@@ -25,6 +25,6 @@ return [
     'preview'       => 'Preview',
     'download_report' => 'Tải về báo cáo',
     'grant_access'    => 'Cấp quyền truy cập',
-    'reset'           => 'Đặt lại mật khẩu',
-    'reset_btn'           => 'Xác Nhận'
+    'reset_btn'           => 'Xác Nhận',
+    'send' => 'Send'
 ];

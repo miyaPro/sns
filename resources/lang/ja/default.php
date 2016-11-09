@@ -22,4 +22,10 @@ return [
     'csv'             => 'CSV',
     'pdf'             => 'PDF',
     'master'             => 'Master',
+    'facebook'        => 'Facebook',
+    'twitter'         => 'Twitter',
+    'instagram'       => 'Instagram',
+    'snapchat'        => 'Snapchat',
+    'post'       => 'Post',
+    'forget_password' => 'パスワード再設定',
 ];

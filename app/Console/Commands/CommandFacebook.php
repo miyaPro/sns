@@ -24,7 +24,7 @@ class CommandFacebook extends Command
      *
      * @var string
      */
-    protected $signature = 'facebook{account_id?}';
+    protected $signature = 'facebook {account_id?}';
 
     /**
      * The console command description.
@@ -80,7 +80,7 @@ class CommandFacebook extends Command
         try{
             $accessToken = $auth['access_token'];
             $fb->getRedirectLoginHelper();
-            $response = $fb->get('/me?fields=id,name,email,accounts{username,cover,picture,about,location,link,name,id,category,access_token,posts{message,likes,created_time,link,shares},fan_count,new_like_count,likes,comments{comment_count}}', $accessToken);
+            $response = $fb->get('/me?fields=id,name,email,accounts{username,cover,picture,about,location,link,name,id,category,access_token,posts{picture,type,permalink_url,message,likes,created_time,link,shares},fan_count,new_like_count,likes,comments{comment_count}}', $accessToken);
             $user = $response->getGraphUser();
             if(isset($user['accounts'])){
                 foreach($user['accounts'] as  $row)  {
@@ -93,7 +93,7 @@ class CommandFacebook extends Command
                         'description'       => @$row['about'],
                         'location'          => @$row['location']['street'],
                         'category'          => @$row['category'],
-                        'link'              => @$row['link'],
+                        'link'              => @$row['permalink_url'],
                         'sns_page_id'       => @$row['id'],
                         'access_token'      => @$row['access_token'],
 
@@ -142,10 +142,13 @@ class CommandFacebook extends Command
             foreach($row['posts'] as $data){
                 $sns_post_id = $data['id'];
                 $inputs = [
-                    'sns_post_id'  => $sns_post_id,
-                    'link'         => @$data['link'],
-                    'created_time' => $data['created_time'],
-                    'message'      => @$data['message']
+                    'sns_post_id'    => $sns_post_id,
+                    'link'           => @$data['permalink_url'],
+                    'created_time'   => $data['created_time'],
+                    'content'        => @$data['message'],
+                    'type'           => @$data['type'],
+                    'image_thumbnail'=> @$data['picture']
+
                 ];
                 $post = $this->repPost->getOneByPost($page->id, $sns_post_id);
                 if($post){
@@ -160,7 +163,7 @@ class CommandFacebook extends Command
 
     public function getPostDetail($data, $post){
         $current_date = date('Y-m-d');
-        $inputs['share_count'] = isset($data['shares']['count']) ? $data['shares']['count'] : 0;
+        $inputs['share_count'] = isset($data['shares']) ? $data['shares']['count'] : 0;
         $inputs['like_count'] = isset($data['likes']) ? count($data['likes']) : 0;
         $inputs['comment_count'] = isset($data['comments']) ? count($data['comments']) : 0;
         $post_detail = $this->repPostDetail->getByDate($post->id, $current_date);

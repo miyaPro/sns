@@ -111,7 +111,7 @@ class PostInstagramRepository extends BaseRepository
                 'pd.updated_at'
             )
             ->where('pd.date', $date)
-            ->orderBy('post_instagrams.created_time', 'asc')
+            ->orderBy('post_instagrams.created_time', 'DESC')
             ->limit(10);
         return $model->get();
     }
