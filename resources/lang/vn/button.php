@@ -26,5 +26,6 @@ return [
     'download_report' => 'Tải về báo cáo',
     'grant_access'    => 'Cấp quyền truy cập',
     'reset_btn'           => 'Xác Nhận',
-    'send' => 'Send'
+    'send' => 'Send',
+    'add_more_account' => 'Thêm tài khoản',
 ];

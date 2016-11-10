@@ -103,6 +103,7 @@
   .page_name_box {
     .wk-progress {
       width: auto;
+      min-width: 350px;
     }
     .tm {
       display: inline-block;
@@ -152,6 +153,12 @@
   }
   .tm-membr .btn-view {
     padding-top: 10px;
+  }
+  .add-other {
+    margin: 0 20px 20px 0;
+    .btn-group {
+      float: right;
+    }
   }
 }
 .btn-white {
@@ -255,8 +262,8 @@
   margin-top: 0px;
   img{
     border-radius: 10px;
-    width: 150px;
-    height: 150px;
+    max-width: 400px;
+    max-height: 400px;
   }
   .post-content{
     margin-top: 5px;
@@ -268,6 +275,12 @@
   .post-icon{
     font-size: 17px !important;
   }
+}
+.input-group-addon.page-label{
+    text-transform: none ;
+}
+.post-like-facebook{
+  color: #4080ff;
 }
 
 a.logo {

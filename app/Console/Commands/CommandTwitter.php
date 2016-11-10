@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 //require "../../vendor/autoload.php";
+use Abraham\TwitterOAuth\TwitterOAuthException;
 use App\Post;
 use App\Repositories\PostTwitterRepository;
 use Carbon\Carbon;
@@ -79,33 +80,37 @@ class CommandTwitter extends Command
         $client_id          = config('services.twitter.client_id');
         $client_secret      = config('services.twitter.client_secret');
         $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
-        $page_twitter       = $connection->get("account/verify_credentials");
-
-        if (200 == $connection->getLastHttpCode()){
-            $page           = $this->repPage->getPage($auth->id, $page_twitter->id);
-            $input_insert   = [
-                'name'              => $page_twitter->name,
-                'screen_name'       => $page_twitter->screen_name,
-                'location'          => $page_twitter->location,
-                'category'          => '',
-                'link'              => '',
-                'sns_page_id'       => $page_twitter->id,
-                'access_token'      => $auth->access_token,
-                'avatar_url'        => $page_twitter->profile_image_url,
-                'banner_url'        => @$page_twitter->profile_banner_url,
-                'description'       => @$page_twitter->description,
-                'created_time'      => date("Y-m-d H:i:s",strtotime(@$page_twitter->created_at)),
-            ];
-            if (!$page) {
-                $page = $this->repPage->store($input_insert, $auth->id);
-            }else{
-                $page =$this->repPage->update($page, $input_insert);
+        try{
+            $page_twitter       = $connection->get("account/verify_credentials");
+            if (200 == $connection->getLastHttpCode()){
+                $page           = $this->repPage->getPage($auth->id, $page_twitter->id);
+                $input_insert   = [
+                    'name'              => $page_twitter->name,
+                    'screen_name'       => $page_twitter->screen_name,
+                    'location'          => $page_twitter->location,
+                    'category'          => '',
+                    'link'              => '',
+                    'sns_page_id'       => $page_twitter->id,
+                    'access_token'      => $auth->access_token,
+                    'avatar_url'        => $page_twitter->profile_image_url,
+                    'banner_url'        => @$page_twitter->profile_banner_url,
+                    'description'       => @$page_twitter->description,
+                    'created_time'      => date("Y-m-d H:i:s",strtotime(@$page_twitter->created_at)),
+                ];
+                if (!$page) {
+                    $page = $this->repPage->store($input_insert, $auth->id);
+                }else{
+                    $page =$this->repPage->update($page, $input_insert);
+                }
+                $this->getPageDetail($page_twitter, $page);
+                $this->getPost($page, $auth);
+            } else {
+                $this->repAuth->resetAccessToken($auth->id);
             }
-            $this->getPageDetail($page_twitter, $page);
-            $this->getPost($page, $auth);
-        } else {
-            $this->repAuth->resetAccessToken($auth->id);
+        } catch (TwitterOAuthException $e) {
+            return $this->error('message1',"result null");
         }
+
     }
 
     public function getPageDetail($page_twitter, $page)

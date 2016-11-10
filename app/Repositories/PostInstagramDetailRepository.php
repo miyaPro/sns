@@ -26,8 +26,9 @@ class PostInstagramDetailRepository extends BaseRepository
     }
 
     public function save($model, $inputs){
-        $model->comment_count  = $inputs['comment_count'];
-        $model->like_count = $inputs['like_count'];
+        $model->comment_count   = $inputs['comment_count'];
+        $model->like_count      = $inputs['like_count'];
+        $model->updated_at      = date("Y-m-d H:i:s");
         $model->save();
     }
     /**

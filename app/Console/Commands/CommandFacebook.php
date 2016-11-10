@@ -80,7 +80,7 @@ class CommandFacebook extends Command
         try{
             $accessToken = $auth['access_token'];
             $fb->getRedirectLoginHelper();
-            $response = $fb->get('/me?fields=id,name,email,accounts{username,cover,picture,about,location,link,name,id,category,access_token,posts{picture,type,permalink_url,message,likes,created_time,link,shares},fan_count,new_like_count,likes,comments{comment_count}}', $accessToken);
+            $response = $fb->get('/me?fields=id,name,email,accounts{username,cover,picture,about,location,link,name,id,category,access_token,posts{comments,picture,type,permalink_url,message,likes,created_time,link,shares},fan_count,new_like_count,likes,comments{comment_count}}', $accessToken);
             $user = $response->getGraphUser();
             if(isset($user['accounts'])){
                 foreach($user['accounts'] as  $row)  {
@@ -113,9 +113,10 @@ class CommandFacebook extends Command
             }
         } catch(FacebookResponseException $e) {
             // When Graph returns an error
-           $this->error('Facebook dose not response Graph data ');
+            $this->repAuth->resetAccessToken($auth->id);
+            $this->error(trans('message.error_get_access_token', ['name' => trans('default.facebook')]));
         } catch(FacebookSDKException $e) {
-           $this->error('FacebookSDK dose not response data ');
+            $this->error(trans('message.error_network_connect', ['name' => trans('default.facebook')]));
         }
     }
 

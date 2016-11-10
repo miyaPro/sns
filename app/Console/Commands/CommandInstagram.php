@@ -95,7 +95,10 @@ class CommandInstagram extends Command
         $url = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$auth->access_token;
         $dataGet = $this->getContent($url,false);
         $dataGet  = @json_decode($dataGet[0]);
-        if(!empty($dataGet)&&!empty($dataGet->meta->code)&&$dataGet->meta->code==200){
+        if(!isset($dataGet)){
+            $this->error(trans('message.error_network_connect', ['name' => trans('default.instagram')]));
+        }
+        else if(isset($dataGet->meta) && $dataGet->meta->code == 200){
             $data =  $dataGet->data;
             $sns_page_id = $data->id;
             $inputs = array(
@@ -116,10 +119,10 @@ class CommandInstagram extends Command
                 $page = $this->repPage->store($inputs, $auth->id);
             }
             $this->getPageDetail($data, $page);
-            $this->getPost($page, $auth);
+            $this->getPost($page, $auth, 100);
         }else{
             $this->repAuth->resetAccessToken($auth->id);
-            $this->error('message',trans('error_do_not_get_page_instagram'));
+            $this->error(trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
         }
     }
 
@@ -141,13 +144,36 @@ class CommandInstagram extends Command
         }
     }
 
-    public function getPost($page, $auth){
+    public function getPost($page, $auth, $numberPost){
         $url = str_replace('{id}',$auth->account_id,config('instagram.url.media')).'?access_token='.$auth->access_token;
-        $dataGet = $this->getContent($url,false);
-        $dataGet  = @json_decode($dataGet[0]);
+        $maxGetPost = config('instagram.limit.post_media');
         $date = new \DateTime();
-        if(!empty($dataGet)&&!empty($dataGet->meta->code)&&$dataGet->meta->code==200){
-            foreach ($dataGet->data as $row){
+        $dataGet = $this->getContent($url, false);
+        $dataGet  = @json_decode($dataGet[0]);
+        if(isset($dataGet)){
+            $dataAllPost = $dataGet->data;
+            if(count($dataAllPost) < $numberPost) {
+                if ($numberPost > $maxGetPost) {
+                    $numberLoop = intval(round($numberPost / $maxGetPost, 0));
+                    for ($i = 0; $i < $numberLoop; $i++) {
+                        $id_min_sns_post = $dataAllPost[count($dataAllPost) - 1]->id;
+                        $currentUrl = $url . '&min_id=' . $id_min_sns_post;
+                        $this->line($currentUrl);
+                        $dataGet = $this->getContent($currentUrl, false);
+                        $dataGet = @json_decode($dataGet[0]);
+                        if (isset($dataGet) && $dataGet->meta->code == 200) {
+                            unset($dataGet->data[0]);
+                            $dataAllPost = array_merge($dataAllPost, $dataGet->data);
+
+                        } else {
+                            $this->error('message', 'error_do_not_get_post_instagram');
+                            $this->line('error in ' . $i);
+                            break;
+                        }
+                    }
+                }
+            }
+            foreach ($dataAllPost as $row){
                 $sns_post_id = $row->id;
                 $inputs = array(
                     'sns_post_id' => $row->id,
@@ -175,11 +201,9 @@ class CommandInstagram extends Command
                 }
                 $this->getPostDetail($row, $post);
             }
-        }
-        else{
+        } else{
             $this->error('message','error_do_not_get_post_instagram');
         }
-
     }
 
     public function getPostDetail($row, $post){

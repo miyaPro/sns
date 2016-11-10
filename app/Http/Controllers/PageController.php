@@ -72,7 +72,7 @@ class PageController extends Controller
         $auth = $this->repAuth->getById($page->auth_id);
         $services = config('constants.service');
         $name_src = array_search($auth->service_code,$services);
-        $pageInfo = $this->repPageDetail->getLast($page->id);
+        $pageInfo = $this->repPageDetail->getLastDate($page->id);
         $condition = config('constants.condition_filter_page');
 
         switch ($page->auth->service_code) {
@@ -87,32 +87,18 @@ class PageController extends Controller
             } break;
             default: return redirect('dashboard')->with('alert-danger', trans('message.exiting_service'));
         }
-        $date  = $repPost->getMaxDate($page->id) ;
-        $listPosts      = $repPost->getListPostByPage($page->id, $date->max_date);
-
+//        $date  = $repPost->getMaxDate($page->id) ;
+        $curent_date = Carbon::today()->toDateString();
+        $listPosts      = $repPost->getListPostByPage($page->id, $curent_date);
+        dd($pageInfo);
         $servicesCode   = $page->auth->service_code;
-        $checkTime = array();
-        foreach($listPosts as $getTime)
-        {
-            $time = strtotime($getTime->created_time);
-            $timeNotification= $this->checkTime($time);
-            array_push($checkTime,$timeNotification );
-        }
         return view('page.index')->with([
             'pageInfo'      => $pageInfo,
             'nameService'   => $name_src,
             'condition'     => $condition,
             'listPosts'     => $listPosts,
             'serviceCode'   => $servicesCode,
-            'checkTime'     => $checkTime
         ]);
-    }
-
-    public function checkTime($time_ago){
-        $cur_time = time();
-        $time_elapsed = $cur_time - $time_ago;
-        $seconds = $time_elapsed ;
-        return $seconds;
     }
 
     /**

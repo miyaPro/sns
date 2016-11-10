@@ -76,7 +76,8 @@ class AuthRepository extends BaseRepository
     }
 
     public function resetAccessToken($auth_id){
-        $update = DB::table('auths')->where('id',$auth_id)->update(array('access_token' => ''));
+        $model = new $this->model;
+        $update = $model->where('id',$auth_id)->update(array('access_token' => ''));
         return $update;
     }
 

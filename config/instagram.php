@@ -51,7 +51,7 @@ return [
         ],
 
     ],
-    'url'=> [
+    'url' => [
         'redirect'=> '/social/handleInstagramCallback',
         'oauth'=>'https://api.instagram.com/oauth/authorize',
         'token'=>'https://api.instagram.com/oauth/access_token',
@@ -60,8 +60,11 @@ return [
         'like'=>'https://api.instagram.com/v1/media/{id}/likes',
         'user_info'=>'https://api.instagram.com/v1/users/{id}'
     ],
-    'scope'=>[
+    'scope' => [
         'access'=>'basic+public_content+follower_list+comments+relationships+likes'
+    ],
+    'limit' => [
+        'post_media' => 20,
     ]
 
 ];

@@ -25,6 +25,7 @@ class PostTwitterDetailRepository extends BaseRepository
     {
         $postDetail->retweet_count             = $inputs['retweet_count'];
         $postDetail->favorite_count            = $inputs['favorite_count'];
+        $postDetail->updated_at                = date("Y-m-d H:i:s");
         $postDetail->save();
     }
     /**

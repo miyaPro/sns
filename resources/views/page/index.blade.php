@@ -28,7 +28,7 @@
                             {!! Form::label('inputDateFrom', trans('field.date_range'), ['class' => 'control-label col-md-2 pull-left']) !!}
                             <div class="input-group input-large col-md-8 pull-left" data-date="" data-date-format="yyyy/mm/dd">
                                 {!! Form::text('from', !empty(request()->cookie('date_search')[0])? request()->cookie('date_search')[0]: date('Y/m/d'), ['id' => 'inputDateFrom','class' => 'form-control default-date-picker dpd1']) !!}
-                                {!! Form::label('inputDateTo', trans('field.to'), ['class' => 'input-group-addon']) !!}
+                                {!! Form::label('inputDateTo', 'To', ['class' => 'input-group-addon page-label']) !!}
                                 {!! Form::text('to', !empty(request()->cookie('date_search')[1])? request()->cookie('date_search')[1]: date('Y/m/d', strtotime(@$date['to']." -2 weeks")), ['id' => 'inputDateTo','class' => 'form-control default-date-picker dpd2']) !!}
                             </div>
                             <div class="col-md-2 pull-right">
@@ -44,8 +44,8 @@
                         <?php  $condition     = array_map(function($val) { return trans('field.condition_filter_'.$val); }, config('constants.condition_filter'));?>
                         <?php $postDetailService = array(
                                 config('constants.service.facebook') => array(
+                                        'fa-thumbs-o-up post-like-facebook'   => 'like_count',
                                         'fa-comment first-city'        => 'comment_count',
-                                        'fa-thumbs-o-up second-city'   => 'like_count',
                                         'fa-share third-city'          => 'share_count'
                                 ),
                                 config('constants.service.twitter') => array(
@@ -53,8 +53,8 @@
                                         'fa-heart second-city'         => 'favorite_count'
                                 ),
                                 config('constants.service.instagram') => array(
-                                        'fa-comment first-city'        => 'comment_count',
-                                        'fa-heart second-city'         => 'like_count'
+                                        'fa-heart second-city'         => 'like_count',
+                                        'fa-comment first-city'        => 'comment_count'
                                 )
                         );
                         $pageDetailService = array(
@@ -107,9 +107,8 @@
                                         <ul class="clearfix location-earning-stats">
                                             @if(isset( $pageDetailService[$serviceCode]))
                                                 @foreach( $pageDetailService[$serviceCode] as $key => $value)
-                                                    <?php $field = 'instagram_'.$value;?>
                                                     <li class="stat-divider service-type">
-                                                        {{trans('field.instagram_'.$value)}}
+                                                        {{trans('field.'.$nameService.'_'.$value)}}
                                                         <span class="statistics {{$key}}">{{ @number_format($pageInfo->$value)}}</span>
                                                     </li>
                                                 @endforeach
@@ -166,10 +165,10 @@
                                                     </p>
                                                 </li>
                                                 <li class="clearfix pull-right">
-                                                    <p>{{ trans('field.created_time') }} :
+                                                    <p>{{ trans('field.post_created_at') }}
                                                         {{(@$post->created_time)}}
                                                     </p>
-                                                    <p>{{ trans('field.updated_time') }} :
+                                                    <p>{{ trans('field.data_get_updated_at') }}
                                                         {{(@$post->updated_at)}}
                                                     </p>
                                                 </li>

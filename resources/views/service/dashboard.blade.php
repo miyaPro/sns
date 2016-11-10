@@ -26,7 +26,7 @@
                             {!! Form::label('inputDateFrom', trans('field.date_range'), ['class' => 'control-label col-md-2']) !!}
                             <div class="input-group input-large col-md-8" data-date="" data-date-format="yyyy/mm/dd">
                                 {!! Form::text('from', @$dates['from'], ['id' => 'inputDateFrom','class' => 'form-control default-date-picker dpd1']) !!}
-                                {!! Form::label('inputDateTo', trans('field.to'), ['class' => 'input-group-addon']) !!}
+                                {!! Form::label('inputDateTo', 'To', ['class' => 'input-group-addon']) !!}
                                 {!! Form::text('to', @$dates['to'], ['id' => 'inputDateTo','class' => 'form-control default-date-picker dpd2']) !!}
                             </div>
                             <div class="col-md-2 button-box">
@@ -56,6 +56,11 @@
                         <div id="{{{ $service_name }}}" class="tab-pane {{{ ($service_name == 'facebook')  ? 'active' : '' }}}">
                             <div class="service-content">
                                 @if(in_array($service_code, $services))
+                                    <div class="clearfix add-other">
+                                        <div class="btn-group">
+                                            <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)) }}">{{{ trans('button.add_more_account') }}}</a>
+                                        </div>
+                                    </div>
                                     @if(isset($pageList[$service_code]))
                                         @foreach($pageList[$service_code] as $page)
                                             <section class="panel">
@@ -140,21 +145,23 @@
                         var data        = [],
                             label       = ['{{{ trans('field.post_engagement') }}}'],
                             element_id  = 'graph_line_{{ $service_name.'_'.$page_id }}';
-                        @if($i > 0)
-                            $('#{{{ $service_name }}}').css('display', 'block');
-                        @endif
-                        @if(isset($postByDay[$service_code]) && isset($postByDay[$service_code][$page_id]))
-                            @foreach($postByDay[$service_code][$page_id] as $date => $post)
-                                data.push({
-                                    date: '{{{ $date }}}',
-                                    value: '{{{ $post['compare'] }}}'
+                        if($('#' + element_id).length > 0) {
+                            @if($i > 0)
+                                $('#{{{ $service_name }}}').css('display', 'block');
+                            @endif
+                            @if(isset($postByDay[$service_code]) && isset($postByDay[$service_code][$page_id]))
+                                @foreach($postByDay[$service_code][$page_id] as $date => $post)
+                                    data.push({
+                                date: '{{{ $date }}}',
+                                value: '{{{ $post['compare'] }}}'
                                 });
-                            @endforeach
-                        @endif
-                        generate_graph(element_id, label, data);
-                        @if($i > 0)
-                             $('#{{{ $service_name }}}').css('display', 'none');
-                        @endif
+                                @endforeach
+                            @endif
+                            generate_graph(element_id, label, data);
+                            @if($i > 0)
+                                 $('#{{{ $service_name }}}').css('display', 'none');
+                            @endif
+                        }
                     @endforeach
                 @endif
             <?php $i++; ?>

@@ -26,6 +26,7 @@ class PostFacebookDetailRepository extends BaseRepository
         $model->like_count               = $inputs['like_count'];
         $model->comment_count            = $inputs['comment_count'];
         $model->share_count              = $inputs['share_count'];
+        $model->updated_at               = date("Y-m-d H:i:s");
         $model->save();
     }
     /**

@@ -135,7 +135,7 @@ class SocialNetworkController extends Controller
         $dataUser = $this->getContent($url,$postdata);
         $dataUser =json_decode($dataUser[0]);
         $user = Auth::user();
-        if(!empty($dataUser)&&@!empty($dataUser->access_token)){
+        if(isset($dataUser) && $dataUser->access_token && $dataUser->user){
             $oauth = $this->repAuth->getOneByField('account_id',$dataUser->user->id);
             $input = array(
                 'user_id'           => $user->id,
@@ -146,10 +146,10 @@ class SocialNetworkController extends Controller
                 'service_code'      => config('constants.service.instagram'),
                 'refresh_token'     =>''
             );
-            if(!$oauth){
-                $this->repAuth->store($input);
-            }else{
+            if($oauth){
                 $this->repAuth->update($oauth, $input);
+            }else{
+                $this->repAuth->store($input);
             }
 //            $process = new Process('php '.env('ARTISAN_PATH').'artisan instagram '.$input['account_id']);
 //            $process->start();

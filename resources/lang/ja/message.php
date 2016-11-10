@@ -23,5 +23,7 @@ return [
     'stopping'    => '停止中',
     'more_than_3_opption'=> '',
     'template_file_not_exist' => 'テンプレートファイルが存在していません',
-    'error_main'        => 'Lỗi đăng nhập.'
+    'error_main'        => 'Lỗi đăng nhập.',
+    'error_network_connect'   => ':name Network, result null',
+    'error_get_access_token'  => ':name Token sai hoặc hết hạn'
 ];
