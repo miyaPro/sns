@@ -152,13 +152,16 @@ class CommandInstagram extends Command
         $dataGet  = @json_decode($dataGet[0]);
         if(isset($dataGet)){
             $dataAllPost = $dataGet->data;
+            if(empty($dataAllPost)){
+                $this->info('No post');
+                return;
+            }
             if(count($dataAllPost) < $numberPost) {
                 if ($numberPost > $maxGetPost) {
                     $numberLoop = intval(round($numberPost / $maxGetPost, 0));
                     for ($i = 0; $i < $numberLoop; $i++) {
                         $id_min_sns_post = $dataAllPost[count($dataAllPost) - 1]->id;
-                        $currentUrl = $url . '&min_id=' . $id_min_sns_post;
-                        $this->line($currentUrl);
+                        $currentUrl = urlencode($url . '&max_id=' . $id_min_sns_post);
                         $dataGet = $this->getContent($currentUrl, false);
                         $dataGet = @json_decode($dataGet[0]);
                         if (isset($dataGet) && $dataGet->meta->code == 200) {
@@ -167,7 +170,6 @@ class CommandInstagram extends Command
 
                         } else {
                             $this->error('message', 'error_do_not_get_post_instagram');
-                            $this->line('error in ' . $i);
                             break;
                         }
                     }

@@ -15,6 +15,7 @@ use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ServiceController extends Controller
 {
@@ -78,12 +79,13 @@ class ServiceController extends Controller
             }
             $fromDate   = date('Y-m-d' ,strtotime($inputs['from']));
             $toDate     = date('Y-m-d' ,strtotime($inputs['to']));
-            $services   = $pageList = $postByDay = $totalPage = [];
+            $services   = $pageList = $postByDay = $totalPage = $authAccount = [];
             //get data pages by date
             foreach ($user->auth as $auth) {
                 if($auth->access_token) {
                     $services[] = $auth->service_code;
                 }
+                $authAccount[$auth->service_code][$auth->id] = $auth->email ? $auth->account_name.' ('.$auth->email.')' : $auth->account_name;
                 switch ($auth->service_code) {
                     case config('constants.service.facebook'): {
                         $repPost    = $this->repPostFb;
@@ -103,12 +105,15 @@ class ServiceController extends Controller
                 foreach ($pages as $page) {
                     //info page
                     $pageList[$auth->service_code][$page->id] = $page;
-                    //post data by page
-                    $postDetail = $repPost->getListPostByDate($page->id, null, $fromDate, $toDate);
-                    $postByDay[$auth->service_code][$page->id] = $this->getData($postDetail, $columns, $fromDate, $toDate);
+                    if(isset($repPost)) {
+                        //post data by page
+                        $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($fromDate)));
+                        $postDetail = $repPost->getListPostByDate($page->id, null, $beforeDate, $toDate);
+                        $postByDay[$auth->service_code][$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
+                    }
 
                     //get total from page detail
-                    $pageDetail = $this->repPageDetail->getLastDate($page->id, $fromDate, $toDate);
+                    $pageDetail = $this->repPageDetail->getLastDate($page->id);
                     $totalPage[$auth->service_code][$page->id] = [
                         'friends_count'     => @$pageDetail->friends_count ? $pageDetail->friends_count : 0,
                         'posts_count'       => @$pageDetail->posts_count ? $pageDetail->posts_count : 0,
@@ -119,6 +124,7 @@ class ServiceController extends Controller
             }
             return response(view('service.dashboard')->with([
                 'services'      => $services,
+                'authAccount'   => $authAccount,
                 'dates'         => $inputs,
                 'pageList'      => $pageList,
                 'postByDay'     => $postByDay,
@@ -129,28 +135,30 @@ class ServiceController extends Controller
         }
     }
 
-    public function getData($listDetail, $columns = [], $startDate, $endDate){
+    public function getData($page, $listDetail, $columns = [], $startDate, $endDate){
         $data       = [];
-        $startDate  = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
         $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
         for($i=0; $i <= $days; $i++) {
             $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
             $data[$day]['total']    = 0;
             $data[$day]['compare']  = 0;
         }
+        $page_create_at = date('Y-m-d' ,strtotime($page->created_at));
         foreach ($listDetail as $i => $postDetail) {
             //total of columns
             foreach ($columns as $column) {
                 $data[$postDetail->date]['total'] += $postDetail->$column;
             }
             //calculation after first item
-            if ($startDate != $postDetail->date){
+            if($page_create_at >= $postDetail->date || $startDate == $postDetail->date) {
+                $compare    = 0;
+            } else {
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
                 $beforeDayVal   = $data[$beforeDate]['total'];
                 $thisDayVal     = $data[$postDetail->date]['total'];
-                $compare        = $thisDayVal - $beforeDayVal;
-                $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
+                $compare    = $thisDayVal - $beforeDayVal;
             }
+            $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
         }
         if(@$data[$startDate]) {
             unset($data[$startDate]);

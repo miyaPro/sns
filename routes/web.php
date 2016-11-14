@@ -32,12 +32,14 @@ Route::post('/page/{id}/social/graphPost', ['uses' => 'PageController@getGraphDa
 Route::post('/', ['uses' => 'Auth\ResetPasswordController@sendMail', 'as' => 'user.reset']);
 
 // router config twitter
-Route::get('/social/handleFacebook', 'SocialNetworkController@handleFacebook');
-Route::get('/social/handleFacebookCallback', 'SocialNetworkController@handleFacebookCallback');
+Route::get('/social/handleFacebook/{logout?}', 'SocialNetworkController@handleFacebook');
+Route::get('/social/handleFacebookCallback/{logout?}', 'SocialNetworkController@handleFacebookCallback');
+Route::get('/social/logoutFacebookCallback', 'SocialNetworkController@logoutFacebookCallback');
 Route::get('/social/handleTwitter', 'SocialNetworkController@handleTwitter');
 Route::get('/social/handleTwitterCallback', 'SocialNetworkController@handleTwitterCallback');
 Route::get('/social/handleInstagramCallback', 'SocialNetworkController@handleInstagramCallback');
-Route::get('/social/handleInstagram', 'SocialNetworkController@handleInstagram');
+Route::get('/social/handleInstagram/{logout?}', 'SocialNetworkController@handleInstagram');
+Route::get('/social/handleSnapchat', 'SocialNetworkController@handleSnapchat');
 Route::post('/password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail');
 
 

@@ -52,13 +52,14 @@ return [
 
     ],
     'url' => [
-        'redirect'=> '/social/handleInstagramCallback',
-        'oauth'=>'https://api.instagram.com/oauth/authorize',
-        'token'=>'https://api.instagram.com/oauth/access_token',
-        'media'=>'https://api.instagram.com/v1/users/{id}/media/recent/',
-        'comment'=>'https://api.instagram.com/v1/media/{id}/comments',
-        'like'=>'https://api.instagram.com/v1/media/{id}/likes',
-        'user_info'=>'https://api.instagram.com/v1/users/{id}'
+        'redirect'  => '/social/handleInstagramCallback',
+        'oauth'     => 'https://api.instagram.com/oauth/authorize',
+        'token'     => 'https://api.instagram.com/oauth/access_token',
+        'media'     => 'https://api.instagram.com/v1/users/{id}/media/recent/',
+        'comment'   => 'https://api.instagram.com/v1/media/{id}/comments',
+        'like'      => 'https://api.instagram.com/v1/media/{id}/likes',
+        'user_info' => 'https://api.instagram.com/v1/users/{id}',
+        'logout'    => 'https://instagram.com/accounts/logoutin/?force_classic_login=&next={url}'
     ],
     'scope' => [
         'access'=>'basic+public_content+follower_list+comments+relationships+likes'

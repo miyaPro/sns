@@ -38,6 +38,7 @@ return [
         'client_id' => '1485803355037503',
         'client_secret' => 'd3f00dd3272c78eea02f044371cbfac0',
         'redirect' => config('app.url').'/social/handleFacebookCallback',
+        'redirect_logout' => config('app.url').'/social/logoutFacebookCallback',
 
     ],
 

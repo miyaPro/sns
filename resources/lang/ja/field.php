@@ -68,4 +68,7 @@ return [
     'condition_filter_daily' => '日別',
     'number_like_comment_share'    => 'Tổng số like, comment, share',
     'post_engagement' => '投稿のエンゲージメント',
+    'post_list' => '直近10投稿リスト',
+    'post_created_at' => '投稿日　',
+    'data_get_updated_at' => '取得日　'
 ];

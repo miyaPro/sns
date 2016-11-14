@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Cookie;
+use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
 {
@@ -65,11 +66,12 @@ class PageController extends Controller
      */
     public function show($id)
     {
+        $user   = Auth::user();
         $page = $this->repPage->getById($id);
-        if(!$page){
+        $auth = $this->repAuth->getById($page->auth_id);
+        if(!$page || $user->id != $auth->user_id){
             return $this->rediect('/dashboard')->with('alert-danger', trans('message.error_page_not_found'));
         }
-        $auth = $this->repAuth->getById($page->auth_id);
         $services = config('constants.service');
         $name_src = array_search($auth->service_code,$services);
         $pageInfo = $this->repPageDetail->getLastDate($page->id);
@@ -90,7 +92,7 @@ class PageController extends Controller
 //        $date  = $repPost->getMaxDate($page->id) ;
         $curent_date = Carbon::today()->toDateString();
         $listPosts      = $repPost->getListPostByPage($page->id, $curent_date);
-        dd($pageInfo);
+
         $servicesCode   = $page->auth->service_code;
         return view('page.index')->with([
             'pageInfo'      => $pageInfo,
@@ -122,7 +124,10 @@ class PageController extends Controller
         }
         $days           = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
         $data           = array();
-        Cookie::queue('date_search', [$startDate, $endDate]);
+        $inputs = array(
+            'from'  => $startDate,
+            'to'    => $endDate,
+        );
         $startDate = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
         $pageDetail     = $this->repPageDetail->getPageByDate($page_id, $startDate, $endDate);
         $condition      = config('constants.condition_filter_page');
@@ -138,10 +143,10 @@ class PageController extends Controller
             $val_condition = $condition[$countType].'_count';
             $data[$detail->date]['count'] = $detail->$val_condition;
             if (($detail->date > date('Y-m-d' ,strtotime($startDate)))) {
-                $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($detail->date)));
+                $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($detail->date)));
                 $beforeDayVal   = $data[$beforeDate]['count'];
                 $thisDayVal     = $data[$detail->date]['count'];
-                $compare = $thisDayVal - $beforeDayVal;
+                $compare        = $thisDayVal - $beforeDayVal;
                 $data[$detail->date]['count_compare'] = ($compare > 0) ? $compare : 0;
 
             }
@@ -152,19 +157,24 @@ class PageController extends Controller
 
 //        Log::info(print_r($data), true));
 //        echo json_encode(array('success' => true, 'contentCount' => $data));exit();
-        return Response::json(array('success' => true, 'contentCount' => $data), 200);
+        return Response::json(array('success' => true, 'contentCount' => $data), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
 
     }
 
     public function getGraphDataPost(Request $request, $page_id)
     {
+        $page = $this->repPage->getById($page_id);
         $startDate  = $request->get('dateFrom');
         $endDate    = $request->get('dateTo');
-        Cookie::queue('date_search', [$startDate, $endDate]);
-        $startDate = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
+        $startDate  = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
+        $inputs = array(
+            'from'  => $startDate,
+            'to'    => $endDate,
+        );
         $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
 
         $serviceOfPage = $this->repPage->checkServicePage($page_id)->service_code;
+        Cookie::queue('date_search', [$startDate, $endDate]);
         if ($serviceOfPage) {
             if (config('constants.service.facebook') == $serviceOfPage) {
                 $columns = [
@@ -201,8 +211,9 @@ class PageController extends Controller
             foreach ($columns as $column) {
                 $postPerDay[$postDetail->date]['total'] += $postDetail->$column;
             }
-            $startDate = date('Y-m-d' ,strtotime($startDate));
-            if ($startDate != $postDetail->date){
+            $startDate     = date('Y-m-d' ,strtotime($startDate));
+            $startDateByDb = date('Y-m-d' ,strtotime($page->created_at ));
+            if ($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
                 $beforeDayVal   = $postPerDay[$beforeDate]['total'];
                 $thisDayVal     = $postPerDay[$postDetail->date]['total'];
@@ -214,6 +225,6 @@ class PageController extends Controller
             unset($postPerDay[$startDate]);
         }
 
-        return Response::json(array('success' => true, 'contentCount' => $postPerDay), 200);
+        return Response::json(array('success' => true, 'contentCount' => $postPerDay), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
     }
 }

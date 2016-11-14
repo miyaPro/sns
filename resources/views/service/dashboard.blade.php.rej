@@ -1,0 +1,36 @@
+diff a/resources/views/service/dashboard.blade.php b/resources/views/service/dashboard.blade.php	(rejected hunks)
+@@ -150,23 +150,23 @@
+                         var data        = [],
+                             label       = ['{{{ trans('field.post_engagement') }}}'],
+                             element_id  = 'graph_line_{{ $service_name.'_'.$page_id }}';
+-                        if($('#' + element_id).length > 0) {
+-                            @if($i > 0)
+-                                $('#{{{ $service_name }}}').css('display', 'block');
+-                            @endif
+-                            @if(isset($postByDay[$service_code]) && isset($postByDay[$service_code][$page_id]))
++                        @if(isset($postByDay[$service_code]) && isset($postByDay[$service_code][$page_id]))
++                            if($('#' + element_id).length > 0) {
++                                @if($i > 0)
++                                    $('#{{{ $service_name }}}').css('display', 'block');
++                                @endif
+                                 @foreach($postByDay[$service_code][$page_id] as $date => $post)
+                                     data.push({
+                                         date: '{{{ $date }}}',
+                                         value: '{{{ $post['compare'] }}}'
+                                     });
+                                 @endforeach
+-                            @endif
+-                            generate_graph(element_id, label, data);
+-                            @if($i > 0)
+-                                 $('#{{{ $service_name }}}').css('display', 'none');
+-                            @endif
+-                        }
++                                generate_graph(element_id, label, data);
++                                @if($i > 0)
++                                     $('#{{{ $service_name }}}').css('display', 'none');
++                                @endif
++                            }
++                        @endif
+                     @endforeach
+                 @endif
+                 <?php $i++; ?>

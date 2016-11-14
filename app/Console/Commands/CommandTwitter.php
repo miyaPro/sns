@@ -136,7 +136,8 @@ class CommandTwitter extends Command
         $client_id          = config('services.twitter.client_id');
         $client_secret      = config('services.twitter.client_secret');
         $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
-        $posts_twitter      = $connection->get("statuses/user_timeline", array("exclude_replies" => "true"));
+        $posts_twitter      = $connection->get("statuses/user_timeline", array("exclude_replies" => "true", "count" => '100'));
+
         foreach ($posts_twitter as $posts) {
             //create post Twitter
             $sns_post_id = $posts->id;

@@ -26,5 +26,6 @@ return [
     'download_report' => 'レポートダウンロード',
     'reset_btn'           => '確認',
     'grant_access'    => 'アカウントに接続',
-    'send' => '送信'
+    'send' => '送信',
+    'add_more_account' => '他アカウント追加'
 ];

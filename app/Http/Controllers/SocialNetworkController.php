@@ -10,6 +10,7 @@ use Facebook\Exceptions\FacebookSDKException as FacebookSDKException;
 use Facebook\Facebook as Facebook;
 use App\Repositories\AuthRepository;
 //use Illuminate\Support\Facades\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
 use Session;
@@ -39,7 +40,7 @@ class SocialNetworkController extends Controller
 
     }
 
-    public function handleFacebook() {
+    public function handleFacebook($logout = false) {
 
         if(!session_id()) {
             session_start();
@@ -53,10 +54,15 @@ class SocialNetworkController extends Controller
 
         $helper = $fb->getRedirectLoginHelper();
         $permissions = ['email','manage_pages']; // optional
-        $url = $helper->getLoginUrl(config('services.facebook.redirect'), $permissions);
+        if($logout) {
+            $urlCallback = config('services.facebook.redirect_logout');
+        } else {
+            $urlCallback = config('services.facebook.redirect');
+        }
+        $url = $helper->getLoginUrl($urlCallback, $permissions);
         return redirect($url);
     }
-    public function handleFacebookCallback() {
+    public function handleFacebookCallback($logout = false) {
 
         if(!session_id()) {
             session_start();
@@ -79,6 +85,10 @@ class SocialNetworkController extends Controller
             $user_id = Auth::user()->id;
             if($authUser)
             {
+                if($logout) {
+                    $logout_url     = $helper->getLogoutUrl($accessToken, url('social/handleFacebook'));
+                    return redirect($logout_url);
+                }
                 $inputs = [
                     'access_token'      =>$accessToken
                 ];
@@ -184,14 +194,24 @@ class SocialNetworkController extends Controller
         return array($contents, $headers);
     }
 
-    public function handleInstagram(Request $request) {
+    public function handleInstagram($logout = false) {
         $userInstagram = array(
             'oauth'=>config('instagram.url.oauth'),
             'client_id' => config('instagram.connections.main.id'),
             'redirect_uri' => url('/').config('instagram.url.redirect'),
             'scope'=>config('instagram.scope.access'),
         );
-        return Redirect::to($userInstagram['oauth'].'/?client_id='.$userInstagram['client_id'].'&redirect_uri='.$userInstagram['redirect_uri'].'&response_type=code&scope='.$userInstagram['scope']);
+        $parameterUrl = '/?client_id='.$userInstagram['client_id'].'&redirect_uri='.$userInstagram['redirect_uri'].'&response_type=code&scope='.$userInstagram['scope'];
+        if($logout){
+            $urlLogOut = str_replace(
+                '{url}',
+                urlencode('/oauth/authorize'.$parameterUrl),
+                config('instagram.url.logout')
+            );
+            return Redirect::to($urlLogOut);
+        }else{
+            return Redirect::to($userInstagram['oauth'].$parameterUrl);
+        }
     }
 
     public function handleTwitter() {
@@ -199,12 +219,15 @@ class SocialNetworkController extends Controller
         $client_id = config('services.twitter.client_id');
         $client_secret = config('services.twitter.client_secret');
         $callback_redirect = config('services.twitter.redirect');
-
         $connection = new TwitterOAuth($client_id, $client_secret);
         $request_token = $connection->oauth('oauth/request_token', array('oauth_callback' => $callback_redirect));
         $_SESSION['oauth_token'] = $request_token['oauth_token'];
         $_SESSION['oauth_token_secret'] = $request_token['oauth_token_secret'];
-        $url = $connection->url('oauth/authenticate', array('oauth_token' => $request_token['oauth_token']));
+        if (@$_SESSION['access_token'] != null) {
+            $url = $connection->url('oauth/authorize', array('oauth_token' => $request_token['oauth_token'], 'force_login' => 'true'));
+        }else {
+            $url = $connection->url('oauth/authenticate', array('oauth_token' => $request_token['oauth_token']));
+        }
 
         return redirect($url);
     }
@@ -273,7 +296,13 @@ class SocialNetworkController extends Controller
 
     public function handleSnapchat()
     {
-
+        $casperKey = '694893979329-l59f3phl42et9clpoo296d8raqoljl6p';
+        $casperSecret = '';
+        $snapchat = new \Snapchat('quyetmiyatsu', 'ducquyet121@gmail.com', 'Quyetnd121');
+        $snapchat->login('Quyetnd121');
+        $a = $snapchat->getAuthToken();
+        dd($a);
+        //return view('service.snapchat');
     }
 
 }

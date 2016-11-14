@@ -57,13 +57,18 @@
                             <div class="service-content">
                                 @if(in_array($service_code, $services))
                                     <div class="clearfix add-other">
+                                        @if($service_code == config('constants.service.facebook'))
+                                            <div class="condition col-md-2">
+                                                {!! Form::select('sel_account',  $authAccount[$service_code], null, ['class' => 'form-control','id' => 'sel_account_'.$service_name]) !!}
+                                            </div>
+                                        @endif
                                         <div class="btn-group">
-                                            <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)) }}">{{{ trans('button.add_more_account') }}}</a>
+                                            <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)).($service_code == config('constants.service.twitter') ? '' : '/1') }}">{{{ trans('button.add_more_account') }}}</a>
                                         </div>
                                     </div>
                                     @if(isset($pageList[$service_code]))
                                         @foreach($pageList[$service_code] as $page)
-                                            <section class="panel">
+                                            <section class="panel page-box" data-account="{{{ @$page['auth_id'] }}}">
                                                 <div class="panel-body page_name_box">
                                                     <div class="wk-progress tm-membr col-md-8">
                                                         <div class="tm-avatar">
@@ -132,61 +137,85 @@
                     @endforeach
                 </div>
             </section>
-    </div>
-@endsection
-@section('scripts')
-    <script>
-        //create graph for post detail data
-        $(function(){
-            <?php $i = 0; ?>
-            @foreach(config('constants.service') as $service_name => $service_code)
-                @if(isset($pageList[$service_code]))
-                    @foreach($pageList[$service_code] as $page_id => $page)
-                        var data        = [],
+        </div>
+        @endsection
+        @section('scripts')
+            <script>
+                //create graph for post detail data
+                $(function(){
+                            <?php $i = 0; ?>
+                            @foreach(config('constants.service') as $service_name => $service_code)
+                            @if(isset($pageList[$service_code]))
+                            @foreach($pageList[$service_code] as $page_id => $page)
+                    var data        = [],
                             label       = ['{{{ trans('field.post_engagement') }}}'],
                             element_id  = 'graph_line_{{ $service_name.'_'.$page_id }}';
-                        if($('#' + element_id).length > 0) {
-                            @if($i > 0)
-                                $('#{{{ $service_name }}}').css('display', 'block');
-                            @endif
-                            @if(isset($postByDay[$service_code]) && isset($postByDay[$service_code][$page_id]))
-                                @foreach($postByDay[$service_code][$page_id] as $date => $post)
-                                    data.push({
-                                date: '{{{ $date }}}',
-                                value: '{{{ $post['compare'] }}}'
-                                });
-                                @endforeach
-                            @endif
-                            generate_graph(element_id, label, data);
-                            @if($i > 0)
-                                 $('#{{{ $service_name }}}').css('display', 'none');
-                            @endif
-                        }
+                    @if(isset($postByDay[$service_code]) && isset($postByDay[$service_code][$page_id]))
+                    if($('#' + element_id).length > 0) {
+                        @if($i > 0)
+                            $('#{{{ $service_name }}}').css('display', 'block');
+                        @endif
+                        @foreach($postByDay[$service_code][$page_id] as $date => $post)
+                            data.push({
+                            date: '{{{ $date }}}',
+                            value: '{{{ $post['compare'] }}}'
+                        });
+                        @endforeach
+                        generate_graph(element_id, label, data);
+                        @if($i > 0)
+                             $('#{{{ $service_name }}}').css('display', 'none');
+                        @endif
+                    }
+                    @endif
                     @endforeach
-                @endif
-            <?php $i++; ?>
-            @endforeach
-        });
+                    @endif
+                    <?php $i++; ?>
 
-        function generate_graph(element_id, label, data) {
-            new Morris.Area({
-                element: element_id,
-                xkey: 'date',
-                ykeys: ['value'],
-                labels: label,
-                lineColors: ['#058DC7'],
-                parseTime: false,
-                hideHover: 'auto',
-                resize: true,
-                lineWidth: 5,
-                pointSize: 5,
-                smooth: false,
-                behaveLikeLine: true,
-                fillOpacity: '0.2',
-                yLabelFormat: function(d) {if(d != 0 && !parseInt(d)) {return '';} return parseInt(d);},
-                xLabelFormat: function(d) {d = new Date(d.label); return (d.getMonth()+1)+'/'+d.getDate();},
-                data: data
-            });
-        }
-    </script>
+                    //show hide page by auth account
+                    if($('#sel_account_{{{ $service_name }}}').length > 0) {
+                        //init this page
+                        var auth_id = $('#sel_account_{{{ $service_name }}}').val();
+                        select_page('{{{ $service_name }}}', auth_id);
+
+                        //select a account
+                        $('#sel_account_{{{ $service_name }}}').on('change', function () {
+                            var auth_id = $(this).val();
+                            select_page('{{{ $service_name }}}', auth_id);
+                        });
+                    }
+                    @endforeach
+                });
+
+                function select_page(service_name, auth_id) {
+                    console.log(service_name + ' - ' + auth_id);
+                    $('#' + service_name + ' .page-box').each(function (e) {
+                        if($(this).data('account') == auth_id) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                }
+                function generate_graph(element_id, label, data) {
+                    new Morris.Area({
+                        element: element_id,
+                        xkey: 'date',
+                        ykeys: ['value'],
+                        labels: label,
+                        lineColors: ['#058DC7'],
+                        parseTime: false,
+                        hideHover: 'auto',
+                        resize: true,
+                        lineWidth: 5,
+                        pointSize: 5,
+                        smooth: false,
+                        behaveLikeLine: true,
+                        fillOpacity: '0.2',
+                        yLabelFormat: function(d) {if(d != 0 && !parseInt(d)) {return '';} return parseInt(d);},
+                        xLabelFormat: function(d) {d = new Date(d.label); return (d.getMonth()+1)+'/'+d.getDate();},
+                        data: data
+                    });
+                }
+
+            </script>
 @endsection

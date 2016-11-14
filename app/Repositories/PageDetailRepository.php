@@ -87,7 +87,14 @@ class PageDetailRepository extends BaseRepository
 
     public function getLastDate($page_id, $startDate = null, $endDate = null) {
         $model = new $this->model();
-        $model = $model->where('page_id', $page_id)
+        $model = $model ->where('page_id', $page_id)
+                        ->join('pages', 'pages.id', '=', 'page_details.page_id')
+                        ->select(
+                            'pages.name',
+                            'pages.description',
+                            'pages.avatar_url',
+                            'page_details.*'
+                        )
         ->orderby('date', 'desc');
         if ($startDate && $endDate) {
             $model = $model->where('date', '>=', $startDate);
