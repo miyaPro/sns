@@ -27,4 +27,6 @@ return [
     'instagram'       => 'Instagram',
     'snapchat'        => 'Snapchat',
     'post'       => 'Post',
+    'snapchat'       => 'Snapchat Account',
+    'info_acc'       => 'Info account',
 ];

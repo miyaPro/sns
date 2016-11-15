@@ -19,25 +19,24 @@ use Illuminate\Support\Facades\Log;
 class CommandFacebook extends Command
 {
 
+    public  $repAuth;
+    public  $repPage;
+    public  $repPost;
+    public  $repPageDetail;
+    public  $repPostDetail;
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'facebook {account_id?}';
-
+    protected $signature = 'facebook {account_id?} {today?}';
     /**
      * The console command description.
      *
      * @var string
      */
     protected $description = 'Command description';
-
-    public  $repAuth;
-    public  $repPage;
-    public  $repPost;
-    public  $repPageDetail;
-    public  $repPostDetail;
+    protected $today = false;
 
 
     public function __construct(
@@ -62,9 +61,10 @@ class CommandFacebook extends Command
      */
     public function handle()
     {
-        $service = config('constants.service.facebook');
-        $account_id = $this->argument('account_id');
-        $arrayAuth = $this->repAuth->getListInitAuth($service, $account_id);
+        $service            = config('constants.service.facebook');
+        $account_id         = $this->argument('account_id');
+        $this->today        = $this->argument('today');
+        $arrayAuth          = $this->repAuth->getListInitAuth($service, $account_id);
         foreach ($arrayAuth as $auth) {
             $this->getPage($auth);
         }
@@ -122,6 +122,9 @@ class CommandFacebook extends Command
 
     public function getPageDetail($row, $page){
         $current_date = date('Y-m-d');
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
         $inputs = [
             'friends_count'         => $row['fan_count'],
             'followers_count'       => '',
@@ -164,6 +167,9 @@ class CommandFacebook extends Command
 
     public function getPostDetail($data, $post){
         $current_date = date('Y-m-d');
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
         $inputs['share_count'] = isset($data['shares']) ? $data['shares']['count'] : 0;
         $inputs['like_count'] = isset($data['likes']) ? count($data['likes']) : 0;
         $inputs['comment_count'] = isset($data['comments']) ? count($data['comments']) : 0;

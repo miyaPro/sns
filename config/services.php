@@ -35,16 +35,16 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
     'facebook' => [
-        'client_id' => '1485803355037503',
-        'client_secret' => 'd3f00dd3272c78eea02f044371cbfac0',
+        'client_id' => '432909340201182',
+        'client_secret' => 'cc7726171d9654335269b949c25261ae',
         'redirect' => config('app.url').'/social/handleFacebookCallback',
-        'redirect_logout' => config('app.url').'/social/logoutFacebookCallback',
+        'redirect_logout' => config('app.url').'/social/handleFacebookCallback/1',
 
     ],
 
     'twitter' => [
-        'client_id' => 'fh9ldFH21zBnmxvBAqBU7MyDc',
-        'client_secret' => 'kqTyWUh4WPPXZkAI6bybfLezN2STb2y6M1HL1MekaXTuSFgjvh',
+        'client_id' => '0mSzwmpftBesxGQBPQnGNn449',
+        'client_secret' => '5imLIZFpKq56HYFt4PPZ6YGFeb5vkCXXLx9akhbMr3zttyPTzk',
         'redirect' => config('app.url').'/social/handleTwitterCallback',
     ],
 

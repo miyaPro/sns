@@ -42,4 +42,7 @@ Route::get('/social/handleInstagram/{logout?}', 'SocialNetworkController@handleI
 Route::get('/social/handleSnapchat', 'SocialNetworkController@handleSnapchat');
 Route::post('/password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail');
 
+//router check acc
+Route::any('account/search', 'AccountController@searchAccount');
+Route::get('account', 'AccountController@show');
 

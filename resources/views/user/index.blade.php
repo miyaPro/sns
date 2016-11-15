@@ -47,18 +47,15 @@
                                     <td>{{{ ($users->currentPage() - 1) * $users->perPage() + $i + 1 }}}</td>
                                     <td>{{{ isset($contract_status[$user->contract_status]) ? $contract_status[$user->contract_status] : '' }}}</td>
                                     <td>{{{ $user->email }}}</td>
-                                    <td>
-                                        @if($user->authority == config('constants.authority.admin'))
-                                            <p>{{{ $user->company_name }}}</p>
-                                        @else
-                                            <a href="{{ url('dashboard/'.$user->id) }}"><p>{{{ $user->company_name }}}</p></a>
-                                        @endif
-                                    </td>
+                                    <td>{{{ $user->company_name }}}</td>
                                     <td>{{{ isset($usersAccess[$user->id]) ? implode(', ', $usersAccess[$user->id]) : '' }}}</td>
                                     <td>{{{ $user->url }}}</td>
                                     <td>{{{ $user->name }}}</td>
                                     <td class="center">
                                         <a href="{{ URL::route("user.edit","$user->id") }}" class="btn btn-info btn-sm edit">{{{ trans('button.update') }}}</a>
+                                        @if($user->authority != config('constants.authority.admin'))
+                                            <a href="{{ url('dashboard/'.$user->id) }}"  class="btn btn-info btn-sm edit">{{{ trans('button.user_dashboard') }}}</a>
+                                        @endif
                                         @if($user->id != $user_id)
                                             <a class="btn btn-danger btn-sm btn-delete" data-button="{{{$user->id}}}"  data-from = "{{ URL::route("user.destroy",":id") }}" href="javascript:void(0)">
                                                 {{{ trans('button.delete')}}}

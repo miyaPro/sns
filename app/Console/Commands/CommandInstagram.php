@@ -20,7 +20,7 @@ class CommandInstagram extends Command
      *
      * @var string
      */
-    protected $signature = 'instagram {account_id?}';
+    protected $signature = 'instagram {account_id?} {today?}';
 
     /**
      * The console command description.
@@ -33,6 +33,7 @@ class CommandInstagram extends Command
     protected $repPage;
     protected $repPageDetail;
     protected $repAuth;
+    protected $today = false;
 
     /**
      * Create a new command instance.
@@ -62,33 +63,12 @@ class CommandInstagram extends Command
     public function handle()
     {
         $this->info('----------------Cront tab instagram----------------');
-        $account_id = $this->argument('account_id');
-        $auths = $this->repAuth->getListInitAuth(config('constants.service.instagram'), $account_id);
+        $account_id     = $this->argument('account_id');
+        $this->today    = $this->argument('today');
+        $auths          = $this->repAuth->getListInitAuth(config('constants.service.instagram'), $account_id);
         foreach ($auths as $auth){
             $this->getPage($auth);
         }
-    }
-
-    public function getContent($url,$postdata){
-        if (!function_exists('curl_init')){
-            return 'Sorry cURL is not installed!';
-        }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        if ($postdata)
-        {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-        }
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 ;Windows NT 6.1; WOW64; AppleWebKit/537.36 ;KHTML, like Gecko; Chrome/39.0.2171.95 Safari/537.36");
-        $contents = curl_exec($ch);
-        $headers = curl_getinfo($ch);
-        curl_close($ch);
-        return array($contents, $headers);
     }
 
     public function getPage($auth){
@@ -126,8 +106,33 @@ class CommandInstagram extends Command
         }
     }
 
+    public function getContent($url,$postdata){
+        if (!function_exists('curl_init')){
+            return 'Sorry cURL is not installed!';
+        }
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+        if ($postdata)
+        {
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+        }
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 ;Windows NT 6.1; WOW64; AppleWebKit/537.36 ;KHTML, like Gecko; Chrome/39.0.2171.95 Safari/537.36");
+        $contents = curl_exec($ch);
+        $headers = curl_getinfo($ch);
+        curl_close($ch);
+        return array($contents, $headers);
+    }
+
     public function getPageDetail($data, $page){
         $current_date = date('Y-m-d');
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
         $page_detail = $this->repPageDetail->getByDate($page->id, $current_date);
 
         $inputs = array(
@@ -210,6 +215,9 @@ class CommandInstagram extends Command
 
     public function getPostDetail($row, $post){
         $current_date = date('Y-m-d');
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
         $post_detail = $this->repPostDetail->getByDate($post->id, $current_date);
         $inputs = array(
             'comment_count' => $row->comments->count,

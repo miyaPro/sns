@@ -25,7 +25,7 @@ class CommandTwitter extends Command
      *
      * @var string
      */
-    protected $signature = "twitter {account_id?}";
+    protected $signature = "twitter {account_id?} {today?}";
 
     /**
      * The console command description.
@@ -44,6 +44,8 @@ class CommandTwitter extends Command
     protected $repPostTwitter;
     protected $repPostTwitterDetail;
     protected $repAuth;
+    protected $today = false;
+
     public function __construct(
         PageRepository $repPage,
         PageDetailRepository $repPageDetail,
@@ -67,9 +69,10 @@ class CommandTwitter extends Command
      */
     public function handle()
     {
-        $service = config('constants.service.twitter');
-        $account_id = $this->argument('account_id');
-        $auths = $this->repAuth->getListInitAuth($service, $account_id);
+        $service        = config('constants.service.twitter');
+        $account_id     = $this->argument('account_id');
+        $this->today    = $this->argument('today');
+        $auths          = $this->repAuth->getListInitAuth($service, $account_id);
         foreach ($auths as $auth) {
             $this->getPage($auth);
         }
@@ -116,6 +119,9 @@ class CommandTwitter extends Command
     public function getPageDetail($page_twitter, $page)
     {
         $current_date   = Carbon::today()->toDateString();
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
         $page_detail   = $this->repPageDetail->getByDate($page->id, $current_date);
         $inputs = [
             'friends_count'     => $page_twitter->friends_count,
@@ -161,6 +167,9 @@ class CommandTwitter extends Command
     public function getPostDetail($posts_twitter, $post)
     {
         $current_date        = Carbon::today()->toDateString();
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
         $postDetail = $this->repPostTwitterDetail->getByDate($post->id, $current_date);
         $inputs = [
             'retweet_count'     => $posts_twitter->retweet_count,

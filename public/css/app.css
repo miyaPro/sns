@@ -6735,6 +6735,10 @@ div.tagsinput span.tag {
   z-index: 1000;
   border-radius: 5px; }
 
+.login-body .form-signin p {
+  color: #3c763d;
+  font-size: 13px; }
+
 @media (max-width: 991px) {
   .panel-body.service-first .search-box .control-label {
     float: left; }
@@ -6800,6 +6804,9 @@ div.tagsinput span.tag {
 
 .post-like-facebook {
   color: #4080ff; }
+
+.panel-chart {
+  margin-top: 10px; }
 
 a.logo {
   margin: 10px 0 0 25px; }

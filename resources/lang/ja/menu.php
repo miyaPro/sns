@@ -10,4 +10,5 @@ return [
     'analytic_report' => 'Analytics結果',
     'master_list'   => 'マスタ管理',
     'dashboard'     => 'ダッシュボード',
+    'check'     => 'チェックユーザー',
 ];

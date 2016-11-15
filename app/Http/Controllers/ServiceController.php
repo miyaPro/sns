@@ -65,8 +65,12 @@ class ServiceController extends Controller
         if((!$user_id || $user_current->id == $user_id) && $user_current->authority == $authority['admin']) {
             return redirect('user');
         }
-        if(!$user_id || $user_current->authority == $authority['client']) {
-            $user_id    = $user_current->id;
+        if($user_current->authority == $authority['client']){
+            if(!$user_id){
+                $user_id    = $user_current->id;
+            }else{
+                abort(404);
+            }
         }
         $user           = $this->repUser->getById($user_id);
         if($user) {
@@ -129,6 +133,7 @@ class ServiceController extends Controller
                 'pageList'      => $pageList,
                 'postByDay'     => $postByDay,
                 'totalPage'     => $totalPage,
+                'user'          => $user_current
             ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));

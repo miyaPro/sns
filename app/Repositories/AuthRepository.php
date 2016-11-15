@@ -18,18 +18,6 @@ class AuthRepository extends BaseRepository
 		$this->model = $auth;
 	}
 
-	/**
-	 * Save the User.
-	 * @param  Array  $inputs
-	 * @return void
-	 */
-  	private function save($auth, $inputs)
-	{
-        $auth->refresh_token             = @$inputs['refresh_token'];
-        $auth->access_token              = $inputs['access_token'];
-        $auth->save();
-	}
-
     /**
      * Create a company.
      *
@@ -47,6 +35,18 @@ class AuthRepository extends BaseRepository
         $this->save($auth, $inputs);
         return $auth;
     }
+
+	/**
+	 * Save the User.
+	 * @param  Array  $inputs
+	 * @return void
+	 */
+  	private function save($auth, $inputs)
+	{
+        $auth->refresh_token             = @$inputs['refresh_token'];
+        $auth->access_token              = $inputs['access_token'];
+        $auth->save();
+	}
 
 	/**
 	 * Update a user.
@@ -81,10 +81,19 @@ class AuthRepository extends BaseRepository
         return $update;
     }
 
-    public function getAuth($account_id, $service_code)
+    public function getAuth($user_id, $account_id, $service_code)
     {
         $model = new $this->model();
-        $model = $model->where('account_id', $account_id)
+        $model = $model->where('user_id', $user_id)
+                       ->where('account_id', $account_id)
+                       ->where('service_code', $service_code);
+        return $model->first();
+    }
+
+    public function getFirstAuth($user_id, $service_code)
+    {
+        $model = new $this->model();
+        $model = $model->where('user_id', $user_id)
                        ->where('service_code', $service_code);
         return $model->first();
     }

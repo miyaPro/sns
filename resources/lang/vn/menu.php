@@ -10,4 +10,5 @@ return [
     'analytic_report'   => 'Analytic Report',
     'master_list'   => 'Danh sách Master',
     'dashboard'     => 'Bảng điều khiển',
+    'check'     => 'Kiểm tra User',
 ];

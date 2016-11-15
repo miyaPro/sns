@@ -28,4 +28,5 @@ return [
     'snapchat'        => 'Snapchat',
     'post'       => 'Post',
     'forget_password' => 'パスワード再設定',
+    'info_acc'       => 'アカウント情報',
 ];

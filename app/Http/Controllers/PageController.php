@@ -69,8 +69,8 @@ class PageController extends Controller
         $user   = Auth::user();
         $page = $this->repPage->getById($id);
         $auth = $this->repAuth->getById($page->auth_id);
-        if(!$page || $user->id != $auth->user_id){
-            return $this->rediect('/dashboard')->with('alert-danger', trans('message.error_page_not_found'));
+        if(!$page || ($user->id != $auth->user_id) && ($user->authority == config('constants.authority.client'))){
+            return redirect('dashboard')->with('alert-danger', trans('message.error_page_not_found'));
         }
         $services = config('constants.service');
         $name_src = array_search($auth->service_code,$services);
@@ -111,6 +111,7 @@ class PageController extends Controller
      */
     public function getGraphData(Request $request, $page_id)
     {
+        $page = $this->repPage->getById($page_id);
         $countType  = $request->get('typeDraw');
         $startDate  = $request->get('dateFrom');
         $endDate    = $request->get('dateTo');
@@ -139,10 +140,11 @@ class PageController extends Controller
                 'count_compare' => 0,
             ];
         }
+        $startDateByDb = date('Y-m-d' ,strtotime($page->created_at ));
         foreach ($pageDetail as $key => $detail) {
             $val_condition = $condition[$countType].'_count';
             $data[$detail->date]['count'] = $detail->$val_condition;
-            if (($detail->date > date('Y-m-d' ,strtotime($startDate)))) {
+            if (($detail->date > date('Y-m-d' ,strtotime($startDate))) && ($detail->date > $startDateByDb)) {
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($detail->date)));
                 $beforeDayVal   = $data[$beforeDate]['count'];
                 $thisDayVal     = $data[$detail->date]['count'];

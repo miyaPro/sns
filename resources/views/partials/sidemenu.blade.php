@@ -25,6 +25,10 @@
                     <a href="{!! URL::to('account/edit') !!}" class="{{ Request::is('account/edit') ? 'active' : '' }}"><i class="fa fa-cog text-warning"></i> <span>{{{ trans('menu.setting') }}}</span></a>
                 </li>
                 <li>
+                    <a href="{!! URL::to('account') !!}" class="{{ Request::is('account') ? 'active' : '' }}"><i class="fa fa-group text-success"></i> <span>{{{ trans('menu.check') }}}</span></a>
+                </li>
+
+                <li>
                     <a href="{!! URL::to('logout') !!}"><i class="fa fa-sign-out text-danger"></i> <span>{{{ trans('menu.sd_logout') }}}</span></a>
                 </li>
             </ul></div>

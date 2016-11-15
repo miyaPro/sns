@@ -63,7 +63,9 @@
                                             </div>
                                         @endif
                                         <div class="btn-group">
-                                            <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)).($service_code == config('constants.service.twitter') ? '' : '/1') }}">{{{ trans('button.add_more_account') }}}</a>
+                                            @if(isset($user) && $user->authority == config('constants.authority.client'))
+                                                <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)).($service_code == config('constants.service.twitter') ? '' : '/1') }}">{{{ trans('button.add_more_account') }}}</a>
+                                            @endif
                                         </div>
                                     </div>
                                     @if(isset($pageList[$service_code]))
@@ -127,7 +129,9 @@
                                     <section class="panel col-md-12">
                                         <div class="panel-body clearfix add-btn">
                                             <div class="btn-group">
-                                                <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)) }}">{{{ trans('button.grant_access') }}}</a>
+                                                @if(isset($user) && $user->authority == config('constants.authority.client'))
+                                                    <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)) }}">{{{ trans('button.grant_access') }}}</a>
+                                                @endif
                                             </div>
                                         </div>
                                     </section>

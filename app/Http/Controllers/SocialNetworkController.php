@@ -77,34 +77,35 @@ class SocialNetworkController extends Controller
         $helper = $fb->getRedirectLoginHelper();
         $_SESSION['FBRLH_state']=$_GET['state'];
         try {
-            $accessToken = $helper->getAccessToken();
-            $response =
+            $user_id        = Auth::user()->id;
+            $accessToken    = $helper->getAccessToken();
+            $response       =
                 $fb->get('/me?fields=id,name,email', $accessToken);
-            $user = $response->getGraphUser();
-            $authUser = $this->repAuth->getAuth($user['id'], config('constants.service.facebook'));
-            $user_id = Auth::user()->id;
+            $userFb         = $response->getGraphUser();
+            $authUser       = $this->repAuth->getAuth($user_id, $userFb['id'], config('constants.service.facebook'));
             if($authUser)
             {
                 if($logout) {
-                    $logout_url     = $helper->getLogoutUrl($accessToken, url('social/handleFacebook'));
+                    $logout_url = $helper->getLogoutUrl($accessToken, url('social/handleFacebook'));
                     return redirect($logout_url);
                 }
                 $inputs = [
-                    'access_token'      =>$accessToken
+                    'access_token'      => $accessToken
                 ];
                 $this->repAuth->update($authUser, $inputs);
 //                $process = new Process('php '.env('ARTISAN_PATCH').'artisan'.$authUser['account_id']);
 //                $process->start();
                 Artisan::call('facebook', [
-                    'account_id' => $authUser['account_id']
+                    'account_id' => $authUser['account_id'],
+                    'today'      => true
                 ]);
             }
             else{
                 $inputs = [
                     'user_id'           => $user_id,
-                    'email'             => $user['email'],
-                    'account_name'      => $user['name'],
-                    'account_id'        => $user['id'],
+                    'email'             => $userFb['email'],
+                    'account_name'      => $userFb['name'],
+                    'account_id'        => $userFb['id'],
                     'access_token'      => $accessToken ,
                     'service_code'      => config('constants.service.facebook')
                 ];
@@ -112,7 +113,8 @@ class SocialNetworkController extends Controller
 //                $process = new Process('php '.env('ARTISAN_PATCH').'artisan '.$inputs['account_id']);
 //                $process->start();
                 Artisan::call('facebook', [
-                    'account_id' => $inputs['account_id']
+                    'account_id' => $inputs['account_id'],
+                    'today'      => true
                 ]);
             }
         } catch(FacebookResponseException $e) {
@@ -134,6 +136,7 @@ class SocialNetworkController extends Controller
         if(empty($request['code'])){
             return redirect('/dashboard/')->with('alert-danger', trans('message.error_get_access_token_instagram'));
         }
+        $service = config('constants.service.instagram');
         $postdata= array(
             'client_id'=>config('instagram.connections.main.id'),
             'client_secret'=>config('instagram.connections.main.secret'),
@@ -146,7 +149,7 @@ class SocialNetworkController extends Controller
         $dataUser =json_decode($dataUser[0]);
         $user = Auth::user();
         if(isset($dataUser) && $dataUser->access_token && $dataUser->user){
-            $oauth = $this->repAuth->getOneByField('account_id',$dataUser->user->id);
+            $oauth = $this->repAuth->getAuth($user->id, $dataUser->user->id, $service);
             $input = array(
                 'user_id'           => $user->id,
                 'email'             => '',
@@ -164,7 +167,8 @@ class SocialNetworkController extends Controller
 //            $process = new Process('php '.env('ARTISAN_PATH').'artisan instagram '.$input['account_id']);
 //            $process->start();
             Artisan::call('instagram', [
-                'account_id' => $input['account_id']
+                'account_id' => $input['account_id'],
+                'today'      => true
             ]);
         }else{
             Session::flash('alert-danger', trans('message.error_get_access_token_instagram'));
@@ -274,7 +278,7 @@ class SocialNetworkController extends Controller
             'service_code'      => $service,
         ];
 
-        $authUser = $this->repAuth->getAuth($twitterUser->id, $service);
+        $authUser = $this->repAuth->getAuth($user_id, $twitterUser->id, $service);
         if ( $authUser ) {
             $input_update = [
                 'access_token'      => $access_token['oauth_token'],
@@ -288,7 +292,8 @@ class SocialNetworkController extends Controller
 //        $process = new Process('php '.env('ARTISAN_PATH').'artisan twitter '.$input['account_id']);
 //        $process->start();
         Artisan::call('twitter', [
-            'account_id' => $input['account_id']
+            'account_id' => $input['account_id'],
+            'today'      => true
         ]);
         return redirect('/dashboard');
 

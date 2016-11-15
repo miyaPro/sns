@@ -62,7 +62,7 @@ return [
         'logout'    => 'https://instagram.com/accounts/logoutin/?force_classic_login=&next={url}'
     ],
     'scope' => [
-        'access'=>'basic+public_content+follower_list+comments+relationships+likes'
+        'access'=>'basic+public_content'
     ],
     'limit' => [
         'post_media' => 20,

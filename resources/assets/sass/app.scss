@@ -182,6 +182,12 @@
   z-index: 1000;
   border-radius: 5px;
 }
+.login-body {
+  .form-signin p {
+    color: #3c763d;
+    font-size: 13px;
+  }
+}
 @media (min-width: 970px) and (max-width: 1020px){
 
 }
@@ -282,7 +288,9 @@
 .post-like-facebook{
   color: #4080ff;
 }
-
+.panel-chart{
+  margin-top: 10px;
+}
 a.logo {
   margin: 10px 0 0 25px;
 }
