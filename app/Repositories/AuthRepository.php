@@ -32,9 +32,11 @@ class AuthRepository extends BaseRepository
         $auth->account_name              = $inputs['account_name'];
         $auth->account_id                = $inputs['account_id'];
         $auth->service_code              = $inputs['service_code'];
+        $auth->rival_flg                 = isset($inputs['rival_flg']) ? $inputs['rival_flg'] : 0;
         $this->save($auth, $inputs);
         return $auth;
     }
+
 
 	/**
 	 * Save the User.
@@ -44,7 +46,7 @@ class AuthRepository extends BaseRepository
   	private function save($auth, $inputs)
 	{
         $auth->refresh_token             = @$inputs['refresh_token'];
-        $auth->access_token              = $inputs['access_token'];
+        $auth->access_token              = @$inputs['access_token'];
         $auth->save();
 	}
 
@@ -96,5 +98,37 @@ class AuthRepository extends BaseRepository
         $model = $model->where('user_id', $user_id)
                        ->where('service_code', $service_code);
         return $model->first();
+    }
+
+    public function getRival($keyword, $perPage, $curent_date)
+    {
+        $model = new $this->model();
+        $model = $model->where('rival_flg', 1)
+                       ->join('pages', 'auths.id', '=', 'pages.auth_id')
+                       ->join('page_details', 'pages.id', '=', 'page_details.page_id')
+                       ->select(
+                           'auths.service_code',
+                           'pages.id as page_id',
+                           'pages.name',
+                           'pages.created_time',
+                           'pages.avatar_url',
+                           'pages.banner_url',
+                           'pages.description',
+                           'pages.sns_page_id',
+                           'page_details.friends_count',
+                           'page_details.posts_count',
+                           'page_details.followers_count',
+                           'page_details.favourites_count'
+
+                       )
+                       ->where('page_details.date', $curent_date)
+                       ->orderby('pages.created_at', 'desc');
+        if($keyword){
+            $model = $model->where(function($q) use ($keyword) {
+                $q->where('pages.name', 'like', "%{$keyword}%");
+            });
+        }
+        $model  = $model->paginate($perPage);
+        return $model;
     }
 }

@@ -133,7 +133,7 @@ class ServiceController extends Controller
                 'pageList'      => $pageList,
                 'postByDay'     => $postByDay,
                 'totalPage'     => $totalPage,
-                'user'          => $user_current
+                'user'          => $user
             ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));

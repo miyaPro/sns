@@ -21,6 +21,9 @@
             <section class="panel">
                 <div class="panel-body service-first">
                     <div class="form-group">
+                        @if(Auth::user()->authority == config('constants.authority.admin'))
+                            <div class="user-info pull-left">{{$user->company_name.' ('.$user->email.')'}}</div>
+                        @endif
                         {!! Form::open(['class' => 'form-horizontal frm-search', 'method' => 'POST']) !!}
                         <div class="search-box col-md-6">
                             {!! Form::label('inputDateFrom', trans('field.date_range'), ['class' => 'control-label col-md-2']) !!}
@@ -63,7 +66,7 @@
                                             </div>
                                         @endif
                                         <div class="btn-group">
-                                            @if(isset($user) && $user->authority == config('constants.authority.client'))
+                                            @if(Auth::user()->authority == config('constants.authority.client'))
                                                 <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)).($service_code == config('constants.service.twitter') ? '' : '/1') }}">{{{ trans('button.add_more_account') }}}</a>
                                             @endif
                                         </div>
@@ -111,7 +114,12 @@
                                                         </ul>
                                                     </div>
                                                     <div class="col-md-12 graph-box">
-                                                        <div class="graph" id="graph_line_{{ $service_name.'_'.$page['id'] }}"></div>
+                                                        <section class="panel panel-chart">
+                                                            <header class="panel-heading">{{ trans('title.post_engagement_daily') }}</header>
+                                                            <div class="panel-body">
+                                                                <div class="graph" id="graph_line_{{ $service_name.'_'.$page['id'] }}"></div>
+                                                            </div>
+                                                        </section>
                                                     </div>
                                                 </div>
                                             </section>
@@ -129,7 +137,7 @@
                                     <section class="panel col-md-12">
                                         <div class="panel-body clearfix add-btn">
                                             <div class="btn-group">
-                                                @if(isset($user) && $user->authority == config('constants.authority.client'))
+                                                @if(Auth::user()->authority == config('constants.authority.client'))
                                                     <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)) }}">{{{ trans('button.grant_access') }}}</a>
                                                 @endif
                                             </div>
@@ -191,7 +199,6 @@
                 });
 
                 function select_page(service_name, auth_id) {
-                    console.log(service_name + ' - ' + auth_id);
                     $('#' + service_name + ' .page-box').each(function (e) {
                         if($(this).data('account') == auth_id) {
                             $(this).show();
@@ -201,6 +208,12 @@
                     });
                 }
                 function generate_graph(element_id, label, data) {
+                    var maxGraph = Math.max.apply(Math,data.map(function(o){return o['value'];}));
+                    var ceilMax = Math.ceil(maxGraph/4);
+                    if(maxGraph >= 3*ceilMax){
+                        maxGraph = 4*ceilMax +  4*Math.ceil(ceilMax/4);
+                    }
+                    maxGraph = maxGraph < 4 ? 4 : maxGraph;
                     new Morris.Area({
                         element: element_id,
                         xkey: 'date',
@@ -211,6 +224,7 @@
                         hideHover: 'auto',
                         resize: true,
                         lineWidth: 5,
+                        ymax: maxGraph,
                         pointSize: 5,
                         smooth: false,
                         behaveLikeLine: true,

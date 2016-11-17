@@ -129,7 +129,7 @@ class SocialNetworkController extends Controller
             $_SESSION['facebook_access_token'] = (string) $accessToken;
 
         }
-        return redirect('/dashboard/'.$user_id);
+        return redirect('/dashboard');
     }
 
     public function handleInstagramCallback(Request $request) {

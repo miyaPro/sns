@@ -1,6 +1,6 @@
 <?php ob_end_clean() ?>
 @extends('layouts.app')
-@section('title') {{{ trans('menu.site_list') }}} :: @parent @stop
+@section('title') {{{ trans('menu.rival_list') }}} :: @parent @stop
 @section('content')
     <div class="row">
         <div class="col-md-12">
@@ -11,7 +11,7 @@
             </div><br />
             <section class="panel">
                 <header class="panel-heading">
-                    {{{ trans('menu.site_list') }}}
+                    {{{ trans('menu.rival_list') }}}
                         <span style="text-transform:none;"></span>
                 </header>
                 <div class="panel-body">
@@ -21,11 +21,10 @@
                         <div class="col-md-4">
                             <div class="input-group">
                                 <span class="input-group-addon btn-default">{{{ trans('field.check_acc') }}}</span>
-                                {!! Form::text('keyword',  Request::get('keyword',null),
-                             ['id' => 'keyword','class' => 'form-control' ]) !!}
+                                {!! Form::text('keyword',  Request::get('keyword',null),['id' => 'keyword','class' => 'form-control' ]) !!}
                                 <span class="input-group-btn">
-                                            <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
-                                        </span>
+                                    <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -34,33 +33,56 @@
                         <thead>
                         <tr role="row">
                             <th class="clientNo">No.</th>
-                            <th>{{{ trans('field.site_url') }}}</th>
+                            <th>{{{ trans('field.name') }}}</th>
                             <th>{{{ trans('field.site_service') }}}</th>
-                            <th class="clientCtaSetting">{{{ trans('field.action_cta') }}}</th>
                             <th>{{{ trans('field.analytics') }}}</th>
                             <th class="clientAction">{{{ trans('default.action') }}}</th>
                         </tr>
                         </thead>
                         <tbody>
                             @if(isset($data) && $data->count() > 0)
-                                <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td class="center">
-                                       {{-- <a href="{{ URL::route("site.creative.index") }}" class="btn btn-success btn-sm">{{{ trans('button.creative') }}}</a>
-                                        <a href="{{{ URL::route("site.condition.index") }}}" class="btn btn-info btn-sm edit">{{{ trans('button.condition') }}}</a>--}}
-                                    </td>
-                                    <td class="center">
-                                        {{--<a href="{{{ URL::route("site.analytic.index") }}}" class="btn btn-success btn-sm">{{{ trans('button.show') }}}</a>--}}
-                                    </td>
-                                    <td class="center">
-                                        {{--<a href="{{ URL::route("site.edit") }}" class="btn btn-info btn-sm edit">{{{ trans('button.update') }}}</a>
-                                        <a class="btn btn-danger btn-sm btn-delete" data-button=""  data-from = "{{ URL::route("site.destroy",":id") }}" href="javascript:void(0)">
-                                            {{{ trans('button.delete')}}}
-                                        </a>--}}
-                                    </td>
-                                </tr>
+                                <?php
+                                $userDetail = array(
+                                        config('constants.service.facebook') => array(
+                                                'first-city'        => 'friends_count',
+                                                'second-city'       => 'posts_count',
+                                        ),
+                                        config('constants.service.twitter') => array(
+                                                'first-city'        => 'friends_count',
+                                                'third-city'        => 'followers_count',
+                                                'second-city'       => 'posts_count'
+                                        ),
+                                        config('constants.service.instagram') => array(
+                                                'first-city'        => 'friends_count',
+                                                'third-city'        => 'followers_count',
+                                                'second-city'       =>  'posts_count'
+                                        )
+                                );
+                                ?>
+                                @foreach($data as $i => $row)
+                                    <tr>
+                                        <td>{{{ ($data->currentPage() - 1) * $data->perPage() + $i + 1 }}}</td>
+                                        <td>{{$row->name}}</td>
+                                        <td>{{array_search($row->service_code, config('constants.service'))}}</td>
+                                        <td>
+                                            <ul class="clearfix account-detail location-earning-stats">
+                                                @if(isset( $userDetail[$row->service_code]))
+                                                    @foreach( $userDetail[$row->service_code] as $key => $value)
+                                                        <li class="stat-divider service-type">
+                                                            {{trans('field.'.array_search($row->service_code, config('constants.service')).'_'.$value)}}
+                                                            <span class="statistics {{$key}}">{{ @number_format($row->$value)}}</span>
+                                                        </li>
+                                                    @endforeach
+                                                @endif
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <a class="btn btn-danger btn-sm btn-delete" data-button="{{{$row->id}}}"  data-from = "{{ URL::route("account.destroy",":id") }}" href="javascript:void(0)">
+                                                {{{ trans('button.delete')}}}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             @else
                                 <tr>
                                     <td colspan="6"><h5> {{{ trans('message.common_no_result')}}}</h5></td>
@@ -68,6 +90,9 @@
                             @endif
                         </tbody>
                     </table>
+                    @if($data && $data->count() > 0)
+                        {{{  $data->render() }}}
+                    @endif
                 </div>
             </section>
         </div>

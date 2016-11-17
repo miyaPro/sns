@@ -28,4 +28,5 @@ return [
     'reset_btn'           => 'Xác Nhận',
     'send' => 'Send',
     'add_more_account' => 'Thêm tài khoản',
+    'user_dashboard'   => 'User Dashboard',
 ];

@@ -5,7 +5,7 @@
         <div class="col-md-12">
             <!--breadcrumbs start -->
             <ul class="breadcrumb">
-                <li><a href="{!! URL::to('site') !!}"><i class="fa fa-bars"></i> {{{ trans('menu.check') }}}</a></li>
+                <li><a href="{!! URL::to('account') !!}"><i class="fa fa-bars"></i> {{{ trans('menu.rival_list') }}}</a></li>
                 <li class="active">
                         {{{ trans('title.add_new') }}}
                 </li>

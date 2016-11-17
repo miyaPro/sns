@@ -3,6 +3,7 @@
 return [
     'sd_logout' => 'Đăng xuất',
     'user_list' => 'Danh sách User',
+    'user_rival' => 'Danh sách đối thủ',
     'user_add'  => 'Tạo User',
     'site_list' => 'Danh sách Site',
     'site_add'  => 'Tạo Site',

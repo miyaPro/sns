@@ -44,5 +44,5 @@ Route::post('/password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail
 
 //router check acc
 Route::any('account/search', 'AccountController@searchAccount');
-Route::get('account', 'AccountController@show');
+Route::resource('account', 'AccountController');
 

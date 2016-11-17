@@ -74,7 +74,11 @@ class CommandTwitter extends Command
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth($service, $account_id);
         foreach ($auths as $auth) {
-            $this->getPage($auth);
+            if ($auth->rival_flg == 1) {
+                $this->getPageRival($auth);
+            }else {
+                $this->getPage($auth);
+            }
         }
     }
 
@@ -182,4 +186,43 @@ class CommandTwitter extends Command
             $this->repPostTwitterDetail->store($inputs, $post->id);
         }
     }
+
+    /*get data and store rival account*/
+    public function getPageRival($auth)
+    {
+        $client_id          = config('services.twitter.client_id');
+        $client_secret      = config('services.twitter.client_secret');
+        $authToGet = $this->repAuth->getFirstAuth($auth->user_id, $auth->service_code);
+        if ($authToGet) {
+            $connection         = new TwitterOAuth($client_id, $client_secret, $authToGet->access_token, $authToGet->refresh_token);
+            try{
+                $user_detail    = $connection->get("users/show", array("user_id" => $auth->account_id));
+                if (200 == $connection->getLastHttpCode()){
+                    $page           = $this->repPage->getPage($auth->id, $user_detail->id);
+                    $input_insert   = [
+                        'name'              => $user_detail->name,
+                        'screen_name'       => $user_detail->screen_name,
+                        'location'          => $user_detail->location,
+                        'category'          => '',
+                        'link'              => '',
+                        'sns_page_id'       => $user_detail->id,
+                        'access_token'      => $auth->access_token,
+                        'avatar_url'        => $user_detail->profile_image_url,
+                        'banner_url'        => @$user_detail->profile_banner_url,
+                        'description'       => @$user_detail->description,
+                        'created_time'      => date("Y-m-d H:i:s",strtotime(@$user_detail->created_at)),
+                    ];
+                    if (!$page) {
+                        $page = $this->repPage->store($input_insert, $auth->id);
+                    }else{
+                        $page =$this->repPage->update($page, $input_insert);
+                    }
+                    $this->getPageDetail($user_detail, $page);
+                }
+            } catch (TwitterOAuthException $e) {
+                return $this->error('message1',"result null");
+            }
+        }
+    }
+    
 }

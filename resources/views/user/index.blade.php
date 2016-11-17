@@ -52,10 +52,10 @@
                                     <td>{{{ $user->url }}}</td>
                                     <td>{{{ $user->name }}}</td>
                                     <td class="center">
-                                        <a href="{{ URL::route("user.edit","$user->id") }}" class="btn btn-info btn-sm edit">{{{ trans('button.update') }}}</a>
                                         @if($user->authority != config('constants.authority.admin'))
                                             <a href="{{ url('dashboard/'.$user->id) }}"  class="btn btn-info btn-sm edit">{{{ trans('button.user_dashboard') }}}</a>
                                         @endif
+                                        <a href="{{ URL::route("user.edit","$user->id") }}" class="btn btn-info btn-sm edit">{{{ trans('button.update') }}}</a>
                                         @if($user->id != $user_id)
                                             <a class="btn btn-danger btn-sm btn-delete" data-button="{{{$user->id}}}"  data-from = "{{ URL::route("user.destroy",":id") }}" href="javascript:void(0)">
                                                 {{{ trans('button.delete')}}}

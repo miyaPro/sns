@@ -8,35 +8,38 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\AuthRepository;
-use App\Repositories\AccountRepository;
 use App\Http\Requests\UserRequest;
 use App\Http\Requests;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Lang;
 use Abraham\TwitterOAuth\TwitterOAuth;
-
+use Illuminate\Support\Facades\Artisan;
 
 class AccountController extends Controller
 {
     protected $repAuth;
-    protected $repAcc;
     public function __construct(
-        AuthRepository $auth,
-        AccountRepository $acc
+        AuthRepository $auth
     )
     {
         $this->repAuth      = $auth;
-        $this->repAcc       = $acc;
         $this->middleware('auth');
 //        $this->middleware('authority', ['except' => ['searchAccount', 'show']]);
     }
 
-    public function show()
+    public function index(Request $request)
     {
-        return view('account.list_account');
+        $curent_date = Carbon::today()->toDateString();
+        $keyword        = $request->get('keyword','');
+        $perPage        = config('constants.per_page');
+        $data = $this->repAuth->getRival($keyword, $perPage[1], $curent_date);
+        return view('account.list_account')->with([
+            'data' => $data
+        ]);
     }
 
     public function searchAccount(Request $request)
@@ -68,32 +71,42 @@ class AccountController extends Controller
         $client_id          = config('services.twitter.client_id');
         $client_secret      = config('services.twitter.client_secret');
         $auth               = $this->repAuth->getFirstAuth($user_id, $service);
-        $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
-        try{
-            $user_detail    = $connection->get("users/show", array("screen_name" => $input['nickname']));
-            if (200 == $connection->getLastHttpCode()){
-                $input_insert = [
-                    'account_id'        => $user_detail->id,
-                    'account_name'      => $user_detail->name,
-                    'screen_name'       => $user_detail->screen_name,
-                    'location'          => @$user_detail->location,
-                    'description'       => @$user_detail->description,
-                    'avatar_url'        => @$user_detail->profile_image_url,
-                    'created_time'      => date("Y-m-d H:i:s",strtotime(@$user_detail->created_at)),
-                    'followers_count'   => @$user_detail->followers_count,
-                    'friends_count'     => @$user_detail->friends_count,
-                    'listed_count'      => @$user_detail->listed_count,
-                    'favourites_count'  => @$user_detail->favourites_count,
-                    'statuses_count'    => @$user_detail->statuses_count,
-                ];
-                $this->repAcc->store($input_insert);
-            } else {
-                $this->repAuth->resetAccessToken($auth->id);
+        if ($auth) {
+            $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
+            try{
+                $user_detail    = $connection->get("users/show", array("screen_name" => $input['nickname']));
+                if (200 == $connection->getLastHttpCode()){
+                    $input_insert = [
+                        'user_id'           => $user_id,
+                        'account_id'        => $user_detail->id,
+                        'account_name'      => $user_detail->name,
+                        'service_code'      => $service,
+                        'rival_flg'         => 1,
+                        'access_token'      => '',
+                        'refresh_token'     => '',
+                    ];
+                    $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service);
+                    if ($authUser) {
+                        $input_update = [
+                            'access_token'      => '',
+                            'refresh_token'     => '',
+                        ];
+                        $this->repAuth->update($authUser, $input_update);
+                    }else {
+                        $this->repAuth->store($input_insert);
+                    }
+                    Artisan::call('twitter', [
+                        'account_id' => $input_insert['account_id'],
+                        'today'      => true
+                    ]);
+                } else {
+                    $this->repAuth->resetAccessToken($auth->id);
+                }
+            } catch (TwitterOAuthException $e) {
+                return $this->error('message1',"result null");
             }
-        } catch (TwitterOAuthException $e) {
-            return $this->error('message1',"result null");
+            return redirect('/account');
         }
-        return redirect('/account');
     }
 
     public function checkAccountInstagram($input)

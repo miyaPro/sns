@@ -43,6 +43,7 @@ class PageDetailRepository extends BaseRepository
         $model->posts_count               = $inputs['posts_count'];
         $model->followers_count           = $inputs['followers_count'];
         $model->favourites_count          = $inputs['favourites_count'];
+        $model->updated_at                = date("Y-m-d H:i:s");
         $model->save();
     }
 

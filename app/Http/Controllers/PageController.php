@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Cookie;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 
 class PageController extends Controller
 {
@@ -91,6 +92,13 @@ class PageController extends Controller
         }
 //        $date  = $repPost->getMaxDate($page->id) ;
         $curent_date = Carbon::today()->toDateString();
+        $pageCurrent = $this->repPageDetail->getPageByDate($page->id, $curent_date, $curent_date);
+        if(!$pageCurrent->count()){
+            Artisan::call($name_src, [
+                'account_id' => $auth->account_id,
+                'today'      => true
+            ]);
+        }
         $listPosts      = $repPost->getListPostByPage($page->id, $curent_date);
 
         $servicesCode   = $page->auth->service_code;
@@ -176,7 +184,6 @@ class PageController extends Controller
         $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
 
         $serviceOfPage = $this->repPage->checkServicePage($page_id)->service_code;
-        Cookie::queue('date_search', [$startDate, $endDate]);
         if ($serviceOfPage) {
             if (config('constants.service.facebook') == $serviceOfPage) {
                 $columns = [

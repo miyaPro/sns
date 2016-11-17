@@ -129,12 +129,7 @@
                                         {!! Form::select('typeDrawSubPage',  $condition, null, ['class' => 'typeDrawSubPage form-control','id' => 'typeDrawSubPage']) !!}
                                     </div>
                                 </div>
-                                <section class="panel panel-chart">
-                                    <header class="panel-heading">{{ trans('title.page_chart') }}</header>
-                                    <div class="panel-body">
-                                        <div id="chartContainer1" class="row"></div>
-                                    </div>
-                                </section>
+                                <div id="chartContainer1" class="row"></div>
                             </div>
                         </section>
                         <section class="panel">
@@ -145,12 +140,7 @@
                                         {!! Form::select('typeDrawSubPost',  $condition, null, ['class' => 'typeDrawSubPost form-control','id' => 'typeDrawSubPost']) !!}
                                     </div>
                                 </div>
-                                <section class="panel panel-chart">
-                                    <header class="panel-heading">{{trans('title.post_chart')}}</header>
-                                    <div class="panel-body">
-                                        <div id="chartContainer2" class="row"></div>
-                                    </div>
-                                </section>
+                                <div id="chartContainer2" class="row"></div>
                             </div>
                             <div class="panel-heading">{{ trans('field.post_list') }}</div>
                             <div class="panel-body service-first">
@@ -312,7 +302,6 @@
                         }
                     }
                     maxPage = Math.max.apply(Math,dataGraph.map(function(o){return o['count'];}));
-                    console.log('maxpage: ' + maxPage);
                     setMaxGraph(chartPage, maxPage)
                     chartPage.setData(dataGraph);
                 }
@@ -335,20 +324,16 @@
                         }
                     }
                     maxPost = Math.max.apply(Math,dataGraph.map(function(o){return o['count'];}));
-                    console.log('maxpost: ' + maxPost);
-//                    setMaxGraph(chartPost, maxPost)
-                    chartPost.options.ymax = 4*Math.ceil(maxPost/4);
-                    console.log(dataGraph);
+                    setMaxGraph(chartPost, maxPost)
                     chartPost.setData(dataGraph)
                 }
                 var setMaxGraph = function(chart, maxGraph){
                     var ceilMax = Math.ceil(maxGraph/4);
                     if(maxGraph >= 3*ceilMax){
-                        max = 4*(ceilMax);
+                        maxGraph = 4*ceilMax +  4*Math.ceil(ceilMax/4);
                     }
-                    var max = max < 4 ? 4 : max;
-                    console.log('data set: ' + max);
-//                    chart.options.ymax = max;
+                    var maxGraph = maxGraph < 4 ? 4 : maxGraph;
+                    chart.options.ymax = maxGraph;
                 }
                 $('#typeDrawPage, #typeDrawSubPost, #typeDrawSubPage').on('change', function (e) {
                     e.preventDefault;

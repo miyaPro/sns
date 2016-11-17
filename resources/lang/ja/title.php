@@ -16,9 +16,10 @@ return [
     'site_edit' => 'サイト編集',
     'site_add' => 'サイト追加',
     'analytic_report' => 'Analytic Report',
-    'master' => 'Danh sách Master',
-    'master_register' => 'Thêm Master mới',
-    'master_edit' => 'Sửa thông tin Master',
+    'master' => 'マスタ覧',
+    'master_register' => 'マスタ追加',
+    'master_edit' => 'マスタ編集',
     'dashboard'     => 'ダッシュボード',
     'info_detail'     => 'SNS 詳細',
+    'post_engagement_daily'     => '日別投稿のエンゲージメント',
 ];
