@@ -6710,9 +6710,12 @@ div.tagsinput span.tag {
   .service-content .tm-membr .btn-view {
     padding-top: 10px; }
   .service-content .add-other {
-    margin: 0 20px 20px 0; }
+    margin: 0 0 20px 0; }
+    .service-content .add-other .sel_account {
+      margin-bottom: 20px; }
     .service-content .add-other .btn-group {
-      float: right; }
+      float: right;
+      margin-right: 20px; }
 
 .btn-white {
   background-clip: padding-box;
@@ -6819,6 +6822,12 @@ div.tagsinput span.tag {
 
 .account-detail {
   margin-bottom: 0px; }
+
+.change_data_graph.active {
+  background-color: beige; }
+
+.change_data_graph {
+  cursor: pointer; }
 
 a.logo {
   margin: 10px 0 0 25px; }

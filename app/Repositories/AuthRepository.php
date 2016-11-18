@@ -45,8 +45,12 @@ class AuthRepository extends BaseRepository
 	 */
   	private function save($auth, $inputs)
 	{
-        $auth->refresh_token             = @$inputs['refresh_token'];
-        $auth->access_token              = @$inputs['access_token'];
+        if(@$inputs['refresh_token']) {
+            $auth->refresh_token         = $inputs['refresh_token'];
+        }
+        if(@$inputs['access_token']) {
+            $auth->access_token          = $inputs['access_token'];
+        }
         $auth->save();
 	}
 
@@ -61,16 +65,22 @@ class AuthRepository extends BaseRepository
         $this->save($auth, $inputs);
 	}
 
-    public function getListUserAccess () {
+    public function getUserAuth ($user_id, $service_code) {
         $model = new $this->model;
-        $model = $model->select('user_id', 'service_code')
-            ->whereNotNull('access_token');
+        $model = $model->where('user_id', $user_id);
+//            ->whereNotNull('access_token')
+//            ->where('access_token','<>', '');
+        if($service_code) {
+            $model = $model->where('service_code', $service_code);
+        }
         return $model->get();
     }
-    public function getListInitAuth($service_code, $account_id = null){
+
+    public function getListInitAuth($service_code, $account_id = null) {
         $model = new $this->model;
         $model = $model->whereNotNull('access_token')
-                       ->where('service_code',$service_code);
+                        ->where('access_token','<>', '')
+                        ->where('service_code',$service_code);
         if($account_id) {
             $model = $model->where('account_id', $account_id);
         }
@@ -96,33 +106,27 @@ class AuthRepository extends BaseRepository
     {
         $model = new $this->model();
         $model = $model->where('user_id', $user_id)
-                       ->where('service_code', $service_code);
+                    ->where('service_code', $service_code)
+                    ->whereNotNull('access_token')
+                    ->where('access_token','<>', '')
+                    ->where('rival_flg', 0);
         return $model->first();
     }
 
-    public function getRival($keyword, $perPage, $curent_date)
+    public function getRival($keyword, $perPage, $user_id = null)
     {
         $model = new $this->model();
+        if ($user_id) {
+            $model = $model->where('user_id', $user_id);
+        }
         $model = $model->where('rival_flg', 1)
-                       ->join('pages', 'auths.id', '=', 'pages.auth_id')
-                       ->join('page_details', 'pages.id', '=', 'page_details.page_id')
                        ->select(
+                           'auths.id as auth_id',
                            'auths.service_code',
-                           'pages.id as page_id',
-                           'pages.name',
-                           'pages.created_time',
-                           'pages.avatar_url',
-                           'pages.banner_url',
-                           'pages.description',
-                           'pages.sns_page_id',
-                           'page_details.friends_count',
-                           'page_details.posts_count',
-                           'page_details.followers_count',
-                           'page_details.favourites_count'
+                           'auths.account_name'
 
                        )
-                       ->where('page_details.date', $curent_date)
-                       ->orderby('pages.created_at', 'desc');
+                       ->orderby('auths.created_at', 'desc');
         if($keyword){
             $model = $model->where(function($q) use ($keyword) {
                 $q->where('pages.name', 'like', "%{$keyword}%");

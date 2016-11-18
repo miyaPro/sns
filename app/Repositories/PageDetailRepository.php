@@ -104,4 +104,11 @@ class PageDetailRepository extends BaseRepository
         return $model->first();
     }
 
+    public function destroyById($list_id)
+    {
+        foreach ($list_id as $id){
+            $this->getById($id)->delete();
+        }
+    }
+
 }

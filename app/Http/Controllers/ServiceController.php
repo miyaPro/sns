@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Facebook\Facebook as Facebook;
+use Facebook\Exceptions\FacebookResponseException as FacebookResponseException;
+use Facebook\Exceptions\FacebookSDKException as FacebookSDKException;
+use Abraham\TwitterOAuth\TwitterOAuthException;
+use Abraham\TwitterOAuth\TwitterOAuth;
 
 class ServiceController extends Controller
 {
@@ -56,9 +61,14 @@ class ServiceController extends Controller
         $this->repPostTw        = $postTw;
         $this->repPostIg        = $postIg;
         $this->middleware(['auth']);
+
+        //get all services
+        foreach (config('constants.service') as $code => $val) {
+            $this->services[$val] = $code;
+        }
     }
 
-    public function dashboard(Request $request, $user_id = null)
+    public function dashboard(Request $request, $service_code, $user_id = null)
     {
         $user_current   = Auth::user();
         $authority      = config('constants.authority');
@@ -67,27 +77,55 @@ class ServiceController extends Controller
         }
         if($user_current->authority == $authority['client']){
             if(!$user_id){
-                $user_id    = $user_current->id;
-            }else{
+                $user_id = $user_current->id;
+            } elseif ($user_id != $user_current->id) {
                 abort(404);
             }
         }
-        $user           = $this->repUser->getById($user_id);
+        $user            = $this->repUser->getById($user_id);
         if($user) {
-            $inputs         = $request->all();
+            $inputs      = $request->all();
             if(!@$inputs['to']) {
-                $inputs['to']   = date('Y/m/d');
+                $inputs['to']   = date('Y/m/d' ,strtotime('-1 day'));
             }
             if(!@$inputs['from']) {
                 $inputs['from'] = date('Y/m/d', strtotime($inputs['to']." -2 weeks"));
             }
             $fromDate   = date('Y-m-d' ,strtotime($inputs['from']));
             $toDate     = date('Y-m-d' ,strtotime($inputs['to']));
-            $services   = $pageList = $postByDay = $totalPage = $authAccount = [];
-            //get data pages by date
+
+            if(!$service_code) {
+                $service_code = config('constants.service.facebook');
+            } else {
+                //check available service
+                $check = false;
+                foreach (config('constants.service') as $name => $code) {
+                    if($service_code == $code) {
+                        $check = true;
+                    }
+                }
+                if(!$check) {
+                    abort(404);
+                }
+            }
+            //check available access token
             foreach ($user->auth as $auth) {
-                if($auth->access_token) {
-                    $services[] = $auth->service_code;
+                if($auth->service_code == $service_code) {
+                    $check_name = 'checkAccessToken'.ucfirst($this->services[$auth->service_code]);
+                    $this->$check_name($auth);
+                }
+            }
+
+            $pageList = $postByDay = $totalPage = $authAccount = $pageCompetitor = [];
+            //get data pages by date
+            $auths          = $this->repAuth->getUserAuth($user_id, $service_code);
+            $service_data['service_exist']      = true;
+            if(!$auths || count($auths) <= 0) {
+                $service_data['service_exist']  = false;
+            }
+            foreach ($auths as $auth) {
+                if($auth->rival_flg == 0 && !$auth->access_token) {
+                    continue;
                 }
                 $authAccount[$auth->service_code][$auth->id] = $auth->email ? $auth->account_name.' ('.$auth->email.')' : $auth->account_name;
                 switch ($auth->service_code) {
@@ -105,20 +143,24 @@ class ServiceController extends Controller
                     } break;
                     default: $request->session()->flash('alert-danger', trans('message.exiting_service'));
                 }
-                $pages = $this->repPage->getAllByField('auth_id', $auth->id);
-                foreach ($pages as $page) {
+
+                foreach ($auth->page as $page) {
                     //info page
-                    $pageList[$auth->service_code][$page->id] = $page;
+                    if($auth->rival_flg == 0){
+                        $pageList[$page->id] = $page;
+                    }else{
+                        $pageCompetitor[$page->id] = $page;
+                    }
                     if(isset($repPost)) {
                         //post data by page
                         $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($fromDate)));
                         $postDetail = $repPost->getListPostByDate($page->id, null, $beforeDate, $toDate);
-                        $postByDay[$auth->service_code][$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
+                        $postByDay[$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
                     }
 
                     //get total from page detail
                     $pageDetail = $this->repPageDetail->getLastDate($page->id);
-                    $totalPage[$auth->service_code][$page->id] = [
+                    $totalPage[$page->id] = [
                         'friends_count'     => @$pageDetail->friends_count ? $pageDetail->friends_count : 0,
                         'posts_count'       => @$pageDetail->posts_count ? $pageDetail->posts_count : 0,
                         'followers_count'   => @$pageDetail->followers_count ? $pageDetail->followers_count : 0,
@@ -126,14 +168,17 @@ class ServiceController extends Controller
                     ];
                 }
             }
+            $service_data['service_code'] = $service_code;
+            $service_data['service_name'] = $this->services[$service_code];
             return response(view('service.dashboard')->with([
-                'services'      => $services,
-                'authAccount'   => $authAccount,
-                'dates'         => $inputs,
-                'pageList'      => $pageList,
-                'postByDay'     => $postByDay,
-                'totalPage'     => $totalPage,
-                'user'          => $user
+                'service_data'      => $service_data,
+                'authAccount'       => $authAccount,
+                'dates'             => $inputs,
+                'pageList'          => $pageList,
+                'postByDay'         => $postByDay,
+                'totalPage'         => $totalPage,
+                'user'              => $user,
+                'pageCompetitor'    => $pageCompetitor,
             ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));
@@ -169,5 +214,83 @@ class ServiceController extends Controller
             unset($data[$startDate]);
         }
         return $data;
+    }
+
+    public function checkAccessTokenFacebook($auth) {
+        $result = true;
+        $fb     = new Facebook([
+            'app_id'                => config('services.facebook.client_id'),
+            'app_secret'            => config('services.facebook.client_secret'),
+            'default_graph_version' => 'v2.8',
+            'grant_type'            => 'fb_exchange_token',
+        ]);
+        try{
+            $accessToken    = $auth['access_token'];
+            $fb->getRedirectLoginHelper();
+            $response       = $fb->get('/me?fields=id,name,email', $accessToken);
+            $user           = $response->getGraphUser();
+            if(!isset($user['accounts'])){
+                $result     = false;
+            }
+        } catch(FacebookResponseException $e) {
+            // When Graph returns an error
+            $this->repAuth->resetAccessToken($auth->id);
+            $result = false;
+        } catch(FacebookSDKException $e) {
+
+        }
+
+        return $result;
+    }
+
+    public function checkAccessTokenTwitter($auth) {
+        $result = true;
+        $client_id          = config('services.twitter.client_id');
+        $client_secret      = config('services.twitter.client_secret');
+        $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
+        $connection->get("account/verify_credentials");
+        try{
+            if (200 != $connection->getLastHttpCode()){
+                $this->repAuth->resetAccessToken($auth->id);
+                $result = false;
+            }
+        } catch (TwitterOAuthException $e) {
+
+        }
+        return $result;
+    }
+
+    public function checkAccessTokenInstagram($auth) {
+        $result     = true;
+        $url        = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$auth->access_token;
+        $dataGet    = $this->getContent($url,false);
+        $dataAccount = @json_decode($dataGet[0]);
+        if(isset($dataGet) && (!isset($dataAccount->meta) || $dataAccount->meta->code != 200)){
+            $this->repAuth->resetAccessToken($auth->id);
+            $result = false;
+        }
+        return $result;
+    }
+
+    public function getContent($url,$postdata){
+        if (!function_exists('curl_init')){
+            return 'Sorry cURL is not installed!';
+        }
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+        if ($postdata)
+        {
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+        }
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 ;Windows NT 6.1; WOW64; AppleWebKit/537.36 ;KHTML, like Gecko; Chrome/39.0.2171.95 Safari/537.36");
+        $contents = curl_exec($ch);
+        $headers = curl_getinfo($ch);
+        curl_close($ch);
+        return array($contents, $headers);
     }
 }

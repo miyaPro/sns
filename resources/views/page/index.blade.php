@@ -280,7 +280,7 @@
                         behaveLikeLine: true,
                         fillOpacity: '0.2',
                         xLabelFormat: function(d) {d = new Date(d.label); return (d.getMonth()+1)+'/'+d.getDate();},
-                        yLabelFormat: function(y){return y != Math.round(y)?'':y;},
+                        yLabelFormat: function(y){return y != Math.round(y)?'':parseInt(y).toLocaleString();},
                     });
                 }
                 var loadGraphPage = function(dataResponse, dataGraph, typeDrawSubPage){

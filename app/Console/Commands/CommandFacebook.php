@@ -29,7 +29,7 @@ class CommandFacebook extends Command
      *
      * @var string
      */
-    protected $signature = 'facebook {account_id?} {today?}';
+    protected $signature = 'facebook {today=0} {account_id?}';
     /**
      * The console command description.
      *

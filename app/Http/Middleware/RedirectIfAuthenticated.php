@@ -23,7 +23,7 @@ class RedirectIfAuthenticated
             if(Auth::user()->authority == $authority['admin']){
                 return redirect('user');
             } elseif(Auth::user()->authority == $authority['client']){
-                return redirect('dashboard');
+                return redirect('dashboard/'.config('constants.service.facebook'));
             }
         }
         return $next($request);

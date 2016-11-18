@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Validation\Rule;
+
 class MasterRequest extends Request
 {
     /**
@@ -21,9 +23,17 @@ class MasterRequest extends Request
      */
     public function rules()
     {
+        $this->input = $this->all();
         return [
             'group'         => 'required|max:255',
-            'code'          => "required|unique:masters,code,NULL,id,deleted_at,NULL",
+            'code' => [
+                'required',
+                Rule::unique('masters')->ignore($this->input['id'], 'id')
+                    ->where(function ($query) {
+                        $query->where('code', $this->input['code']);
+                        $query->where('group', $this->input['group']);
+                    }),
+            ],
             'name_ja'       => 'max:255',
             'name_vn'       => 'max:255',
             'name_en'       => 'max:255',

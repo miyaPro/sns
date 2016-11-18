@@ -70,5 +70,7 @@ return [
     'condition_filter_total' => 'Total',
     'condition_filter_daily' => 'Daily',
     'post_engagement' => 'Post Engagement',
+    'client_email' => 'クライアントEメール',
+    'rival_name' => 'ライバル名前'
 
 ];

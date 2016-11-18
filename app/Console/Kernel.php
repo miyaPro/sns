@@ -28,11 +28,19 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('facebook')
-            ->everyTenMinutes();
+            ->dailyAt('00:10');
         $schedule->command('twitter')
-            ->everyTenMinutes();
+            ->dailyAt('00:10');
         $schedule->command('instagram')
-            ->everyTenMinutes();
+            ->dailyAt('00:10');
+
+        $schedule->command('facebook 1')
+            ->everyThirtyMinutes()->unlessBetween('23:00', '3:00');
+        $schedule->command('twitter 1')
+            ->everyThirtyMinutes()->unlessBetween('23:00', '3:00');
+        $schedule->command('instagram 1')
+            ->everyThirtyMinutes()->unlessBetween('23:00', '3:00');
+
     }
 
     /**

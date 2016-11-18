@@ -25,5 +25,8 @@ return [
     'template_file_not_exist' => 'テンプレートファイルが存在していません',
     'error_main'        => 'Lỗi đăng nhập.',
     'error_network_connect'   => ':name Network, result null',
-    'error_get_access_token'  => ':name Token sai hoặc hết hạn'
+    'error_get_access_token'  => ':name Token sai hoặc hết hạn',
+    'error_get_info_acc'  => 'Rival account does not exist!',
+    'token_expired'  => '無効または期限切れのトークン。',
+    'benchmark_save_success' => ' ベンチマーク企業を新規に追加しました。'
 ];

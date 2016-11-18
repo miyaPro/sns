@@ -16,23 +16,22 @@
                     </li>
                 @else
                     <li>
-                        <a href="{!! URL::to('dashboard') !!}" class="{{ Request::is('dashboard') ? 'active' : '' }}">
+                        <a href="{!! URL::to('dashboard/'.config('constants.service.facebook')) !!}" class="{{ Request::is('dashboard') ? 'active' : '' }}">
                             <i class="fa fa-book"></i> <span>{{{ trans('menu.dashboard') }}}</span>
                         </a>
+                    </li>
+                    <li>
+                        <a href="{!! URL::to('benchmark') !!}" class="{{ Request::is('benchmark') ? 'active' : '' }}"><i class="fa fa-building"></i> <span>{{{ trans('menu.rival_list') }}}</span></a>
                     </li>
                 @endif
                 <li>
                     <a href="{!! URL::to('account/edit') !!}" class="{{ Request::is('account/edit') ? 'active' : '' }}"><i class="fa fa-cog text-warning"></i> <span>{{{ trans('menu.setting') }}}</span></a>
-                </li>
-                <li>
-                    <a href="{!! URL::to('account') !!}" class="{{ Request::is('account') ? 'active' : '' }}"><i class="fa fa-group text-success"></i> <span>{{{ trans('menu.rival_list') }}}</span></a>
                 </li>
 
                 <li>
                     <a href="{!! URL::to('logout') !!}"><i class="fa fa-sign-out text-danger"></i> <span>{{{ trans('menu.sd_logout') }}}</span></a>
                 </li>
             </ul></div>
-        <?php echo Request::is('ad'); ?>
         <!-- sidebar menu end-->
         <div id="ascrail2000" class="nicescroll-rails" style="width: 3px; z-index: auto; cursor: default; position: absolute; top: 0px; left: 237px; height: 253px; opacity: 0; display: block;"><div style="position: relative; top: 0px; float: right; width: 3px; height: 62px; border: 0px solid rgb(255, 255, 255); border-radius: 0px; background-color: rgb(31, 181, 173); background-clip: padding-box;"></div></div><div id="ascrail2000-hr" class="nicescroll-rails" style="height: 3px; z-index: auto; top: 250px; left: 0px; position: absolute; cursor: default; display: none; width: 237px; opacity: 0;"><div style="position: relative; top: 0px; height: 3px; width: 240px; border: 0px solid rgb(255, 255, 255); border-radius: 0px; background-color: rgb(31, 181, 173); background-clip: padding-box;"></div></div></div>
 </aside>

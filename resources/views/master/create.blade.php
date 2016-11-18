@@ -44,6 +44,7 @@
                     <div class="form-group">
                         {!! Form::label('group', trans('field.group'), ['class' => "col-md-2 control-label required"]) !!}
                         <div class="col-md-3">
+                            {!! Form::hidden('id', null, ['class' => 'form-control']) !!}
                             {!! Form::text('group', null, ['id' => 'inputGroup','class' => 'form-control']) !!}
                             @if ($errors->has('group'))
                                 <label for="inputGroup" class="error">{{ $errors->first('group') }}</label>

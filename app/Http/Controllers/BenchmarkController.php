@@ -1,10 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: nguyen.duc.quyet
- * Date: 15/11/2016
- * Time: 10:00
- */
+
 namespace App\Http\Controllers;
 
 use App\Repositories\AuthRepository;
@@ -16,13 +11,15 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Http\Requests\BenchmarkRequest;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Lang;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Illuminate\Support\Facades\Artisan;
 
-class AccountController extends Controller
+class BenchmarkController extends Controller
 {
+
     protected $repAuth;
     protected $repMaster;
     protected $repPage;
@@ -40,23 +37,20 @@ class AccountController extends Controller
         $this->repPage        = $page;
         $this->repPageDetail = $pageDetail;
         $this->middleware('auth');
-//        $this->middleware('authority', ['except' => ['searchAccount', 'show']]);
     }
 
     public function index(Request $request)
     {
-        $current_date = Carbon::parse('-1 days')->toDateString();
-//        $current_date   = Carbon::today()->toDateString();
         $user_id        = (Auth::user()->authority != config('constants.authority.admin')) ? Auth::user()->id : '';
         $keyword        = $request->get('keyword','');
         $perPage        = config('constants.per_page');
-        $data           = $this->repAuth->getRival($keyword, $perPage[1], $current_date, $user_id);
-        return view('account.list_account')->with([
+        $data           = $this->repAuth->getRival($keyword, $perPage[1], $user_id);
+        return view('benchmark.index')->with([
             'data'      => $data,
         ]);
     }
 
-    public function searchAccount(Request $request)
+    public function create()
     {
         $lang    = Lang::locale();
         $service = $this->repMaster->getService();
@@ -65,28 +59,41 @@ class AccountController extends Controller
             $name = 'name_'.$lang;
             $social[$value->$name] = ucfirst($value->$name);
         }
+        return view('benchmark.create')->with([
+            'social' => $social
+        ]);
+    }
+
+    public function store(BenchmarkRequest $request)
+    {
         $input = $request->all();
         if($input) {
             $account_func = 'checkAccount'.ucfirst($input['typeSociale']);
             return $this->$account_func($input);
         }
-        return view('account.check_account')->with([
-            'social' => $social
-        ]);
     }
 
     public function destroy($id)
     {
+        $user_id            = Auth::user()->id;
+        $auth        = $this->repAuth->getById($id);
         $page        = $this->repPage->getOneByField('auth_id', $id);
         $page_detail = $this->repPageDetail->getAllByField('page_id', $page->id);
         $arr_page_detail_id = array();
         foreach ($page_detail as $value) {
             $arr_page_detail_id[] = $value->id;
         }
-        $this->repPageDetail->destroyById($arr_page_detail_id);
-        $this->repPage->destroy($page->id);
-        $this->repAuth->destroy($id);
-        return Response::json(array('success' => true), 200);
+        if ($user_id == $auth->user_id) {
+            $this->repPageDetail->destroyById($arr_page_detail_id);
+            $this->repPage->destroy($page->id);
+            $this->repAuth->destroy($id);
+            return Response::json(array('success' => true), 200);
+        }
+        $errors['msg'] = trans("message.common_error");
+        return Response::json(array(
+            'success' => false,
+            'errors' => $errors
+        ), 400);
     }
 
     public function checkAccountFacebook($input)
@@ -110,7 +117,7 @@ class AccountController extends Controller
                     $input_insert = [
                         'user_id'           => $user_id,
                         'account_id'        => $user_detail->id,
-                        'account_name'      => $user_detail->name,
+                        'account_name'      => $user_detail->screen_name,
                         'service_code'      => $service,
                         'rival_flg'         => 1,
                     ];
@@ -118,19 +125,21 @@ class AccountController extends Controller
                     if (!$authUser) {
                         $this->repAuth->store($input_insert);
                         Artisan::call('twitter', [
-                            'today'      => 1,
-                            'account_id' => $input_insert['account_id']
+                            'account_id' => $input_insert['account_id'],
+                            'today'      => true
                         ]);
                     } else {
-                        return redirect()->back()->with('alert-danger', trans('message.exists_error', ['name' => trans('default.profile')]));
+                        return redirect()->back()->with('alert-danger', trans('message.exists_error'))->withInput($input);
                     }
                 } else {
-                    return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc', ['name' => trans('default.profile')]));
+                    return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);
                 }
             } catch (TwitterOAuthException $e) {
                 return $this->error('message1',"result null");
             }
-            return redirect('/account');
+            return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success', ['name' => trans('default.profile')]));;
+        } else {
+            return redirect()->back()->with('alert-danger', trans('message.token_expired'));
         }
     }
 
@@ -176,5 +185,4 @@ class AccountController extends Controller
         curl_close($ch);
         return array($contents, $headers);
     }
-    
 }

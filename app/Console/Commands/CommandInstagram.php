@@ -20,7 +20,7 @@ class CommandInstagram extends Command
      *
      * @var string
      */
-    protected $signature = 'instagram {account_id?} {today?}';
+    protected $signature = 'instagram {today=0} {account_id?}';
 
     /**
      * The console command description.

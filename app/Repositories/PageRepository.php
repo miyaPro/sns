@@ -15,6 +15,22 @@ class PageRepository extends BaseRepository
     {
         $this->model = $page;
     }
+
+    /**
+     * Create a company.
+     *
+     * @param  array  $inputs
+     * @param  int    $confirmation_code
+     */
+    public function store($inputs, $auth_id)
+    {
+        $page = new $this->model;
+        $page->auth_id   = $auth_id;
+        $page->sns_page_id   = $inputs['sns_page_id'];
+        $page = $this->save($page, $inputs);
+        return $page;
+    }
+
     /**
      * Save the User.
      * @param  Array  $inputs
@@ -35,20 +51,7 @@ class PageRepository extends BaseRepository
         $page->save();
         return $page;
     }
-    /**
-     * Create a company.
-     *
-     * @param  array  $inputs
-     * @param  int    $confirmation_code
-     */
-    public function store($inputs, $auth_id)
-    {
-        $page = new $this->model;
-        $page->auth_id   = $auth_id;
-        $page->sns_page_id   = $inputs['sns_page_id'];
-        $page = $this->save($page, $inputs);
-        return $page;
-    }
+
     /**
      * Update a token.
      *
@@ -85,4 +88,5 @@ class PageRepository extends BaseRepository
                        );
         return $model->first();
     }
+
 }

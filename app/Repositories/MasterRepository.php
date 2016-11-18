@@ -86,4 +86,12 @@ class MasterRepository extends BaseRepository
         $data  = $model->paginate($perPage);
         return $data;
     }
+
+    public function getService()
+    {
+        $model = new $this->model();
+        $model = $model->where('group', 'services')
+                       ->where('attr1', 1);
+        return $model->get();
+    }
 }

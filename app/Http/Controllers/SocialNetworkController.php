@@ -96,8 +96,8 @@ class SocialNetworkController extends Controller
 //                $process = new Process('php '.env('ARTISAN_PATCH').'artisan'.$authUser['account_id']);
 //                $process->start();
                 Artisan::call('facebook', [
-                    'account_id' => $authUser['account_id'],
-                    'today'      => true
+                    'today'      => 1,
+                    'account_id' => $authUser['account_id']
                 ]);
             }
             else{
@@ -113,8 +113,9 @@ class SocialNetworkController extends Controller
 //                $process = new Process('php '.env('ARTISAN_PATCH').'artisan '.$inputs['account_id']);
 //                $process->start();
                 Artisan::call('facebook', [
-                    'account_id' => $inputs['account_id'],
-                    'today'      => true
+                    'today'      => 1,
+                    'account_id' => $inputs['account_id']
+
                 ]);
             }
         } catch(FacebookResponseException $e) {
@@ -129,7 +130,7 @@ class SocialNetworkController extends Controller
             $_SESSION['facebook_access_token'] = (string) $accessToken;
 
         }
-        return redirect('/dashboard');
+        return redirect('/dashboard/'.config('constants.service.facebook'));
     }
 
     public function handleInstagramCallback(Request $request) {
@@ -167,13 +168,13 @@ class SocialNetworkController extends Controller
 //            $process = new Process('php '.env('ARTISAN_PATH').'artisan instagram '.$input['account_id']);
 //            $process->start();
             Artisan::call('instagram', [
-                'account_id' => $input['account_id'],
-                'today'      => true
+                'today'      => 1,
+                'account_id' => $input['account_id']
             ]);
         }else{
             Session::flash('alert-danger', trans('message.error_get_access_token_instagram'));
         }
-        return redirect('/dashboard');
+        return redirect('/dashboard/'.config('constants.service.instagram'));
     }
 
     public function getContent($url,$postdata){
@@ -292,10 +293,10 @@ class SocialNetworkController extends Controller
 //        $process = new Process('php '.env('ARTISAN_PATH').'artisan twitter '.$input['account_id']);
 //        $process->start();
         Artisan::call('twitter', [
-            'account_id' => $input['account_id'],
-            'today'      => true
+            'today'      => 1,
+            'account_id' => $input['account_id']
         ]);
-        return redirect('/dashboard');
+        return redirect('/dashboard/'.config('constants.service.twitter'));
 
     }
 

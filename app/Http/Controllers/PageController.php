@@ -95,8 +95,8 @@ class PageController extends Controller
         $pageCurrent = $this->repPageDetail->getPageByDate($page->id, $curent_date, $curent_date);
         if(!$pageCurrent->count()){
             Artisan::call($name_src, [
+                'today'      => 1,
                 'account_id' => $auth->account_id,
-                'today'      => true
             ]);
         }
         $listPosts      = $repPost->getListPostByPage($page->id, $curent_date);
@@ -141,7 +141,7 @@ class PageController extends Controller
         $pageDetail     = $this->repPageDetail->getPageByDate($page_id, $startDate, $endDate);
         $condition      = config('constants.condition_filter_page');
         /*data graph page*/
-        for($i=0;$i <= $days; $i++) {
+        for($i=0;$i <= $days + 1; $i++) {
             $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
             $data[$day] = [
                 'count' => 0,
@@ -152,7 +152,7 @@ class PageController extends Controller
         foreach ($pageDetail as $key => $detail) {
             $val_condition = $condition[$countType].'_count';
             $data[$detail->date]['count'] = $detail->$val_condition;
-            if (($detail->date > date('Y-m-d' ,strtotime($startDate))) && ($detail->date > $startDateByDb)) {
+            if (($detail->date > date('Y-m-d' ,strtotime($startDate))) && ($detail->date >= $startDateByDb)) {
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($detail->date)));
                 $beforeDayVal   = $data[$beforeDate]['count'];
                 $thisDayVal     = $data[$detail->date]['count'];

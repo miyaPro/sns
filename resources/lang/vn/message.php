@@ -36,5 +36,8 @@ return [
     'error_network_connect'   => ':name network, result null',
     'exiting_service'  => 'Không có dịch vụ tương ứng!',
     'page_not_found'  => 'Không có trang nào.',
-
+    'error_get_info_acc'  => 'Rival account does not exist!',
+    'exists_error'=> ':name đã tồn tại!',
+    'token_expired'  => 'Invalid or expired token!',
+    'benchmark_save_success' => 'Benchmark được thêm vào thành công.'
 ];

@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 //require "../../vendor/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuthException;
-use App\Post;
 use App\Repositories\PostTwitterRepository;
 use Carbon\Carbon;
 use Faker\Provider\cs_CZ\DateTime;
@@ -25,7 +24,7 @@ class CommandTwitter extends Command
      *
      * @var string
      */
-    protected $signature = "twitter {account_id?} {today?}";
+    protected $signature = "twitter {today=0} {account_id?}";
 
     /**
      * The console command description.
@@ -82,6 +81,64 @@ class CommandTwitter extends Command
         }
     }
 
+    public function getPageRival($auth)
+    {
+        $client_id          = config('services.twitter.client_id');
+        $client_secret      = config('services.twitter.client_secret');
+        $authToGet = $this->repAuth->getFirstAuth($auth->user_id, $auth->service_code);
+        if ($authToGet) {
+            $connection         = new TwitterOAuth($client_id, $client_secret, $authToGet->access_token, $authToGet->refresh_token);
+            try{
+                $user_detail    = $connection->get("users/show", array("user_id" => $auth->account_id));
+                if (200 == $connection->getLastHttpCode()){
+                    $page           = $this->repPage->getPage($auth->id, $user_detail->id);
+                    $input_insert   = [
+                        'name'              => $user_detail->name,
+                        'screen_name'       => $user_detail->screen_name,
+                        'location'          => $user_detail->location,
+                        'category'          => '',
+                        'link'              => '',
+                        'sns_page_id'       => $user_detail->id,
+                        'access_token'      => $auth->access_token,
+                        'avatar_url'        => $user_detail->profile_image_url,
+                        'banner_url'        => @$user_detail->profile_banner_url,
+                        'description'       => @$user_detail->description,
+                        'created_time'      => date("Y-m-d H:i:s",strtotime(@$user_detail->created_at)),
+                    ];
+                    if (!$page) {
+                        $page = $this->repPage->store($input_insert, $auth->id);
+                    }else{
+                        $page =$this->repPage->update($page, $input_insert);
+                    }
+                    $this->getPageDetail($user_detail, $page);
+                }
+            } catch (TwitterOAuthException $e) {
+                return $this->error('message1',"result null");
+            }
+        }
+    }
+
+    public function getPageDetail($page_twitter, $page)
+    {
+        $current_date   = Carbon::today()->toDateString();
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
+        $page_detail   = $this->repPageDetail->getByDate($page->id, $current_date);
+        $inputs = [
+            'friends_count'     => $page_twitter->friends_count,
+            'posts_count'       => $page_twitter->statuses_count,
+            'followers_count'   => $page_twitter->followers_count,
+            'favourites_count'  => $page_twitter->favourites_count,
+        ];
+        if($page_detail){
+            $this->repPageDetail->update($page_detail, $inputs);
+        }else{
+            $inputs['date'] = $current_date;
+            $this->repPageDetail->store($inputs, $page->id);
+        }
+    }
+
     public function getPage($auth)
     {
         $client_id          = config('services.twitter.client_id');
@@ -120,27 +177,6 @@ class CommandTwitter extends Command
 
     }
 
-    public function getPageDetail($page_twitter, $page)
-    {
-        $current_date   = Carbon::today()->toDateString();
-        if(!$this->today) {
-            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
-        }
-        $page_detail   = $this->repPageDetail->getByDate($page->id, $current_date);
-        $inputs = [
-            'friends_count'     => $page_twitter->friends_count,
-            'posts_count'       => $page_twitter->statuses_count,
-            'followers_count'   => $page_twitter->followers_count,
-            'favourites_count'  => $page_twitter->favourites_count,
-        ];
-        if($page_detail){
-            $this->repPageDetail->update($page_detail, $inputs);
-        }else{
-            $inputs['date'] = $current_date;
-            $this->repPageDetail->store($inputs, $page->id);
-        }
-    }
-
     public function getPost($page, $auth)
     {
         $client_id          = config('services.twitter.client_id');
@@ -168,6 +204,8 @@ class CommandTwitter extends Command
         }
     }
 
+    /*get data and store rival account*/
+
     public function getPostDetail($posts_twitter, $post)
     {
         $current_date        = Carbon::today()->toDateString();
@@ -184,44 +222,6 @@ class CommandTwitter extends Command
         }else{
             $inputs['date'] = $current_date;
             $this->repPostTwitterDetail->store($inputs, $post->id);
-        }
-    }
-
-    /*get data and store rival account*/
-    public function getPageRival($auth)
-    {
-        $client_id          = config('services.twitter.client_id');
-        $client_secret      = config('services.twitter.client_secret');
-        $authToGet = $this->repAuth->getFirstAuth($auth->user_id, $auth->service_code);
-        if ($authToGet) {
-            $connection         = new TwitterOAuth($client_id, $client_secret, $authToGet->access_token, $authToGet->refresh_token);
-            try{
-                $user_detail    = $connection->get("users/show", array("user_id" => $auth->account_id));
-                if (200 == $connection->getLastHttpCode()){
-                    $page           = $this->repPage->getPage($auth->id, $user_detail->id);
-                    $input_insert   = [
-                        'name'              => $user_detail->name,
-                        'screen_name'       => $user_detail->screen_name,
-                        'location'          => $user_detail->location,
-                        'category'          => '',
-                        'link'              => '',
-                        'sns_page_id'       => $user_detail->id,
-                        'access_token'      => $auth->access_token,
-                        'avatar_url'        => $user_detail->profile_image_url,
-                        'banner_url'        => @$user_detail->profile_banner_url,
-                        'description'       => @$user_detail->description,
-                        'created_time'      => date("Y-m-d H:i:s",strtotime(@$user_detail->created_at)),
-                    ];
-                    if (!$page) {
-                        $page = $this->repPage->store($input_insert, $auth->id);
-                    }else{
-                        $page =$this->repPage->update($page, $input_insert);
-                    }
-                    $this->getPageDetail($user_detail, $page);
-                }
-            } catch (TwitterOAuthException $e) {
-                return $this->error('message1',"result null");
-            }
         }
     }
     

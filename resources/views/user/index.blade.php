@@ -34,7 +34,7 @@
                             <th class="clientStatus">{{{ trans('field.status') }}}</th>
                             <th class="clientEmail">{{{ trans('field.email') }}}</th>
                             <th class="clientCompany">{{{ trans('field.company_name') }}}</th>
-                            <th class="clientUrl">{{{ trans('field.connect') }}}</th>
+                            <th class="clientUrl">{{{ trans('field.connected') }}}</th>
                             <th class="clientUrl">{{{ trans('field.url') }}}</th>
                             <th class="clientName">{{{ trans('field.person_charge') }}}</th>
                             <th class="clientAction">{{{ trans('default.action') }}}</th>
@@ -53,7 +53,7 @@
                                     <td>{{{ $user->name }}}</td>
                                     <td class="center">
                                         @if($user->authority != config('constants.authority.admin'))
-                                            <a href="{{ url('dashboard/'.$user->id) }}"  class="btn btn-info btn-sm edit">{{{ trans('button.user_dashboard') }}}</a>
+                                            <a href="{{ url('dashboard/'.config('constants.service.facebook').'/'.$user->id) }}"  class="btn btn-info btn-sm edit">{{{ trans('button.user_dashboard') }}}</a>
                                         @endif
                                         <a href="{{ URL::route("user.edit","$user->id") }}" class="btn btn-info btn-sm edit">{{{ trans('button.update') }}}</a>
                                         @if($user->id != $user_id)

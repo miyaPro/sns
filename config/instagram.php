@@ -59,7 +59,8 @@ return [
         'comment'   => 'https://api.instagram.com/v1/media/{id}/comments',
         'like'      => 'https://api.instagram.com/v1/media/{id}/likes',
         'user_info' => 'https://api.instagram.com/v1/users/{id}',
-        'logout'    => 'https://instagram.com/accounts/logoutin/?force_classic_login=&next={url}'
+        'logout'    => 'https://instagram.com/accounts/logoutin/?force_classic_login=&next={url}',
+        'search'    => 'https://api.instagram.com/v1/users/search?q={name}&count=1'
     ],
     'scope' => [
         'access'=>'basic+public_content'

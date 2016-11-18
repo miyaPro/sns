@@ -25,7 +25,7 @@ Route::resource('user', 'UserController');
 Route::get('/account/edit', 'UserController@accountEdit');
 Route::post('/account/update', 'UserController@accountUpdate');
 Route::resource('master', 'MasterController');
-Route::any('dashboard/{user?}', 'ServiceController@dashboard');
+Route::any('dashboard/{service_code}/{user?}', 'ServiceController@dashboard');
 Route::resource('page', 'PageController');
 Route::post('/page/{id}/social/graph', ['uses' => 'PageController@getGraphData', 'as' => 'site.analytic.graph']);
 Route::post('/page/{id}/social/graphPost', ['uses' => 'PageController@getGraphDataPost', 'as' => 'site.analytic.graphPost']);
@@ -43,6 +43,5 @@ Route::get('/social/handleSnapchat', 'SocialNetworkController@handleSnapchat');
 Route::post('/password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail');
 
 //router check acc
-Route::any('account/search', 'AccountController@searchAccount');
-Route::resource('account', 'AccountController');
+Route::resource('benchmark', 'BenchmarkController');
 

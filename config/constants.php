@@ -20,7 +20,7 @@ return [
         'facebook'  => '001',
         'twitter'   => '002',
         'instagram' => '003',
-        'snapchat'  => '004',
+//        'snapchat'  => '004',
     ],
     'master' => [
         'contract_status'   => 'contract_status',
