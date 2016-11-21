@@ -75,17 +75,19 @@ class BenchmarkController extends Controller
 
     public function destroy($id)
     {
-        $user_id            = Auth::user()->id;
-        $auth        = $this->repAuth->getById($id);
-        $page        = $this->repPage->getOneByField('auth_id', $id);
-        $page_detail = $this->repPageDetail->getAllByField('page_id', $page->id);
+        $user_id      = Auth::user()->id;
+        $auth         = $this->repAuth->getById($id);
         $arr_page_detail_id = array();
-        foreach ($page_detail as $value) {
-            $arr_page_detail_id[] = $value->id;
-        }
-        if ($user_id == $auth->user_id) {
-            $this->repPageDetail->destroyById($arr_page_detail_id);
-            $this->repPage->destroy($page->id);
+        if ($auth && $user_id == $auth->user_id) {
+            $page        = $this->repPage->getOneByField('auth_id', $id);
+            if ($page) {
+                $page_detail = $this->repPageDetail->getAllByField('page_id', $page->id);
+                foreach ($page_detail as $value) {
+                    $arr_page_detail_id[] = $value->id;
+                }
+                $this->repPageDetail->destroyById($arr_page_detail_id);
+                $this->repPage->destroy($page->id);
+            }
             $this->repAuth->destroy($id);
             return Response::json(array('success' => true), 200);
         }
@@ -135,9 +137,9 @@ class BenchmarkController extends Controller
                     return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);
                 }
             } catch (TwitterOAuthException $e) {
-                return $this->error('message1',"result null");
+                return redirect()->back()->with('alert-danger', trans('message.token_expired'));
             }
-            return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success', ['name' => trans('default.profile')]));;
+            return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success'));
         } else {
             return redirect()->back()->with('alert-danger', trans('message.token_expired'));
         }

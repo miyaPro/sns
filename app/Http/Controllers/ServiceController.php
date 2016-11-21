@@ -76,11 +76,10 @@ class ServiceController extends Controller
             return redirect('user');
         }
         if($user_current->authority == $authority['client']){
-            if(!$user_id){
-                $user_id = $user_current->id;
-            } elseif ($user_id != $user_current->id) {
+            if($user_id){
                 abort(404);
             }
+            $user_id = $user_current->id;
         }
         $user            = $this->repUser->getById($user_id);
         if($user) {
@@ -116,13 +115,9 @@ class ServiceController extends Controller
                 }
             }
 
-            $pageList = $postByDay = $totalPage = $authAccount = $pageCompetitor = [];
+            $pageList = $postByDay = $totalPage = $authAccount = $pageCompetitor = $maxPost = [];
             //get data pages by date
             $auths          = $this->repAuth->getUserAuth($user_id, $service_code);
-            $service_data['service_exist']      = true;
-            if(!$auths || count($auths) <= 0) {
-                $service_data['service_exist']  = false;
-            }
             foreach ($auths as $auth) {
                 if($auth->rival_flg == 0 && !$auth->access_token) {
                     continue;
@@ -156,6 +151,7 @@ class ServiceController extends Controller
                         $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($fromDate)));
                         $postDetail = $repPost->getListPostByDate($page->id, null, $beforeDate, $toDate);
                         $postByDay[$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
+                        $maxPost[$page->id] = PageController::getMaxGraph($postByDay[$page->id]);
                     }
 
                     //get total from page detail
@@ -179,6 +175,7 @@ class ServiceController extends Controller
                 'totalPage'         => $totalPage,
                 'user'              => $user,
                 'pageCompetitor'    => $pageCompetitor,
+                'maxGraph'          => $maxPost
             ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));

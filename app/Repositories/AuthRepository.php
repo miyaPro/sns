@@ -68,8 +68,6 @@ class AuthRepository extends BaseRepository
     public function getUserAuth ($user_id, $service_code) {
         $model = new $this->model;
         $model = $model->where('user_id', $user_id);
-//            ->whereNotNull('access_token')
-//            ->where('access_token','<>', '');
         if($service_code) {
             $model = $model->where('service_code', $service_code);
         }
@@ -78,9 +76,7 @@ class AuthRepository extends BaseRepository
 
     public function getListInitAuth($service_code, $account_id = null) {
         $model = new $this->model;
-        $model = $model->whereNotNull('access_token')
-                        ->where('access_token','<>', '')
-                        ->where('service_code',$service_code);
+        $model = $model->where('service_code',$service_code);
         if($account_id) {
             $model = $model->where('account_id', $account_id);
         }
@@ -129,7 +125,7 @@ class AuthRepository extends BaseRepository
                        ->orderby('auths.created_at', 'desc');
         if($keyword){
             $model = $model->where(function($q) use ($keyword) {
-                $q->where('pages.name', 'like', "%{$keyword}%");
+                $q->where('auths.account_name', 'like', "%{$keyword}%");
             });
         }
         $model  = $model->paginate($perPage);

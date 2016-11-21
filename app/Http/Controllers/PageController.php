@@ -121,16 +121,12 @@ class PageController extends Controller
     {
         $page = $this->repPage->getById($page_id);
         $countType  = $request->get('typeDraw');
-        $startDate  = $request->get('dateFrom');
-        $endDate    = $request->get('dateTo');
+        $startDate  = $request->get('dateFrom', Carbon::parse('-2 weeks')->toDateString());
+        $endDate    = $request->get('dateTo', Carbon::today()->toDateString());
 
-        if (@$startDate && @$endDate) {
-            $startDate  = date('Y-m-d' ,strtotime($startDate));
-            $endDate    = date('Y-m-d' ,strtotime($endDate));
-        } else {
-            $startDate  = Carbon::parse('-2 weeks')->toDateString();
-            $endDate    = Carbon::today()->toDateString();
-        }
+        $startDate  = date('Y-m-d' ,strtotime($startDate));
+        $endDate    = date('Y-m-d' ,strtotime($endDate));
+
         $days           = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
         $data           = array();
         $inputs = array(
@@ -141,7 +137,7 @@ class PageController extends Controller
         $pageDetail     = $this->repPageDetail->getPageByDate($page_id, $startDate, $endDate);
         $condition      = config('constants.condition_filter_page');
         /*data graph page*/
-        for($i=0;$i <= $days + 1; $i++) {
+        for($i=0; $i <= $days + 1; $i++) {
             $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
             $data[$day] = [
                 'count' => 0,
@@ -152,22 +148,19 @@ class PageController extends Controller
         foreach ($pageDetail as $key => $detail) {
             $val_condition = $condition[$countType].'_count';
             $data[$detail->date]['count'] = $detail->$val_condition;
-            if (($detail->date > date('Y-m-d' ,strtotime($startDate))) && ($detail->date >= $startDateByDb)) {
+            if ($detail->date > $startDateByDb) {
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($detail->date)));
-                $beforeDayVal   = $data[$beforeDate]['count'];
-                $thisDayVal     = $data[$detail->date]['count'];
-                $compare        = $thisDayVal - $beforeDayVal;
+                $compare        = $data[$detail->date]['count'] - $data[$beforeDate]['count'];
                 $data[$detail->date]['count_compare'] = ($compare > 0) ? $compare : 0;
-
             }
         }
-        if(@$data[$startDate]) {
+        if($data[$startDate]) {
             unset($data[$startDate]);
         }
-
+        $maxValuePage = PageController::getMaxGraph($data);
 //        Log::info(print_r($data), true));
 //        echo json_encode(array('success' => true, 'contentCount' => $data));exit();
-        return Response::json(array('success' => true, 'contentCount' => $data), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
+        return Response::json(array('success' => true, 'contentCount' => $data, 'maxValueData' =>$maxValuePage), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
 
     }
 
@@ -233,7 +226,51 @@ class PageController extends Controller
         if(@$postPerDay[$startDate]) {
             unset($postPerDay[$startDate]);
         }
+        $maxValuePost = PageController::getMaxGraph($postPerDay);
+        return Response::json(array('success' => true, 'contentCount' => $postPerDay, 'maxValueData' => $maxValuePost), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
+    }
 
-        return Response::json(array('success' => true, 'contentCount' => $postPerDay), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
+    public static function getMaxGraph($data ){
+        $initKey = array();
+        foreach ($data as $subData){
+            foreach ($subData as $key => $value){
+                $initKey[] = $key;
+            }
+            break;
+        }
+        $maxValueArr = array_reduce($data, function ($p1, $p2) use ($initKey) {
+            $p = array();
+            foreach ($initKey as $key){
+                $p[$key] = @$p1[$key] > $p2[$key] ? $p1[$key] : $p2[$key] ;
+            }
+            return $p;
+        });
+        foreach ($maxValueArr as $key => $value){
+            $maxGraph = $maxValueArr[$key];
+            $roundMax = round($maxGraph/5);
+            if($maxGraph >= 3*$roundMax){
+                $maxGraph = 5*$roundMax + 5*ceil($roundMax/5);
+            }
+            $maxValueArr[$key] = $maxGraph;
+            if($maxGraph <= 100){
+                $maxGraph = 10*(round($maxGraph/10, 0));
+                $maxGraph = $maxGraph < 5 ? 5 : $maxGraph;
+            }else{
+                if($maxGraph %100 ==0){
+                    return intval($maxGraph);
+                }
+                $length = strlen($maxGraph);
+                $splitPart = pow(10, $length -1)/2;
+                $roundMax = $splitPart * round($maxGraph / ($splitPart));
+                if($roundMax <= $maxGraph){
+                    $maxGraph = $roundMax + 10*round(($maxGraph - $roundMax)/10, 0);
+                }else{
+                    $maxGraph = $roundMax;
+                }
+            }
+            $maxValueArr[$key] = $maxGraph;
+        }
+
+        return $maxValueArr;
     }
 }

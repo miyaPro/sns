@@ -95,12 +95,21 @@ return [
     |
     */
 
+//    'custom' => [
+//        'attribute-name' => [
+//            'rule-name' => 'custom-message',
+//        ],
+//    ],
+
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'nickname' => [
+            'required'             => 'ハンドルネームは、必ず指定してください。',
+        ],
+        'typeSociale' => [
+            'required'             => 'ソーシャルネットワークは、必ず指定してください。',
+            'alpha'                => 'ソーシャルネットワークには、アルファベッドのみ使用できます。'
         ],
     ],
-
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Attributes

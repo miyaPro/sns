@@ -23,10 +23,10 @@ return [
     'stopping'    => '停止中',
     'more_than_3_opption'=> '',
     'template_file_not_exist' => 'テンプレートファイルが存在していません',
-    'error_main'        => 'Lỗi đăng nhập.',
+    'error_main'        => 'エラー',
     'error_network_connect'   => ':name Network, result null',
-    'error_get_access_token'  => ':name Token sai hoặc hết hạn',
-    'error_get_info_acc'  => 'Rival account does not exist!',
-    'token_expired'  => '無効または期限切れのトークン。',
+    'error_get_access_token'  => ':nameのアクセストークンは無効または期限切れです。',
+    'error_get_info_acc'  => 'アカウント名は存在しません。',
+    'token_expired'  => '無効または期限切れのトークンです。ダッシュボードからアカウント接続を行ってください。',
     'benchmark_save_success' => ' ベンチマーク企業を新規に追加しました。'
 ];

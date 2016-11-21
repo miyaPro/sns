@@ -73,9 +73,12 @@ class CommandTwitter extends Command
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth($service, $account_id);
         foreach ($auths as $auth) {
+            if($auth->rival_flg == 0 && !$auth->access_token) {
+                continue;
+            }
             if ($auth->rival_flg == 1) {
                 $this->getPageRival($auth);
-            }else {
+            } else {
                 $this->getPage($auth);
             }
         }

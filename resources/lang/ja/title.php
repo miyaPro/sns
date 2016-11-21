@@ -22,5 +22,5 @@ return [
     'dashboard'     => 'ダッシュボード',
     'info_detail'     => 'SNS 詳細',
     'post_engagement_daily'     => '日別投稿のエンゲージメント',
-    'page_engagement_daily'     => 'Page Engagement Daily',
+    'page_engagement_daily'     => 'ページ全体',
 ];

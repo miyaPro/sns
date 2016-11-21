@@ -213,12 +213,13 @@
                             dataType: 'Json',
                             success: function (data) {
                                 var dataResponse = data.contentCount;
+                                var maxGraph = data.maxValueData;
                                 dataGraph = [];
                                 if(data.success){
                                     if(typeDraw == 1){
-                                        loadGraphPage(dataResponse, dataGraph, typeDrawSubPage);
+                                        loadGraphPage(dataResponse, dataGraph, typeDrawSubPage, maxGraph);
                                     }else{
-                                        loadGraphPost(dataResponse, dataGraph, typeDrawSubPost);
+                                        loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
                                     }
                                 }
                             }
@@ -239,7 +240,8 @@
                                 dataGraph = [];
                                 if(data.success){
                                     var dataResponse = data.contentCount;
-                                    loadGraphPage(dataResponse,dataGraph, typeDrawSubPage);
+                                    var maxGraph = data.maxValueData
+                                    loadGraphPage(dataResponse,dataGraph, typeDrawSubPage, maxGraph);
                                 }
                             }
                         })
@@ -257,7 +259,8 @@
                                 dataGraph = [];
                                 if(data.success){
                                     var dataResponse = data.contentCount;
-                                    loadGraphPost(dataResponse, dataGraph, typeDrawSubPost);
+                                    var maxGraph = data.maxValueData
+                                    loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
                                 }
                             }
                         })
@@ -278,12 +281,13 @@
                         pointSize: 5,
                         smooth: false,
                         behaveLikeLine: true,
+                        numLines: 6,
                         fillOpacity: '0.2',
                         xLabelFormat: function(d) {d = new Date(d.label); return (d.getMonth()+1)+'/'+d.getDate();},
                         yLabelFormat: function(y){return y != Math.round(y)?'':parseInt(y).toLocaleString();},
                     });
                 }
-                var loadGraphPage = function(dataResponse, dataGraph, typeDrawSubPage){
+                var loadGraphPage = function(dataResponse, dataGraph, typeDrawSubPage, maxGraph){
                     chartPage.options.labels = [$('#typeDrawPage option:selected').html()];
                     var maxPage
                     if(typeDrawSubPage == '0'){
@@ -293,6 +297,7 @@
                                 count: dataResponse[item]['count']
                             })
                         }
+                        maxPage = maxGraph['count']
                     }else{
                         for (var item in dataResponse) {
                             dataGraph.push({
@@ -300,12 +305,12 @@
                                 count : dataResponse[item]['count_compare']
                             })
                         }
+                        maxPage = maxGraph['count_compare']
                     }
-                    maxPage = Math.max.apply(Math,dataGraph.map(function(o){return o['count'];}));
-                    setMaxGraph(chartPage, maxPage)
+                    chartPage.options.ymax = maxPage;
                     chartPage.setData(dataGraph);
                 }
-                var loadGraphPost = function(dataResponse, dataGraph, typeDrawSubPost){
+                var loadGraphPost = function(dataResponse, dataGraph, typeDrawSubPost, maxGraph){
                     chartPost.options.labels = ["{{trans('field.post_engagement')}}"];
                     var maxPost;
                     if(typeDrawSubPost == '0'){
@@ -315,6 +320,7 @@
                                 count: dataResponse[item]['total']
                             })
                         }
+                        maxPost = maxGraph['total']
                     }else{
                         for (var item in dataResponse) {
                             dataGraph.push({
@@ -322,18 +328,10 @@
                                 count : dataResponse[item]['compare']
                             })
                         }
+                        maxPost = maxGraph['compare']
                     }
-                    maxPost = Math.max.apply(Math,dataGraph.map(function(o){return o['count'];}));
-                    setMaxGraph(chartPost, maxPost)
+                    chartPost.options.ymax = maxPost;
                     chartPost.setData(dataGraph)
-                }
-                var setMaxGraph = function(chart, maxGraph){
-                    var ceilMax = Math.ceil(maxGraph/4);
-                    if(maxGraph >= 3*ceilMax){
-                        maxGraph = 4*ceilMax +  4*Math.ceil(ceilMax/4);
-                    }
-                    var maxGraph = maxGraph < 4 ? 4 : maxGraph;
-                    chart.options.ymax = maxGraph;
                 }
                 $('#typeDrawPage, #typeDrawSubPost, #typeDrawSubPage').on('change', function (e) {
                     e.preventDefault;
@@ -345,7 +343,7 @@
                     }
                 });
                 chartPage = generateGraph('chartContainer1',[]);
-                chartPost = generateGraph('chartContainer2',[])
+                chartPost = generateGraph('chartContainer2',[]);
                 graphDraw(3);
                 $('.btn-submit').on('click',function () {
                     var dateFrom = $('#inputDateFrom'), dateTo = $('#inputDateTo');
