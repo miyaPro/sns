@@ -157,7 +157,7 @@
 
                                 @php $i = 0; @endphp
                                 @foreach($pageCompetitor as $page)
-                                    <section class="panel page-box" data-account="{{{ @$page['auth_id'] }}}" id="{{{ strtolower(str_slug(@$page['name'], '_')) }}}">
+                                    <section class="panel page-box" data-account="{{{ @$page['auth_id'] }}}" id="{{{ strtolower(str_slug(@$page['screen_name'], '_')) }}}">
                                         @if($i == 0)
                                             <div class="panel-heading">
                                                 {{trans('menu.rival_list')}}
@@ -248,12 +248,12 @@
                             @foreach($postByDay[$page_id] as $date => $post)
                                 data.push({
                                 date: '{{{ $date }}}',
-                                value: '{{{ $post['compare'] }}}'
+                                value: '{{{ $post['compare'] or 0 }}}'
                             });
                             @endforeach
                             pageListChart['{{$page_id}}'] = generate_graph(element_id);
                             pageListChart['{{$page_id}}'].options.labels = label;
-                            @if($maxGraph[$page_id])
+                            @if(isset($maxGraph[$page_id]['compare']))
                                 pageListChart['{{$page_id}}'].options.ymax = ['{{$maxGraph[$page_id]['compare']}}'];
                             @endif
                             pageListChart['{{$page_id}}'].setData(data);
@@ -292,9 +292,9 @@
 
             });
             var hash = window.location.hash;
-            if(hash.trim().length >0){
+            if(hash !='' && $(hash).length > 0){
                 setTimeout(function(){
-                    $('html, body').animate({ scrollTop: $(hash).offset().top }, 100);
+                    $('html, body').animate({ scrollTop: $(hash).offset().top - 100 }, 100);
                 }, 800);
             }
         });
@@ -352,8 +352,6 @@
                         maxGraphResponse = data.maxValueData,
                         maxGraph;
                     if(data.success){
-                        console.log('maxvalue');
-                        console.log(maxGraphResponse)
                         if(typeDraw == '0'){
                             for (var item in dataResponse) {
                                 dataGraph.push({
@@ -371,12 +369,12 @@
                             }
                             maxGraph = maxGraphResponse['count_compare'];
                         }
-                        console.log(maxGraph);
                         var parent_graph = $('#' + element_id).parents('.panel.page-box'),
                                 service_display = parent_graph.css('display');
                         if(service_display == 'none') {
                             parent_graph.css('display', 'block');
                         }
+                        chart.options.ymax = maxGraph;
                         chart.options.labels = label;
                         chart.setData(dataGraph);
                         if(service_display == 'none') {

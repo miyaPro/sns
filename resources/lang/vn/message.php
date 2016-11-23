@@ -39,5 +39,6 @@ return [
     'error_get_info_acc'  => 'Rival account does not exist!',
     'exists_error'=> ':name đã tồn tại!',
     'token_expired'  => 'Invalid or expired token!',
-    'benchmark_save_success' => 'Benchmark được thêm vào thành công.'
+    'benchmark_save_success' => 'Benchmark được thêm vào thành công.',
+    'error_date_ranger' => 'Ngày bắt đầu phải nhỏ hơn ngày kết thúc',
 ];

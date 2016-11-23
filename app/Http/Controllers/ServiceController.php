@@ -84,11 +84,12 @@ class ServiceController extends Controller
         $user            = $this->repUser->getById($user_id);
         if($user) {
             $inputs      = $request->all();
-            if(!@$inputs['to']) {
-                $inputs['to']   = date('Y/m/d' ,strtotime('-1 day'));
-            }
-            if(!@$inputs['from']) {
-                $inputs['from'] = date('Y/m/d', strtotime($inputs['to']." -2 weeks"));
+            $date        = $request->cookie('date_search');
+            $inputs['to']   = $request->get("to", isset($date['to']) ? $date['to'] : date('Y/m/d' ,strtotime('-1 day')));
+            $inputs['from'] = $request->get("from", isset($date['from']) ? $date['from'] : date('Y/m/d', strtotime($inputs['to']." -2 weeks")));
+
+            if($inputs['from'] > $inputs['to']) {
+                return redirect()->back()->with('alert-danger', trans('message.error_date_ranger'));
             }
             $fromDate   = date('Y-m-d' ,strtotime($inputs['from']));
             $toDate     = date('Y-m-d' ,strtotime($inputs['to']));
@@ -176,7 +177,7 @@ class ServiceController extends Controller
                 'user'              => $user,
                 'pageCompetitor'    => $pageCompetitor,
                 'maxGraph'          => $maxPost
-            ]))->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
+            ]))->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));
         }
@@ -193,10 +194,10 @@ class ServiceController extends Controller
         $page_create_at = date('Y-m-d' ,strtotime($page->created_at));
         foreach ($listDetail as $i => $postDetail) {
             //total of columns
+            //calculation after first item
             foreach ($columns as $column) {
                 $data[$postDetail->date]['total'] += $postDetail->$column;
             }
-            //calculation after first item
             if($page_create_at >= $postDetail->date || $startDate == $postDetail->date) {
                 $compare    = 0;
             } else {
@@ -207,6 +208,7 @@ class ServiceController extends Controller
             }
             $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
         }
+        $data[$page_create_at]['total'] = 0;
         if(@$data[$startDate]) {
             unset($data[$startDate]);
         }

@@ -46,7 +46,7 @@
                                         <td>{{ucfirst(array_search($row->service_code, config('constants.service')))}}</td>
                                         <td>{{$row->account_name}}</td>
                                         <td>
-                                            <a href="{{ url('dashboard/'.config('constants.service.twitter')).'#'.strtolower(str_slug(@$row->account_name, '_'))}}"  class="btn btn-info btn-sm edit">
+                                            <a href="{{ url('dashboard/'.$row->service_code).'#'.strtolower(str_slug(@$row->account_name, '_'))}}"  class="btn btn-info btn-sm edit">
                                                 {{{ trans('button.user_dashboard') }}}
                                             </a>
                                             <a class="btn btn-danger btn-sm btn-delete" data-button="{{{$row->auth_id}}}"  data-from = "{{ URL::route("benchmark.destroy",":id") }}" href="javascript:void(0)">

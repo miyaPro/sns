@@ -35,8 +35,8 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
     'facebook' => [
-        'client_id' => '432909340201182',
-        'client_secret' => 'cc7726171d9654335269b949c25261ae',
+        'client_id' => '688268881331892',
+        'client_secret' => '0fee9ef5124c2572ac753686928134c2',
         'redirect' => config('app.url').'/social/handleFacebookCallback',
         'redirect_logout' => config('app.url').'/social/handleFacebookCallback/1',
 

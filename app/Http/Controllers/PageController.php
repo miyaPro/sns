@@ -154,14 +154,63 @@ class PageController extends Controller
                 $data[$detail->date]['count_compare'] = ($compare > 0) ? $compare : 0;
             }
         }
+        $data[$startDateByDb]['count'] = 0;
         if($data[$startDate]) {
             unset($data[$startDate]);
         }
         $maxValuePage = PageController::getMaxGraph($data);
 //        Log::info(print_r($data), true));
 //        echo json_encode(array('success' => true, 'contentCount' => $data));exit();
-        return Response::json(array('success' => true, 'contentCount' => $data, 'maxValueData' =>$maxValuePage), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
+        return Response::json(array('success' => true, 'contentCount' => $data, 'maxValueData' =>$maxValuePage), 200)->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
 
+    }
+
+    public static function getMaxGraph($data ){
+        $initKey = array();
+        foreach ($data as $subData){
+            foreach ($subData as $key => $value){
+                $initKey[] = $key;
+            }
+            break;
+        }
+        $maxValueArr = array_reduce($data, function ($subData1, $subData2) use ($initKey) {
+            $result = array();
+            foreach ($initKey as $key){
+                $result[$key] = @$subData1[$key] > @$subData2[$key] ? @intval($subData1[$key]) : @intval($subData2[$key]) ;
+            }
+            return $result;
+        });
+        if($maxValueArr){
+            foreach ($maxValueArr as $key => $value){
+                $maxGraph = $maxValueArr[$key];
+                $roundMax = round($maxGraph/5);
+                if($maxGraph >= 3*$roundMax){
+                    $maxGraph = 5*$roundMax + 5*ceil($roundMax/5);
+                }
+                $maxValueArr[$key] = intval($maxGraph);
+                if($maxGraph <= 100){
+                    $maxGraph = 10*(round($maxGraph/10, 0));
+                    $maxGraph = $maxGraph < 5 ? 5 : $maxGraph;
+                }else{
+                    $length = strlen($maxGraph);
+                    $maxGraphRound = 5 * pow(10, $length-2) * ceil($maxGraph/(5 * pow(10, $length -2)));
+                    if($maxGraph >= 3/5*$maxGraphRound){
+                        $maxValueArr[$key] = $maxGraphRound;
+                        continue;
+                    }
+                    $splitPart = pow(10, $length -1)/2;
+                    $roundMax = $splitPart * round($maxGraph / ($splitPart));
+                    if($roundMax <= $maxGraph){
+                        $maxGraph = $roundMax + 10*round(($maxGraph - $roundMax)/10, 0);
+                    }else{
+                        $maxGraph = $roundMax;
+                    }
+                }
+                $maxValueArr[$key] = $maxGraph;
+            }
+        }
+
+        return $maxValueArr;
     }
 
     public function getGraphDataPost(Request $request, $page_id)
@@ -210,11 +259,11 @@ class PageController extends Controller
             $postPerDay[$day]['compare'] = 0;
         }
         foreach ($listPostByDate as $i => $postDetail) {
+            $startDate     = date('Y-m-d' ,strtotime($startDate));
+            $startDateByDb = date('Y-m-d' ,strtotime($page->created_at ));
             foreach ($columns as $column) {
                 $postPerDay[$postDetail->date]['total'] += $postDetail->$column;
             }
-            $startDate     = date('Y-m-d' ,strtotime($startDate));
-            $startDateByDb = date('Y-m-d' ,strtotime($page->created_at ));
             if ($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
                 $beforeDayVal   = $postPerDay[$beforeDate]['total'];
@@ -223,54 +272,11 @@ class PageController extends Controller
                 $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
             }
         }
+        $postPerDay[$startDateByDb]['total'] = 0;
         if(@$postPerDay[$startDate]) {
             unset($postPerDay[$startDate]);
         }
         $maxValuePost = PageController::getMaxGraph($postPerDay);
-        return Response::json(array('success' => true, 'contentCount' => $postPerDay, 'maxValueData' => $maxValuePost), 200)->withCookie(cookie()->forever('date_search', [$inputs['from'], $inputs['to']]));
-    }
-
-    public static function getMaxGraph($data ){
-        $initKey = array();
-        foreach ($data as $subData){
-            foreach ($subData as $key => $value){
-                $initKey[] = $key;
-            }
-            break;
-        }
-        $maxValueArr = array_reduce($data, function ($p1, $p2) use ($initKey) {
-            $p = array();
-            foreach ($initKey as $key){
-                $p[$key] = @$p1[$key] > $p2[$key] ? $p1[$key] : $p2[$key] ;
-            }
-            return $p;
-        });
-        foreach ($maxValueArr as $key => $value){
-            $maxGraph = $maxValueArr[$key];
-            $roundMax = round($maxGraph/5);
-            if($maxGraph >= 3*$roundMax){
-                $maxGraph = 5*$roundMax + 5*ceil($roundMax/5);
-            }
-            $maxValueArr[$key] = $maxGraph;
-            if($maxGraph <= 100){
-                $maxGraph = 10*(round($maxGraph/10, 0));
-                $maxGraph = $maxGraph < 5 ? 5 : $maxGraph;
-            }else{
-                if($maxGraph %100 ==0){
-                    return intval($maxGraph);
-                }
-                $length = strlen($maxGraph);
-                $splitPart = pow(10, $length -1)/2;
-                $roundMax = $splitPart * round($maxGraph / ($splitPart));
-                if($roundMax <= $maxGraph){
-                    $maxGraph = $roundMax + 10*round(($maxGraph - $roundMax)/10, 0);
-                }else{
-                    $maxGraph = $roundMax;
-                }
-            }
-            $maxValueArr[$key] = $maxGraph;
-        }
-
-        return $maxValueArr;
+        return Response::json(array('success' => true, 'contentCount' => $postPerDay, 'maxValueData' => $maxValuePost), 200)->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
     }
 }

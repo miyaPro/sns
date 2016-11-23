@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Lang;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Illuminate\Support\Facades\Artisan;
+use Abraham\TwitterOAuth\TwitterOAuthException;
 
 class BenchmarkController extends Controller
 {
@@ -113,6 +114,7 @@ class BenchmarkController extends Controller
 
         if ($auth) {
             $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
+            DB::beginTransaction();
             try{
                 $user_detail    = $connection->get("users/show", array("screen_name" => $input['nickname']));
                 if (200 == $connection->getLastHttpCode()){
@@ -128,8 +130,10 @@ class BenchmarkController extends Controller
                         $this->repAuth->store($input_insert);
                         Artisan::call('twitter', [
                             'account_id' => $input_insert['account_id'],
-                            'today'      => true
+                            'today'      => 1
                         ]);
+                        DB::commit();
+                        return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success'));
                     } else {
                         return redirect()->back()->with('alert-danger', trans('message.exists_error'))->withInput($input);
                     }
@@ -137,12 +141,12 @@ class BenchmarkController extends Controller
                     return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);
                 }
             } catch (TwitterOAuthException $e) {
-                return redirect()->back()->with('alert-danger', trans('message.token_expired'));
+                DB::rollback();
+            } catch (\Exception $e) {
+                DB::rollback();
             }
-            return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success'));
-        } else {
-            return redirect()->back()->with('alert-danger', trans('message.token_expired'));
         }
+        return redirect()->back()->with('alert-danger', trans('message.common_error'));
     }
 
     public function checkAccountInstagram($input)
@@ -155,14 +159,33 @@ class BenchmarkController extends Controller
             $dataGet = $this->getContent($url,false);
             $dataGet  = @json_decode($dataGet[0]);
             if(!isset($dataGet)){
-                return redirect('/account')->with('alert-danger', trans('message.error_network_connect', ['name' => trans('default.instagram')]));
+                return redirect('/benchmark')->with('alert-danger', trans('message.error_network_connect', ['name' => trans('default.instagram')]));
             }
             else if(isset($dataGet->meta) && $dataGet->meta->code == 200){
-                dd($dataGet->data);
+                $user_detail = $dataGet->data[0];
+                $input_insert = array(
+                    'user_id'           => $user_id,
+                    'account_id'        => $user_detail->id,
+                    'account_name'      => $user_detail->username,
+                    'service_code'      => $service,
+                    'rival_flg'         => 1,
+                );
+                $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service);
+                if (!$authUser) {
+                    $this->repAuth->store($input_insert);
+                    Artisan::call('instagram', [
+                        'today'      => 1,
+                        'account_id' => $input_insert['account_id']
+                    ]);
+                    return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success'));
+                } else {
+                    return redirect()->back()->with('alert-danger', trans('message.exists_error'))->withInput($input);
+                }
             }else{
-                $this->repAuth->resetAccessToken($auth->id);
-                return redirect('/account')->with('alert-danger', trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
+                return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);
             }
+        }else {
+            return redirect()->back()->with('alert-danger', trans('message.token_expired'))->withInput($input);
         }
     }
 

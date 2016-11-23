@@ -15,6 +15,7 @@ use App\Repositories\PageDetailRepository;
 use App\Repositories\PostTwitterDetailRepository;
 use App\Repositories\AuthRepository;
 use App\Repositories\PageRepository;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CommandTwitter extends Command
@@ -91,6 +92,7 @@ class CommandTwitter extends Command
         $authToGet = $this->repAuth->getFirstAuth($auth->user_id, $auth->service_code);
         if ($authToGet) {
             $connection         = new TwitterOAuth($client_id, $client_secret, $authToGet->access_token, $authToGet->refresh_token);
+            DB::beginTransaction();
             try{
                 $user_detail    = $connection->get("users/show", array("user_id" => $auth->account_id));
                 if (200 == $connection->getLastHttpCode()){
@@ -113,10 +115,14 @@ class CommandTwitter extends Command
                     }else{
                         $page =$this->repPage->update($page, $input_insert);
                     }
+                    DB::commit();
                     $this->getPageDetail($user_detail, $page);
                 }
             } catch (TwitterOAuthException $e) {
+                DB::rollback();
                 return $this->error('message1',"result null");
+            } catch (\Exception $e) {
+               DB::rollback();
             }
         }
     }
@@ -127,18 +133,24 @@ class CommandTwitter extends Command
         if(!$this->today) {
             $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
         }
-        $page_detail   = $this->repPageDetail->getByDate($page->id, $current_date);
-        $inputs = [
-            'friends_count'     => $page_twitter->friends_count,
-            'posts_count'       => $page_twitter->statuses_count,
-            'followers_count'   => $page_twitter->followers_count,
-            'favourites_count'  => $page_twitter->favourites_count,
-        ];
-        if($page_detail){
-            $this->repPageDetail->update($page_detail, $inputs);
-        }else{
-            $inputs['date'] = $current_date;
-            $this->repPageDetail->store($inputs, $page->id);
+        DB::beginTransaction();
+        try {
+            $page_detail   = $this->repPageDetail->getByDate($page->id, $current_date);
+            $inputs = [
+                'friends_count'     => $page_twitter->friends_count,
+                'posts_count'       => $page_twitter->statuses_count,
+                'followers_count'   => $page_twitter->followers_count,
+                'favourites_count'  => $page_twitter->favourites_count,
+            ];
+            if($page_detail){
+                $this->repPageDetail->update($page_detail, $inputs);
+            }else{
+                $inputs['date'] = $current_date;
+                $this->repPageDetail->store($inputs, $page->id);
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollback();
         }
     }
 
@@ -147,6 +159,7 @@ class CommandTwitter extends Command
         $client_id          = config('services.twitter.client_id');
         $client_secret      = config('services.twitter.client_secret');
         $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
+        DB::beginTransaction();
         try{
             $page_twitter       = $connection->get("account/verify_credentials");
             if (200 == $connection->getLastHttpCode()){
@@ -169,13 +182,17 @@ class CommandTwitter extends Command
                 }else{
                     $page =$this->repPage->update($page, $input_insert);
                 }
+                DB::commit();
                 $this->getPageDetail($page_twitter, $page);
                 $this->getPost($page, $auth);
             } else {
                 $this->repAuth->resetAccessToken($auth->id);
             }
         } catch (TwitterOAuthException $e) {
+            DB::rollback();
             return $this->error('message1',"result null");
+        } catch (\Exception $e) {
+            DB::rollback();
         }
 
     }
@@ -185,25 +202,34 @@ class CommandTwitter extends Command
         $client_id          = config('services.twitter.client_id');
         $client_secret      = config('services.twitter.client_secret');
         $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
-        $posts_twitter      = $connection->get("statuses/user_timeline", array("exclude_replies" => "true", "count" => '100'));
+        DB::beginTransaction();
+        try {
+            $posts_twitter      = $connection->get("statuses/user_timeline", array("exclude_replies" => "true", "count" => '100'));
 
-        foreach ($posts_twitter as $posts) {
-            //create post Twitter
-            $sns_post_id = $posts->id;
-            $post = $this->repPostTwitter->getOneByPost($page->id, $sns_post_id);
-            $inputs = [
-                'sns_post_id'       => $sns_post_id,
-                'content'           => $posts->text,
-                'image_thumbnail'   => @$posts->entities->media[0]->media_url,
-                'author'            => $posts->user->screen_name,
-                'created_time'      => date("Y-m-d H:i:s",strtotime($posts->created_at)),
-            ];
-            if($post){
-                $post = $this->repPostTwitter->update($post, $inputs);
-            }else{
-                $post = $this->repPostTwitter->store($inputs, $page->id);
+            foreach ($posts_twitter as $posts) {
+                //create post Twitter
+                $sns_post_id = $posts->id;
+                $post = $this->repPostTwitter->getOneByPost($page->id, $sns_post_id);
+                $inputs = [
+                    'sns_post_id'       => $sns_post_id,
+                    'content'           => $posts->text,
+                    'image_thumbnail'   => @$posts->entities->media[0]->media_url,
+                    'author'            => $posts->user->screen_name,
+                    'created_time'      => date("Y-m-d H:i:s",strtotime($posts->created_at)),
+                ];
+                if($post){
+                    $post = $this->repPostTwitter->update($post, $inputs);
+                }else{
+                    $post = $this->repPostTwitter->store($inputs, $page->id);
+                }
+                DB::commit();
+                $this->getPostDetail($posts, $post);
             }
-            $this->getPostDetail($posts, $post);
+        } catch (TwitterOAuthException $e) {
+            DB::rollback();
+            return $this->error('message1',"result null");
+        } catch (\Exception $e) {
+            DB::rollback();
         }
     }
 
@@ -215,16 +241,21 @@ class CommandTwitter extends Command
         if(!$this->today) {
             $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
         }
-        $postDetail = $this->repPostTwitterDetail->getByDate($post->id, $current_date);
-        $inputs = [
-            'retweet_count'     => $posts_twitter->retweet_count,
-            'favorite_count'    => $posts_twitter->favorite_count,
-        ];
-        if($postDetail){
-            $this->repPostTwitterDetail->update($postDetail, $inputs);
-        }else{
-            $inputs['date'] = $current_date;
-            $this->repPostTwitterDetail->store($inputs, $post->id);
+        DB::beginTransaction();
+        try {
+            $postDetail = $this->repPostTwitterDetail->getByDate($post->id, $current_date);
+            $inputs = [
+                'retweet_count'     => $posts_twitter->retweet_count,
+                'favorite_count'    => $posts_twitter->favorite_count,
+            ];
+            if($postDetail){
+                $this->repPostTwitterDetail->update($postDetail, $inputs);
+            }else{
+                $inputs['date'] = $current_date;
+                $this->repPostTwitterDetail->store($inputs, $post->id);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
         }
     }
     
