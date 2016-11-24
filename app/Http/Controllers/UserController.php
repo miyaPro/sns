@@ -161,9 +161,12 @@ class UserController extends Controller
         DB::beginTransaction();
         try{
             $user = $this->repUser->getById($id);
-            $this->repUser->update($user, $inputs);
-            DB::commit();
-            return redirect('user')->with('alert-success', trans('message.update_success', ['name' => trans('default.user')]));
+            if($user){
+                $this->repUser->update($user, $inputs);
+                DB::commit();
+                return redirect('user')->with('alert-success', trans('message.update_success', ['name' => trans('default.user')]));
+            }
+            return redirect()->back()->with('alert-danger', trans('message.update_error', ['name' => trans('default.user')]));
         } catch (\Exception $e){
             DB::rollback();
             return redirect()->back()->with('alert-danger', trans('message.update_error', ['name' => trans('default.user')]));

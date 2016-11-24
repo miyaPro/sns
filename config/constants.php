@@ -28,7 +28,8 @@ return [
     ],
     'condition_filter_page' => ['friends', 'followers', 'favourites', 'posts'],
     'condition_filter_post' => ['likes', 'comments', 'shares', 'retweets', 'favorites'],
-    'condition_filter' => ['total', 'daily'],
+    'condition_filter'      => ['total', 'daily'],
+    'service_limit_post'    => 30,
 
 ];
 

@@ -102,10 +102,10 @@ return [
 //    ],
 
     'custom' => [
-        'nickname' => [
-            'required'             => 'ハンドルネームは、必ず指定してください。',
+        'account_name' => [
+            'required'             => 'アカウント名は、必ず指定してください。',
         ],
-        'typeSociale' => [
+        'service_code' => [
             'required'             => 'ソーシャルネットワークは、必ず指定してください。',
             'alpha'                => 'ソーシャルネットワークには、アルファベッドのみ使用できます。'
         ],

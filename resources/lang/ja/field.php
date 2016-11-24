@@ -69,7 +69,7 @@ return [
     'post_list' => '直近10投稿リスト',
     'post_created_at' => '投稿日　',
     'data_get_updated_at' => '取得日　',
-    'check_acc' => 'ハンドルネーム',
+    'account_name' => 'アカウント名',
     'select_social' => 'ソーシャルネットワーク',
     'client_email' => 'クライアントEメール',
     'rival_name' => 'ライバル名前',

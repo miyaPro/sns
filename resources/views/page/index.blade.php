@@ -27,9 +27,9 @@
 
                             {!! Form::label('inputDateFrom', trans('field.date_range'), ['class' => 'control-label col-md-2 pull-left']) !!}
                             <div class="input-group input-large col-md-8 pull-left" data-date="" data-date-format="yyyy/mm/dd">
-                                {!! Form::text('from', !empty(request()->cookie('date_search')['from'])? request()->cookie('date_search')['from']: date('Y/m/d'), ['id' => 'inputDateFrom','class' => 'form-control default-date-picker dpd1']) !!}
+                                {!! Form::text('from', !empty(request()->cookie('date_search')['from'])? str_replace('-', '/', request()->cookie('date_search')['from']): date('Y/m/d'), ['id' => 'inputDateFrom','class' => 'form-control default-date-picker dpd1']) !!}
                                 {!! Form::label('inputDateTo', 'To', ['class' => 'input-group-addon page-label']) !!}
-                                {!! Form::text('to', !empty(request()->cookie('date_search')['to'])? request()->cookie('date_search')['to']: date('Y/m/d', strtotime(@$date['to']." -2 weeks")), ['id' => 'inputDateTo','class' => 'form-control default-date-picker dpd2']) !!}
+                                {!! Form::text('to', !empty(request()->cookie('date_search')['to'])? str_replace('-', '/', request()->cookie('date_search')['to']): date('Y/m/d', strtotime(@$date['to']." -2 weeks")), ['id' => 'inputDateTo','class' => 'form-control default-date-picker dpd2']) !!}
                             </div>
                             <div class="col-md-2 pull-right">
                                 <button class="btn btn-primary btn-submit"><i class="fa fa-search"></i></button>
@@ -221,6 +221,8 @@
                                     }else{
                                         loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
                                     }
+                                }else{
+                                    alert(data.message);
                                 }
                             }
                         })
@@ -242,6 +244,8 @@
                                     var dataResponse = data.contentCount;
                                     var maxGraph = data.maxValueData
                                     loadGraphPage(dataResponse,dataGraph, typeDrawSubPage, maxGraph);
+                                }else{
+                                    alert(data.message);
                                 }
                             }
                         })
@@ -261,6 +265,8 @@
                                     var dataResponse = data.contentCount;
                                     var maxGraph = data.maxValueData
                                     loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
+                                }else{
+                                    alert(data.message);
                                 }
                             }
                         })

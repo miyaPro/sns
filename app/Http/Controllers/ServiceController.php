@@ -208,7 +208,9 @@ class ServiceController extends Controller
             }
             $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
         }
-        $data[$page_create_at]['total'] = 0;
+        if (isset($data[$page_create_at])) {
+            $data[$page_create_at]['total'] = 0;
+        }
         if(@$data[$startDate]) {
             unset($data[$startDate]);
         }

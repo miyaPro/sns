@@ -104,11 +104,10 @@ class PageDetailRepository extends BaseRepository
         return $model->first();
     }
 
-    public function destroyById($list_id)
+    public function destroyById($page_id)
     {
-        foreach ($list_id as $id){
-            $this->getById($id)->delete();
-        }
+        $model = new $this->model();
+        $model->where('page_id', $page_id)->delete();
     }
 
 }

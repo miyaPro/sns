@@ -78,15 +78,4 @@ class PageRepository extends BaseRepository
                        ->where('sns_page_id', $sns_page_id);
         return $model->first();
     }
-
-    public function checkServicePage($page_id){
-        $model = new $this->model();
-        $model = $model->where('pages.id', $page_id)
-                       ->join('auths', 'pages.auth_id', '=', 'auths.id')
-                       ->select(
-                           'auths.service_code'
-                       );
-        return $model->first();
-    }
-
 }

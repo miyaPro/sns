@@ -23,10 +23,9 @@ class BenchmarkRequest extends Request
      */
     public function rules()
     {
-        $this->input = $this->all();
         return [
-            'typeSociale'      => 'required|alpha',
-            'nickname'         => 'required|max:255',
+            'service_code'      => 'required|alpha',
+            'account_name'         => 'required|max:255',
         ];
     }
 }

@@ -80,7 +80,7 @@ class CommandFacebook extends Command
         try{
             $accessToken = $auth['access_token'];
             $fb->getRedirectLoginHelper();
-            $response = $fb->get('/me?fields=id,name,email,accounts{username,cover,picture,about,location,link,name,id,category,access_token,posts{comments,picture,type,permalink_url,message,likes,created_time,link,shares},fan_count,new_like_count,likes,comments{comment_count}}', $accessToken);
+            $response = $fb->get('/me?fields=id,name,email,accounts{username,cover,picture,about,location,link,name,id,category,access_token,posts.limit('.config('constants.service_limit_post').'){comments,picture,type,permalink_url,message,likes,created_time,link,shares},fan_count,new_like_count,likes,comments{comment_count}}', $accessToken);
             $user = $response->getGraphUser();
             if(isset($user['accounts'])){
                 foreach($user['accounts'] as  $row)  {

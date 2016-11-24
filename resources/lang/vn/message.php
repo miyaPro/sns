@@ -34,7 +34,7 @@ return [
     'error_do_not_get_page'   => ':name không thể lấy được thông tin page trên',
     'error_page_not_found'    => ':name không tồn tại trang',
     'error_network_connect'   => ':name network, result null',
-    'exiting_service'  => 'Không có dịch vụ tương ứng!',
+    'not_exiting_service'  => 'Không có dịch vụ tương ứng!',
     'page_not_found'  => 'Không có trang nào.',
     'error_get_info_acc'  => 'Rival account does not exist!',
     'exists_error'=> ':name đã tồn tại!',

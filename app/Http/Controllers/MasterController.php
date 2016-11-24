@@ -95,9 +95,12 @@ class MasterController extends Controller
         DB::beginTransaction();
         try{
             $master = $this->repMaster->getById($id);
-            $this->repMaster->update($master, $inputs);
-            DB::commit();
-            return redirect('master')->with('alert-success', trans('message.update_success', ['name' => trans('default.master')]));
+            if($master){
+                $this->repMaster->update($master, $inputs);
+                DB::commit();
+                return redirect('master')->with('alert-success', trans('message.update_success', ['name' => trans('default.master')]));
+            }
+            return redirect()->back()->with('alert-danger', trans('message.update_error', ['name' => trans('default.master')]));
         } catch (\Exception $e){
             DB::rollback();
             return redirect()->back()->with('alert-danger', trans('message.update_error', ['name' => trans('default.master')]));

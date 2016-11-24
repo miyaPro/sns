@@ -63,106 +63,224 @@ class PageController extends Controller
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return
      */
     public function show($id)
     {
         $user   = Auth::user();
         $page = $this->repPage->getById($id);
-        $auth = $this->repAuth->getById($page->auth_id);
-        if(!$page || ($user->id != $auth->user_id) && ($user->authority == config('constants.authority.client'))){
-            return redirect('dashboard')->with('alert-danger', trans('message.error_page_not_found'));
+        if($page){
+            $auth = $this->repAuth->getById($page->auth_id);
+            if(!$auth->rival_flg && (($user->id == $auth->user_id) || ($user->authority == config('constants.authority.admin')))){
+                $services = config('constants.service');
+                $name_src = array_search($auth->service_code,$services);
+                $pageInfo = $this->repPageDetail->getLastDate($page->id);
+                $condition = config('constants.condition_filter_page');
+                switch ($auth->service_code){
+                    case config('constants.service.facebook'):
+                        $repPost       = $this->repPostFb;
+                        break;
+                    case config('constants.service.twitter'):
+                        $repPost       = $this->repPostTw;
+                        break;
+                    case config('constants.service.instagram'):
+                        $repPost       = $this->repPostIg;
+                        break;
+                    default:
+                        return  redirect('dashboard/001')->with('alert-danger', trans('message.not_exiting_service'));
+                }
+                $current_date = Carbon::today()->toDateString();
+                $pageCurrent = $this->repPageDetail->getPageByDate($page->id, $current_date, $current_date);
+                if(!$pageCurrent){
+                    Artisan::call($name_src, [
+                        'today'      => 1,
+                        'account_id' => $auth->account_id,
+                    ]);
+                }
+                $listPosts      = $repPost->getListPostByPage($page->id, $current_date);
+                $servicesCode   = $page->auth->service_code;
+                return view('page.index')->with([
+                    'pageInfo'      => $pageInfo,
+                    'nameService'   => $name_src,
+                    'condition'     => $condition,
+                    'listPosts'     => $listPosts,
+                    'serviceCode'   => $servicesCode,
+                ]);
+            }
         }
-        $services = config('constants.service');
-        $name_src = array_search($auth->service_code,$services);
-        $pageInfo = $this->repPageDetail->getLastDate($page->id);
-        $condition = config('constants.condition_filter_page');
-
-        switch ($page->auth->service_code) {
-            case config('constants.service.facebook'): {
-                $repPost       = $this->repPostFb;
-            } break;
-            case config('constants.service.twitter'): {
-                $repPost       = $this->repPostTw;
-            } break;
-            case config('constants.service.instagram'): {
-                $repPost       = $this->repPostIg;
-            } break;
-            default: return redirect('dashboard')->with('alert-danger', trans('message.exiting_service'));
-        }
-//        $date  = $repPost->getMaxDate($page->id) ;
-        $curent_date = Carbon::today()->toDateString();
-        $pageCurrent = $this->repPageDetail->getPageByDate($page->id, $curent_date, $curent_date);
-        if(!$pageCurrent->count()){
-            Artisan::call($name_src, [
-                'today'      => 1,
-                'account_id' => $auth->account_id,
-            ]);
-        }
-        $listPosts      = $repPost->getListPostByPage($page->id, $curent_date);
-
-        $servicesCode   = $page->auth->service_code;
-        return view('page.index')->with([
-            'pageInfo'      => $pageInfo,
-            'nameService'   => $name_src,
-            'condition'     => $condition,
-            'listPosts'     => $listPosts,
-            'serviceCode'   => $servicesCode,
-        ]);
+        return redirect('dashboard/001')->with('alert-danger', trans('message.error_page_not_found'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param
+     * @return
      */
     public function getGraphData(Request $request, $page_id)
     {
-        $page = $this->repPage->getById($page_id);
-        $countType  = $request->get('typeDraw');
-        $startDate  = $request->get('dateFrom', Carbon::parse('-2 weeks')->toDateString());
-        $endDate    = $request->get('dateTo', Carbon::today()->toDateString());
+        if($request->has('dateFrom') && $request->has('dateTo') && $request->has('typeDraw')){
+            $startDate = $request->get('dateFrom');
+            $endDate = $request->get('dateTo');
+            $countType = $request->get('typeDraw');
+            $condition = config('constants.condition_filter_page');
+            $user      = Auth::user();
 
-        $startDate  = date('Y-m-d' ,strtotime($startDate));
-        $endDate    = date('Y-m-d' ,strtotime($endDate));
-
-        $days           = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
-        $data           = array();
-        $inputs = array(
-            'from'  => $startDate,
-            'to'    => $endDate,
-        );
-        $startDate = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
-        $pageDetail     = $this->repPageDetail->getPageByDate($page_id, $startDate, $endDate);
-        $condition      = config('constants.condition_filter_page');
-        /*data graph page*/
-        for($i=0; $i <= $days + 1; $i++) {
-            $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
-            $data[$day] = [
-                'count' => 0,
-                'count_compare' => 0,
-            ];
-        }
-        $startDateByDb = date('Y-m-d' ,strtotime($page->created_at ));
-        foreach ($pageDetail as $key => $detail) {
-            $val_condition = $condition[$countType].'_count';
-            $data[$detail->date]['count'] = $detail->$val_condition;
-            if ($detail->date > $startDateByDb) {
-                $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($detail->date)));
-                $compare        = $data[$detail->date]['count'] - $data[$beforeDate]['count'];
-                $data[$detail->date]['count_compare'] = ($compare > 0) ? $compare : 0;
+            $startDate = date('Y-m-d', strtotime($startDate));
+            $endDate = date('Y-m-d', strtotime($endDate));
+            if(strtotime($endDate) < strtotime($startDate)){
+                return Response::json(array(
+                    'success' => false,
+                    'message' => trans('message.error_date_ranger')), 200);
+            }
+            $page = $this->repPage->getById($page_id);
+            if(array_key_exists($countType, $condition)){
+                if($page){
+                    $auth = $this->repAuth->getById($page->auth_id);
+                    if($auth && ($auth->user_id == $user->id || $user->authority == config('constants.authority.admin'))){
+                        $days = floor((strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24));
+                        $data = array();
+                        $inputs = array(
+                            'from' => $startDate,
+                            'to' => $endDate,
+                        );
+                        $startDate = date('Y-m-d', strtotime("-1 day", strtotime($startDate)));
+                        $pageDetail = $this->repPageDetail->getPageByDate($page_id, $startDate, $endDate);
+                        /*data graph page*/
+                        for ($i = 0; $i <= $days + 1; $i++){
+                            $day = date('Y-m-d', strtotime("+" . $i . " day", strtotime($startDate)));
+                            $data[$day] = [
+                                'count' => 0,
+                                'count_compare' => 0,
+                            ];
+                        }
+                        $startDateByDb = date('Y-m-d', strtotime($page->created_at));
+                        if($pageDetail){
+                            $val_condition = $condition[$countType] . '_count';
+                            foreach ($pageDetail as $key => $detail){
+                                $data[$detail->date]['count'] = $detail->$val_condition;
+                                if($detail->date > $startDateByDb){
+                                    $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($detail->date)));
+                                    $compare = $data[$detail->date]['count'] - $data[$beforeDate]['count'];
+                                    $data[$detail->date]['count_compare'] = ($compare > 0) ? $compare : 0;
+                                }
+                            }
+                            if(isset($data[$startDateByDb])){
+                                $data[$startDateByDb]['count'] = 0;
+                            }
+                            if(isset($data[$startDate])){
+                                unset($data[$startDate]);
+                            }
+                            $maxValuePage = $this->getMaxGraph($data);
+                            return Response::json(array('success' => true,
+                                'contentCount' => $data,
+                                'maxValueData' => $maxValuePage), 200)
+                                ->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
+                        }
+                    }
+                }
             }
         }
-        $data[$startDateByDb]['count'] = 0;
-        if($data[$startDate]) {
-            unset($data[$startDate]);
-        }
-        $maxValuePage = PageController::getMaxGraph($data);
-//        Log::info(print_r($data), true));
-//        echo json_encode(array('success' => true, 'contentCount' => $data));exit();
-        return Response::json(array('success' => true, 'contentCount' => $data, 'maxValueData' =>$maxValuePage), 200)->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
+        return Response::json(array('success' => false, 'message' => trans('message.common_error')), 200);
+    }
 
+    public function getGraphDataPost(Request $request, $page_id)
+    {
+        if($request->has('dateFrom') && $request->has('dateTo')){
+            $startDate = $request->get('dateFrom');
+            $endDate = $request->get('dateTo');
+            $user = Auth::user();
+            if(strtotime($endDate) < strtotime($startDate)){
+                return Response::json(array(
+                    'success' => false,
+                    'message' => trans('message.error_date_ranger')), 200);
+            }
+            $inputs = array(
+                'from' => $startDate,
+                'to' => $endDate,
+            );
+            $startDate = date('Y-m-d', strtotime("-1 day", strtotime($startDate)));
+            $endDate = date('Y-m-d', strtotime($endDate));
+
+            $days = floor((strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24));
+            $page = $this->repPage->getById($page_id);
+            if($page){
+                $auth = $this->repAuth->getById($page->auth_id);
+                if($auth && ($auth->user_id == $user->id || $user->authority == config('constants.authority.admin'))){
+                    $service_code = $auth->service_code;
+                    if($service_code){
+                        $columns = [
+                            'like_count',
+                            'comment_count',
+                            'share_count'
+                        ];
+                        if(config('constants.service.facebook') == $service_code){
+                            $columns = [
+                                'like_count',
+                                'comment_count',
+                                'share_count'
+                            ];
+                            $posts = $this->repPostFb;
+                            $listPostByDate = $posts->getListPostByDate($page_id, null, $startDate, $endDate);
+                        }
+                        else if(config('constants.service.twitter') == $service_code){
+                            $columns = [
+                                'retweet_count',
+                                'favorite_count'
+                            ];
+                            $posts = $this->repPostTw;
+                            $listPostByDate = $posts->getListPostByDate($page_id, null, $startDate, $endDate);
+                        }
+                        else if(config('constants.service.instagram') == $service_code){
+                            $columns = [
+                                'like_count',
+                                'comment_count'
+                            ];
+                            $posts = $this->repPostIg;
+                            $listPostByDate = $posts->getListPostByDate($page_id, null, $startDate, $endDate);
+                        }
+
+                        if(isset($listPostByDate)){
+                            $postPerDay = [];
+                            for ($i = 0; $i <= $days; $i++){
+                                $day = date('Y-m-d', strtotime("+" . $i . " day", strtotime($startDate)));
+                                $postPerDay[$day]['total'] = 0;
+                                $postPerDay[$day]['compare'] = 0;
+                            }
+                            if($listPostByDate && count($listPostByDate) > 0){
+                                $startDateByDb = date('Y-m-d', strtotime($page->created_at));
+                                foreach ($listPostByDate as $i => $postDetail){
+                                    $startDate = date('Y-m-d', strtotime($startDate));
+                                    foreach ($columns as $column){
+                                        $postPerDay[$postDetail->date]['total'] += $postDetail->$column;
+                                    }
+                                    if($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
+                                        $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($postDetail->date)));
+                                        $beforeDayVal = $postPerDay[$beforeDate]['total'];
+                                        $thisDayVal = $postPerDay[$postDetail->date]['total'];
+                                        $compare = $thisDayVal - $beforeDayVal;
+                                        $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
+                                    }
+                                }
+                                if(isset($postPerDay[$startDateByDb])){
+                                    $postPerDay[$startDateByDb]['total'] = 0;
+                                }
+                                if(isset($postPerDay[$startDate])){
+                                    unset($postPerDay[$startDate]);
+                                }
+                                $maxValuePost = $this->getMaxGraph($postPerDay);
+                                return Response::json(array(
+                                    'success' => true,
+                                    'contentCount' => $postPerDay,
+                                    'maxValueData' => $maxValuePost), 200)
+                                    ->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return Response::json(array('success' => false, 'message' => trans('message.common_error')), 200);
     }
 
     public static function getMaxGraph($data ){
@@ -173,7 +291,7 @@ class PageController extends Controller
             }
             break;
         }
-        $maxValueArr = array_reduce($data, function ($subData1, $subData2) use ($initKey) {
+        $maxValueArr = array_reduce($data, function ($subData1, $subData2) use ($initKey){
             $result = array();
             foreach ($initKey as $key){
                 $result[$key] = @$subData1[$key] > @$subData2[$key] ? @intval($subData1[$key]) : @intval($subData2[$key]) ;
@@ -181,12 +299,14 @@ class PageController extends Controller
             return $result;
         });
         if($maxValueArr){
+            Log::info('-----------------------');
             foreach ($maxValueArr as $key => $value){
                 $maxGraph = $maxValueArr[$key];
                 $roundMax = round($maxGraph/5);
                 if($maxGraph >= 3*$roundMax){
                     $maxGraph = 5*$roundMax + 5*ceil($roundMax/5);
                 }
+                Log::info($maxGraph);
                 $maxValueArr[$key] = intval($maxGraph);
                 if($maxGraph <= 100){
                     $maxGraph = 10*(round($maxGraph/10, 0));
@@ -195,6 +315,7 @@ class PageController extends Controller
                     $length = strlen($maxGraph);
                     $maxGraphRound = 5 * pow(10, $length-2) * ceil($maxGraph/(5 * pow(10, $length -2)));
                     if($maxGraph >= 3/5*$maxGraphRound){
+                        Log::info($maxGraph .' >= 3/5* '.$maxGraphRound);
                         $maxValueArr[$key] = $maxGraphRound;
                         continue;
                     }
@@ -211,72 +332,5 @@ class PageController extends Controller
         }
 
         return $maxValueArr;
-    }
-
-    public function getGraphDataPost(Request $request, $page_id)
-    {
-        $page = $this->repPage->getById($page_id);
-        $startDate  = $request->get('dateFrom');
-        $endDate    = $request->get('dateTo');
-        $startDate  = date('Y-m-d' ,strtotime("-1 day", strtotime($startDate)));
-        $inputs = array(
-            'from'  => $startDate,
-            'to'    => $endDate,
-        );
-        $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
-
-        $serviceOfPage = $this->repPage->checkServicePage($page_id)->service_code;
-        if ($serviceOfPage) {
-            if (config('constants.service.facebook') == $serviceOfPage) {
-                $columns = [
-                    'like_count',
-                    'comment_count',
-                    'share_count'
-                ];
-                $repPost       = $this->repPostFb;
-            }
-            if (config('constants.service.twitter') == $serviceOfPage) {
-                $columns = [
-                    'retweet_count',
-                    'favorite_count'
-                ];
-                $repPost       = $this->repPostTw;
-            }
-            if (config('constants.service.instagram') == $serviceOfPage) {
-                $columns = [
-                    'like_count',
-                    'comment_count'
-                ];
-                $repPost       = $this->repPostIg;
-            }
-            $listPostByDate = $repPost->getListPostByDate($page_id, null, $startDate, $endDate);
-        }
-
-        $postPerDay = [];
-        for($i=0;$i <= $days; $i++) {
-            $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
-            $postPerDay[$day]['total'] = 0;
-            $postPerDay[$day]['compare'] = 0;
-        }
-        foreach ($listPostByDate as $i => $postDetail) {
-            $startDate     = date('Y-m-d' ,strtotime($startDate));
-            $startDateByDb = date('Y-m-d' ,strtotime($page->created_at ));
-            foreach ($columns as $column) {
-                $postPerDay[$postDetail->date]['total'] += $postDetail->$column;
-            }
-            if ($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
-                $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
-                $beforeDayVal   = $postPerDay[$beforeDate]['total'];
-                $thisDayVal     = $postPerDay[$postDetail->date]['total'];
-                $compare        = $thisDayVal - $beforeDayVal;
-                $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
-            }
-        }
-        $postPerDay[$startDateByDb]['total'] = 0;
-        if(@$postPerDay[$startDate]) {
-            unset($postPerDay[$startDate]);
-        }
-        $maxValuePost = PageController::getMaxGraph($postPerDay);
-        return Response::json(array('success' => true, 'contentCount' => $postPerDay, 'maxValueData' => $maxValuePost), 200)->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
     }
 }

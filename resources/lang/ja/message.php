@@ -28,5 +28,8 @@ return [
     'error_get_access_token'  => ':nameのアクセストークンは無効または期限切れです。',
     'error_get_info_acc'  => 'アカウント名は存在しません。',
     'token_expired'  => '無効または期限切れのトークンです。ダッシュボードからアカウント接続を行ってください。',
-    'benchmark_save_success' => ' ベンチマーク企業を新規に追加しました。'
+    'benchmark_save_success' => ' ベンチマーク企業を新規に追加しました。',
+    'exists_error' => 'アカウントがすでに存在しています。',
+    'not_exiting_service'  => 'SNSは存在しません。',
+    'error_page_not_found'    => 'ページは存在しません。',
 ];

@@ -56,20 +56,23 @@ class BenchmarkController extends Controller
         $lang    = Lang::locale();
         $service = $this->repMaster->getService();
         $social  = array();
-        foreach ($service as $key => $value) {
-            $name = 'name_'.$lang;
-            $social[$value->$name] = ucfirst($value->$name);
+        if($service && count($service) > 0){
+            foreach ($service as $key => $value) {
+                $name = 'name_'.$lang;
+                $social[$value->$name] = ucfirst($value->$name);
+            }
+            return view('benchmark.create')->with([
+                'social' => $social
+            ]);
         }
-        return view('benchmark.create')->with([
-            'social' => $social
-        ]);
+        return redirect('benchmark')->with('alert-danger', trans('message.not_exiting_service'));
     }
 
     public function store(BenchmarkRequest $request)
     {
         $input = $request->all();
         if($input) {
-            $account_func = 'checkAccount'.ucfirst($input['typeSociale']);
+            $account_func = 'checkAccount'.ucfirst($input['service_code']);
             return $this->$account_func($input);
         }
     }
@@ -78,15 +81,10 @@ class BenchmarkController extends Controller
     {
         $user_id      = Auth::user()->id;
         $auth         = $this->repAuth->getById($id);
-        $arr_page_detail_id = array();
         if ($auth && $user_id == $auth->user_id) {
             $page        = $this->repPage->getOneByField('auth_id', $id);
             if ($page) {
-                $page_detail = $this->repPageDetail->getAllByField('page_id', $page->id);
-                foreach ($page_detail as $value) {
-                    $arr_page_detail_id[] = $value->id;
-                }
-                $this->repPageDetail->destroyById($arr_page_detail_id);
+                $this->repPageDetail->destroyById($page->id);
                 $this->repPage->destroy($page->id);
             }
             $this->repAuth->destroy($id);
@@ -116,7 +114,8 @@ class BenchmarkController extends Controller
             $connection         = new TwitterOAuth($client_id, $client_secret, $auth->access_token, $auth->refresh_token);
             DB::beginTransaction();
             try{
-                $user_detail    = $connection->get("users/show", array("screen_name" => $input['nickname']));
+                $user_detail    = $connection->get("users/show", array("screen_name" => $input['account_name']));
+
                 if (200 == $connection->getLastHttpCode()){
                     $input_insert = [
                         'user_id'           => $user_id,
@@ -145,6 +144,8 @@ class BenchmarkController extends Controller
             } catch (\Exception $e) {
                 DB::rollback();
             }
+        } else {
+            return redirect()->back()->with('alert-danger', trans('message.token_expired'));
         }
         return redirect()->back()->with('alert-danger', trans('message.common_error'));
     }
@@ -155,31 +156,36 @@ class BenchmarkController extends Controller
         $service            = config('constants.service.instagram');
         $auth               = $this->repAuth->getFirstAuth($user_id, $service);
         if($auth){
-            $url = str_replace('{name}',$input['nickname'], config('instagram.url.search')).'&access_token='.$auth->access_token;
+            $url = str_replace('{name}',$input['account_name'], config('instagram.url.search')).'&access_token='.$auth->access_token;
             $dataGet = $this->getContent($url,false);
             $dataGet  = @json_decode($dataGet[0]);
             if(!isset($dataGet)){
-                return redirect('/benchmark')->with('alert-danger', trans('message.error_network_connect', ['name' => trans('default.instagram')]));
+                return redirect()->back()->with('alert-danger', trans('message.common_error'))->withInput($input);
             }
-            else if(isset($dataGet->meta) && $dataGet->meta->code == 200){
-                $user_detail = $dataGet->data[0];
-                $input_insert = array(
-                    'user_id'           => $user_id,
-                    'account_id'        => $user_detail->id,
-                    'account_name'      => $user_detail->username,
-                    'service_code'      => $service,
-                    'rival_flg'         => 1,
-                );
-                $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service);
-                if (!$authUser) {
-                    $this->repAuth->store($input_insert);
-                    Artisan::call('instagram', [
-                        'today'      => 1,
-                        'account_id' => $input_insert['account_id']
-                    ]);
-                    return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success'));
-                } else {
-                    return redirect()->back()->with('alert-danger', trans('message.exists_error'))->withInput($input);
+            else if(isset($dataGet->meta) && $dataGet->meta->code == 200 && isset($dataGet->data)){
+                if(count($dataGet->data) > 0){
+                    $user_detail = $dataGet->data[0];
+                    $input_insert = array(
+                        'user_id'           => $user_id,
+                        'account_id'        => $user_detail->id,
+                        'account_name'      => $user_detail->username,
+                        'service_code'      => $service,
+                        'rival_flg'         => 1,
+                    );
+                    $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service);
+                    if (!$authUser) {
+                        $this->repAuth->store($input_insert);
+                        Artisan::call('instagram', [
+                            'today'      => 1,
+                            'account_id' => $input_insert['account_id']
+                        ]);
+                        return redirect('/benchmark')->with('alert-success', trans('message.benchmark_save_success'));
+                    } else {
+                        return redirect()->back()->with('alert-danger', trans('message.exists_error'))->withInput($input);
+                    }
+                }
+                else{
+                    return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);
                 }
             }else{
                 return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);

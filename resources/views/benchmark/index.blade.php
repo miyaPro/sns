@@ -20,7 +20,7 @@
                     <div class="form-group">
                         <div class="col-md-4">
                             <div class="input-group">
-                                <span class="input-group-addon btn-default">{{{ trans('field.check_acc') }}}</span>
+                                <span class="input-group-addon btn-default">{{{ trans('field.account_name') }}}</span>
                                 {!! Form::text('keyword',  Request::get('keyword',null),['id' => 'keyword','class' => 'form-control' ]) !!}
                                 <span class="input-group-btn">
                                     <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>

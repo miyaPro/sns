@@ -11,7 +11,7 @@ use App\Repositories\PostInstagramDetailRepository;
 use App\Repositories\PostInstagramRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\AuthRepository;
-use  Log;
+use Illuminate\Support\Facades\Log;
 
 class CommandInstagram extends Command
 {
@@ -66,6 +66,7 @@ class CommandInstagram extends Command
         $account_id     = $this->argument('account_id');
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth(config('constants.service.instagram'), $account_id);
+        Log::info('-----------------------------');
         foreach ($auths as $auth){
             if($auth->rival_flg == 0 && !$auth->access_token) {
                 continue;
@@ -76,10 +77,20 @@ class CommandInstagram extends Command
                 $this->getPage($auth);
             }
         }
+        Log::info('-----------------------------');
+    }
+
+    public function getPageRival($auth)
+    {
+        $authToGet = $this->repAuth->getFirstAuth($auth->user_id, $auth->service_code);
+        if ($authToGet) {
+                $this->getPage($auth, $authToGet->access_token);
+        }
     }
 
     public function getPage($auth, $access_token=null){
         if($auth->rival_flg == 1 && isset($access_token)){
+            Log::info('------------competion------------'.$auth);
             $url = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$access_token;
         }else{
             $url = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$auth->access_token;
@@ -111,19 +122,11 @@ class CommandInstagram extends Command
             }
             $this->getPageDetail($data, $page);
             if($auth->rival_flg == 0){
-                $this->getPost($page, $auth, 100);
+                $this->getPost($page, $auth, config('constants.service_limit_post'));
             }
         }else{
             $this->repAuth->resetAccessToken($auth->id);
             $this->error(trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
-        }
-    }
-
-    public function getPageRival($auth)
-    {
-        $authToGet = $this->repAuth->getFirstAuth($auth->user_id, $auth->service_code);
-        if ($authToGet) {
-                $this->getPage($auth, $authToGet->access_token);
         }
     }
 
@@ -150,6 +153,7 @@ class CommandInstagram extends Command
     }
 
     public function getPageDetail($data, $page){
+        Log::info('page detail call ....');
         $current_date = date('Y-m-d');
         if(!$this->today) {
             $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
@@ -174,6 +178,9 @@ class CommandInstagram extends Command
         $url = str_replace('{id}',$auth->account_id,config('instagram.url.media')).'?access_token='.$auth->access_token;
         $maxGetPost = config('instagram.limit.post_media');
         $date = new \DateTime();
+        if($numberPost < $maxGetPost) {
+            $url .= '&count='.$numberPost;
+        }
         $dataGet = $this->getContent($url, false);
         $dataGet  = @json_decode($dataGet[0]);
         if(isset($dataGet)){
@@ -183,26 +190,22 @@ class CommandInstagram extends Command
                 $this->error(trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
                 return;
             }
-            if(count($dataAllPost) < $numberPost) {
-                if ($numberPost > $maxGetPost) {
-                    $numberLoop = intval(round($numberPost / $maxGetPost, 0));
-                    for ($i = 0; $i < $numberLoop; $i++) {
-                        $currNumPost = $numberPost - count($dataAllPost);
-                        $nextUrl = @$dataGet->pagination->next_url;
-                        if($nextUrl){
-                            $currentUrl = $nextUrl;
-                            if($currNumPost < $maxGetPost){
-                                $currentUrl.=('&count='.$currNumPost);
-                            }
-                            $dataGet = $this->getContent($currentUrl, false);
-                            $dataGet = @json_decode($dataGet[0]);
-                            if (isset($dataGet) && $dataGet->meta->code == 200) {
-                                $dataAllPost = array_merge($dataAllPost, $dataGet->data);
-
-                            } else {
-                                $this->error('message.error_do_not_get_post_instagram');
-                                break;
-                            }
+            if(count($dataAllPost) < $numberPost && $numberPost > $maxGetPost) {
+                $numberLoop = floor($numberPost / $maxGetPost);
+                for ($i = 0; $i < $numberLoop; $i++) {
+                    $currNumPost = $numberPost - count($dataAllPost);
+                    $nextUrl = @$dataGet->pagination->next_url;
+                    if($nextUrl){
+                        if($currNumPost < $maxGetPost){
+                            $nextUrl .= '&count='.$currNumPost;
+                        }
+                        $dataGet = $this->getContent($nextUrl, false);
+                        $dataGet = @json_decode($dataGet[0]);
+                        if (isset($dataGet) && $dataGet->meta->code == 200) {
+                            $dataAllPost = array_merge($dataAllPost, $dataGet->data);
+                        } else {
+                            $this->error('message.error_do_not_get_post_instagram');
+                            break;
                         }
                     }
                 }

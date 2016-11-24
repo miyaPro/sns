@@ -4,7 +4,11 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -44,7 +48,37 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        $e = $exception;
+        if ($e instanceof ModelNotFoundException)
+        {
+            $e = new NotFoundHttpException($e->getMessage(), $e);
+        }
+        if ($e instanceof MethodNotAllowedHttpException)
+        {
+            $e = new NotFoundHttpException($e->getMessage(), $e);
+        }
+        if ($request->ajax() || $request->wantsJson()) {
+            $errors['msg'][] =  trans('message.common_error');
+            return response()->json(array(
+                'success' => false,
+                'errors' => $errors
+
+            ), 400);
+        }
+        if ($e instanceof TokenMismatchException) {
+            return response()->view('errors.404', array(), 404);
+        }
+        //insert this snippet
+        if ($this->isHttpException($e))
+        {
+            $statusCode = $e->getStatusCode();
+            switch ($statusCode)
+            {
+                case '404': return response()->view('errors.404', array(), 404);
+            }
+        }
         return parent::render($request, $exception);
+
     }
 
     /**

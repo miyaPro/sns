@@ -32,6 +32,7 @@ class MasterRequest extends Request
                     ->where(function ($query) {
                         $query->where('code', $this->input['code']);
                         $query->where('group', $this->input['group']);
+                        $query->whereNull('deleted_at');
                     }),
             ],
             'name_ja'       => 'max:255',
