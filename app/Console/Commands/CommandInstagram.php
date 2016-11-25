@@ -12,6 +12,7 @@ use App\Repositories\PostInstagramRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\AuthRepository;
 use Illuminate\Support\Facades\Log;
+use app\Common\Common;
 
 class CommandInstagram extends Command
 {
@@ -66,7 +67,6 @@ class CommandInstagram extends Command
         $account_id     = $this->argument('account_id');
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth(config('constants.service.instagram'), $account_id);
-        Log::info('-----------------------------');
         foreach ($auths as $auth){
             if($auth->rival_flg == 0 && !$auth->access_token) {
                 continue;
@@ -77,7 +77,6 @@ class CommandInstagram extends Command
                 $this->getPage($auth);
             }
         }
-        Log::info('-----------------------------');
     }
 
     public function getPageRival($auth)
@@ -90,12 +89,11 @@ class CommandInstagram extends Command
 
     public function getPage($auth, $access_token=null){
         if($auth->rival_flg == 1 && isset($access_token)){
-            Log::info('------------competion------------'.$auth);
             $url = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$access_token;
         }else{
             $url = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$auth->access_token;
         }
-        $dataGet = $this->getContent($url,false);
+        $dataGet = Common::getContent($url,false);
         $dataGet  = @json_decode($dataGet[0]);
         if(!isset($dataGet)){
             $this->error(trans('message.error_network_connect', ['name' => trans('default.instagram')]));
@@ -130,30 +128,7 @@ class CommandInstagram extends Command
         }
     }
 
-    public function getContent($url,$postdata){
-        if (!function_exists('curl_init')){
-            return 'Sorry cURL is not installed!';
-        }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        if ($postdata)
-        {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-        }
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 ;Windows NT 6.1; WOW64; AppleWebKit/537.36 ;KHTML, like Gecko; Chrome/39.0.2171.95 Safari/537.36");
-        $contents = curl_exec($ch);
-        $headers = curl_getinfo($ch);
-        curl_close($ch);
-        return array($contents, $headers);
-    }
-
     public function getPageDetail($data, $page){
-        Log::info('page detail call ....');
         $current_date = date('Y-m-d');
         if(!$this->today) {
             $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
@@ -181,7 +156,7 @@ class CommandInstagram extends Command
         if($numberPost < $maxGetPost) {
             $url .= '&count='.$numberPost;
         }
-        $dataGet = $this->getContent($url, false);
+        $dataGet = Common::getContent($url, false);
         $dataGet  = @json_decode($dataGet[0]);
         if(isset($dataGet)){
             $dataAllPost = $dataGet->data;
@@ -199,7 +174,7 @@ class CommandInstagram extends Command
                         if($currNumPost < $maxGetPost){
                             $nextUrl .= '&count='.$currNumPost;
                         }
-                        $dataGet = $this->getContent($nextUrl, false);
+                        $dataGet = Common::getContent($nextUrl, false);
                         $dataGet = @json_decode($dataGet[0]);
                         if (isset($dataGet) && $dataGet->meta->code == 200) {
                             $dataAllPost = array_merge($dataAllPost, $dataGet->data);

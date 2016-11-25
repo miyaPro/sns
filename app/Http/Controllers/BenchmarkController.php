@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Lang;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Illuminate\Support\Facades\Artisan;
 use Abraham\TwitterOAuth\TwitterOAuthException;
+use app\Common\Common;
 
 class BenchmarkController extends Controller
 {
@@ -157,7 +158,7 @@ class BenchmarkController extends Controller
         $auth               = $this->repAuth->getFirstAuth($user_id, $service);
         if($auth){
             $url = str_replace('{name}',$input['account_name'], config('instagram.url.search')).'&access_token='.$auth->access_token;
-            $dataGet = $this->getContent($url,false);
+            $dataGet = Common::getContent($url,false);
             $dataGet  = @json_decode($dataGet[0]);
             if(!isset($dataGet)){
                 return redirect()->back()->with('alert-danger', trans('message.common_error'))->withInput($input);
@@ -195,25 +196,4 @@ class BenchmarkController extends Controller
         }
     }
 
-    public function getContent($url,$postdata){
-        if (!function_exists('curl_init')){
-            return 'Sorry cURL is not installed!';
-        }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        if ($postdata)
-        {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-        }
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 ;Windows NT 6.1; WOW64; AppleWebKit/537.36 ;KHTML, like Gecko; Chrome/39.0.2171.95 Safari/537.36");
-        $contents = curl_exec($ch);
-        $headers = curl_getinfo($ch);
-        curl_close($ch);
-        return array($contents, $headers);
-    }
 }

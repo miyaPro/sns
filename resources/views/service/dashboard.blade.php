@@ -360,7 +360,7 @@
                                 })
                             }
                             maxGraph = maxGraphResponse['count'];
-                        }else{
+                        }else if(typeDraw == '1'){
                             for (var item in dataResponse) {
                                 dataGraph.push({
                                     date : item,
@@ -368,6 +368,14 @@
                                 })
                             }
                             maxGraph = maxGraphResponse['count_compare'];
+                        }else{
+                            for (var item in dataResponse) {
+                                dataGraph.push({
+                                    date: item,
+                                    value: dataResponse[item]['count_change']
+                                })
+                            }
+                            maxGraph = maxGraphResponse['count_change'];
                         }
                         var parent_graph = $('#' + element_id).parents('.panel.page-box'),
                                 service_display = parent_graph.css('display');

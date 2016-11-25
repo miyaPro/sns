@@ -30,17 +30,16 @@ class Kernel extends ConsoleKernel
         $schedule->command('facebook')
             ->dailyAt('00:10');
         $schedule->command('twitter')
-            ->dailyAt('00:10');
+            ->dailyAt('00:15');
         $schedule->command('instagram')
-            ->dailyAt('00:10');
+            ->dailyAt('00:20');
 
         $schedule->command('facebook 1')
-            ->everyThirtyMinutes()->unlessBetween('23:00', '3:00');
+            ->hourly()->unlessBetween('23:00', '6:00');
         $schedule->command('twitter 1')
-            ->everyThirtyMinutes()->unlessBetween('23:00', '3:00');
+            ->hourly()->unlessBetween('23:00', '6:00');
         $schedule->command('instagram 1')
-            ->everyMinute()->unlessBetween('23:00', '3:00');
-
+            ->hourly()->unlessBetween('23:00', '6:00');
     }
 
     /**

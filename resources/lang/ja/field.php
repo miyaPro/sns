@@ -65,6 +65,7 @@ return [
     'updated_time'      => 'Update',
     'condition_filter_total' => '累計',
     'condition_filter_daily' => '日別',
+    'condition_filter_total_change' => 'total_change',
     'post_engagement' => '投稿のエンゲージメント',
     'post_list' => '直近10投稿リスト',
     'post_created_at' => '投稿日　',

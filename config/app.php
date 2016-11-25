@@ -77,7 +77,7 @@ return [
     |
     */
 
-    'locale' => 'vn',
+    'locale' => 'ja',
 
     /*
     |--------------------------------------------------------------------------
@@ -230,6 +230,7 @@ return [
         'Html' => Collective\Html\HtmlFacade::class,
         'Socialite' => Laravel\Socialite\Facades\Socialite::class,
         'Instagram' => Vinkla\Instagram\Facades\Instagram::class,
+        'Common'    => App\Libraries\Common\Common::class,
     ]
 
 ];

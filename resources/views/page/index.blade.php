@@ -295,7 +295,7 @@
                 }
                 var loadGraphPage = function(dataResponse, dataGraph, typeDrawSubPage, maxGraph){
                     chartPage.options.labels = [$('#typeDrawPage option:selected').html()];
-                    var maxPage
+                    var maxPage;
                     if(typeDrawSubPage == '0'){
                         for (var item in dataResponse) {
                             dataGraph.push({
@@ -304,7 +304,7 @@
                             })
                         }
                         maxPage = maxGraph['count']
-                    }else{
+                    }else if(typeDrawSubPage == '1'){
                         for (var item in dataResponse) {
                             dataGraph.push({
                                 date : item,
@@ -312,6 +312,14 @@
                             })
                         }
                         maxPage = maxGraph['count_compare']
+                    }else{
+                        for (var item in dataResponse) {
+                            dataGraph.push({
+                                date : item,
+                                count : dataResponse[item]['count_change']
+                            })
+                        }
+                        maxPage = maxGraph['count_change']
                     }
                     chartPage.options.ymax = maxPage;
                     chartPage.setData(dataGraph);
@@ -327,7 +335,7 @@
                             })
                         }
                         maxPost = maxGraph['total']
-                    }else{
+                    }else if(typeDrawSubPost == '1'){
                         for (var item in dataResponse) {
                             dataGraph.push({
                                 date : item,
@@ -335,9 +343,18 @@
                             })
                         }
                         maxPost = maxGraph['compare']
+                    }else{
+                        for (var item in dataResponse) {
+                            dataGraph.push({
+                                date : item,
+                                count : dataResponse[item]['change']
+                            })
+                        }
+                        maxPost = maxGraph['change']
                     }
                     chartPost.options.ymax = maxPost;
-                    chartPost.setData(dataGraph)
+                    console.log(chartPost.options.element);
+                    chartPost.setData([])
                 }
                 $('#typeDrawPage, #typeDrawSubPost, #typeDrawSubPage').on('change', function (e) {
                     e.preventDefault;

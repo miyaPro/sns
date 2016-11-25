@@ -21,6 +21,7 @@ use Facebook\Exceptions\FacebookResponseException as FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException as FacebookSDKException;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Abraham\TwitterOAuth\TwitterOAuth;
+use app\Common\Common;
 
 class ServiceController extends Controller
 {
@@ -152,7 +153,7 @@ class ServiceController extends Controller
                         $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($fromDate)));
                         $postDetail = $repPost->getListPostByDate($page->id, null, $beforeDate, $toDate);
                         $postByDay[$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
-                        $maxPost[$page->id] = PageController::getMaxGraph($postByDay[$page->id]);
+                        $maxPost[$page->id] = Common::getMaxGraph($postByDay[$page->id]);
                     }
 
                     //get total from page detail
@@ -264,7 +265,7 @@ class ServiceController extends Controller
     public function checkAccessTokenInstagram($auth) {
         $result     = true;
         $url        = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$auth->access_token;
-        $dataGet    = $this->getContent($url,false);
+        $dataGet    = Common::getContent($url,false);
         $dataAccount = @json_decode($dataGet[0]);
         if(isset($dataGet) && (!isset($dataAccount->meta) || $dataAccount->meta->code != 200)){
             $this->repAuth->resetAccessToken($auth->id);
@@ -273,25 +274,4 @@ class ServiceController extends Controller
         return $result;
     }
 
-    public function getContent($url,$postdata){
-        if (!function_exists('curl_init')){
-            return 'Sorry cURL is not installed!';
-        }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        if ($postdata)
-        {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-        }
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 ;Windows NT 6.1; WOW64; AppleWebKit/537.36 ;KHTML, like Gecko; Chrome/39.0.2171.95 Safari/537.36");
-        $contents = curl_exec($ch);
-        $headers = curl_getinfo($ch);
-        curl_close($ch);
-        return array($contents, $headers);
-    }
 }

@@ -18,6 +18,7 @@ use Session;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Artisan;
+use app\Common\Common;
 
 
 /**
@@ -146,7 +147,7 @@ class SocialNetworkController extends Controller
             'code'=>$request['code'],
         );
         $url = config('instagram.url.token');
-        $dataUser = $this->getContent($url,$postdata);
+        $dataUser = Common::getContent($url,$postdata);
         $dataUser =json_decode($dataUser[0]);
         $user = Auth::user();
         if(isset($dataUser) && $dataUser->access_token && $dataUser->user){
@@ -175,28 +176,6 @@ class SocialNetworkController extends Controller
             Session::flash('alert-danger', trans('message.error_get_access_token_instagram'));
         }
         return redirect('/dashboard/'.config('constants.service.instagram'));
-    }
-
-    public function getContent($url,$postdata){
-        if (!function_exists('curl_init')){
-            return 'Sorry cURL is not installed!';
-        }
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-        if ($postdata)
-        {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-        }
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 ;Windows NT 6.1; WOW64; AppleWebKit/537.36 ;KHTML, like Gecko; Chrome/39.0.2171.95 Safari/537.36");
-        $contents = curl_exec($ch);
-        $headers = curl_getinfo($ch);
-        curl_close($ch);
-        return array($contents, $headers);
     }
 
     public function handleInstagram($logout = false) {

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Response;
 use Cookie;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
+use app\Common\Common;
 
 class PageController extends Controller
 {
@@ -152,6 +153,7 @@ class PageController extends Controller
                             $data[$day] = [
                                 'count' => 0,
                                 'count_compare' => 0,
+                            'count_change' => 0,
                             ];
                         }
                         $startDateByDb = date('Y-m-d', strtotime($page->created_at));
@@ -163,6 +165,12 @@ class PageController extends Controller
                                     $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($detail->date)));
                                     $compare = $data[$detail->date]['count'] - $data[$beforeDate]['count'];
                                     $data[$detail->date]['count_compare'] = ($compare > 0) ? $compare : 0;
+                                if ($startDate < $startDateByDb) {
+                                    $change = $data[$detail->date]['count'] - $data[$startDateByDb]['count'];
+                                }else {
+                                    $change = $data[$detail->date]['count'] - $data[$startDate]['count'];
+                                }
+                                $data[$detail->date]['count_change'] = ($change > 0) ? $change : 0;
                                 }
                             }
                             if(isset($data[$startDateByDb])){
@@ -171,7 +179,7 @@ class PageController extends Controller
                             if(isset($data[$startDate])){
                                 unset($data[$startDate]);
                             }
-                            $maxValuePage = $this->getMaxGraph($data);
+                            $maxValuePage = Common::getMaxGraph($data);
                             return Response::json(array('success' => true,
                                 'contentCount' => $data,
                                 'maxValueData' => $maxValuePage), 200)
@@ -246,6 +254,8 @@ class PageController extends Controller
                                 $day = date('Y-m-d', strtotime("+" . $i . " day", strtotime($startDate)));
                                 $postPerDay[$day]['total'] = 0;
                                 $postPerDay[$day]['compare'] = 0;
+                            $postPerDay[$day]['change'] = 0;
+
                             }
                             if($listPostByDate && count($listPostByDate) > 0){
                                 $startDateByDb = date('Y-m-d', strtotime($page->created_at));
@@ -256,10 +266,18 @@ class PageController extends Controller
                                     }
                                     if($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
                                         $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($postDetail->date)));
+                                    $startDayVal = $postPerDay[$startDate]['total'];
+                                    $startDayDbVal = $postPerDay[$startDateByDb]['total'];
                                         $beforeDayVal = $postPerDay[$beforeDate]['total'];
                                         $thisDayVal = $postPerDay[$postDetail->date]['total'];
                                         $compare = $thisDayVal - $beforeDayVal;
+                                    if ($startDate < $startDateByDb){
+                                        $change = $thisDayVal - $startDayDbVal;
+                                    }else{
+                                        $change = $thisDayVal - $startDayVal;
+                                    }
                                         $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
+                                    $postPerDay[$postDetail->date]['change'] = ($change > 0) ? $change : 0;
                                     }
                                 }
                                 if(isset($postPerDay[$startDateByDb])){
@@ -268,7 +286,7 @@ class PageController extends Controller
                                 if(isset($postPerDay[$startDate])){
                                     unset($postPerDay[$startDate]);
                                 }
-                                $maxValuePost = $this->getMaxGraph($postPerDay);
+                                $maxValuePost = Common::getMaxGraph($postPerDay);
                                 return Response::json(array(
                                     'success' => true,
                                     'contentCount' => $postPerDay,
@@ -283,54 +301,4 @@ class PageController extends Controller
         return Response::json(array('success' => false, 'message' => trans('message.common_error')), 200);
     }
 
-    public static function getMaxGraph($data ){
-        $initKey = array();
-        foreach ($data as $subData){
-            foreach ($subData as $key => $value){
-                $initKey[] = $key;
-            }
-            break;
-        }
-        $maxValueArr = array_reduce($data, function ($subData1, $subData2) use ($initKey){
-            $result = array();
-            foreach ($initKey as $key){
-                $result[$key] = @$subData1[$key] > @$subData2[$key] ? @intval($subData1[$key]) : @intval($subData2[$key]) ;
-            }
-            return $result;
-        });
-        if($maxValueArr){
-            Log::info('-----------------------');
-            foreach ($maxValueArr as $key => $value){
-                $maxGraph = $maxValueArr[$key];
-                $roundMax = round($maxGraph/5);
-                if($maxGraph >= 3*$roundMax){
-                    $maxGraph = 5*$roundMax + 5*ceil($roundMax/5);
-                }
-                Log::info($maxGraph);
-                $maxValueArr[$key] = intval($maxGraph);
-                if($maxGraph <= 100){
-                    $maxGraph = 10*(round($maxGraph/10, 0));
-                    $maxGraph = $maxGraph < 5 ? 5 : $maxGraph;
-                }else{
-                    $length = strlen($maxGraph);
-                    $maxGraphRound = 5 * pow(10, $length-2) * ceil($maxGraph/(5 * pow(10, $length -2)));
-                    if($maxGraph >= 3/5*$maxGraphRound){
-                        Log::info($maxGraph .' >= 3/5* '.$maxGraphRound);
-                        $maxValueArr[$key] = $maxGraphRound;
-                        continue;
-                    }
-                    $splitPart = pow(10, $length -1)/2;
-                    $roundMax = $splitPart * round($maxGraph / ($splitPart));
-                    if($roundMax <= $maxGraph){
-                        $maxGraph = $roundMax + 10*round(($maxGraph - $roundMax)/10, 0);
-                    }else{
-                        $maxGraph = $roundMax;
-                    }
-                }
-                $maxValueArr[$key] = $maxGraph;
-            }
-        }
-
-        return $maxValueArr;
-    }
 }
