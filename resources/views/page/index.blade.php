@@ -222,6 +222,7 @@
                                         loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
                                     }
                                 }else{
+                                    console.log(data.message);
                                     alert(data.message);
                                 }
                             }
@@ -245,6 +246,7 @@
                                     var maxGraph = data.maxValueData
                                     loadGraphPage(dataResponse,dataGraph, typeDrawSubPage, maxGraph);
                                 }else{
+                                    console.log(data.message);
                                     alert(data.message);
                                 }
                             }
@@ -266,6 +268,7 @@
                                     var maxGraph = data.maxValueData
                                     loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
                                 }else{
+                                    console.log( data);
                                     alert(data.message);
                                 }
                             }
@@ -353,8 +356,7 @@
                         maxPost = maxGraph['change']
                     }
                     chartPost.options.ymax = maxPost;
-                    console.log(chartPost.options.element);
-                    chartPost.setData([])
+                    chartPost.setData(dataGraph)
                 }
                 $('#typeDrawPage, #typeDrawSubPost, #typeDrawSubPage').on('change', function (e) {
                     e.preventDefault;

@@ -69,7 +69,7 @@ return [
     'post_detail'    => 'Thông tin danh sách bài post',
     'condition_filter_total' => 'Total',
     'condition_filter_daily' => 'Daily',
-    'condition_filter_total_change' => 'total_change',
+    'condition_filter_total_change' => 'Total change',
     'post_engagement' => 'Post Engagement',
     'client_email' => 'クライアントEメール',
     'rival_name' => 'ライバル名前'

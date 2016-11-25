@@ -12,7 +12,7 @@ use App\Repositories\PostInstagramRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\AuthRepository;
 use Illuminate\Support\Facades\Log;
-use app\Common\Common;
+use App\Common\Common;
 
 class CommandInstagram extends Command
 {
@@ -67,16 +67,21 @@ class CommandInstagram extends Command
         $account_id     = $this->argument('account_id');
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth(config('constants.service.instagram'), $account_id);
+        Log::info('instagram');
+        Log::info('--------------------------------------');
         foreach ($auths as $auth){
             if($auth->rival_flg == 0 && !$auth->access_token) {
                 continue;
             }
             if ($auth->rival_flg == 1) {
+                Log::info('------auth 1: '.$auth);
                 $this->getPageRival($auth);
             } else {
+                Log::info('------auth 0: '.$auth);
                 $this->getPage($auth);
             }
         }
+        Log::info('------------------------------------------------------');
     }
 
     public function getPageRival($auth)

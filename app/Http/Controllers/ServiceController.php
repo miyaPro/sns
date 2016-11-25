@@ -21,7 +21,7 @@ use Facebook\Exceptions\FacebookResponseException as FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException as FacebookSDKException;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Abraham\TwitterOAuth\TwitterOAuth;
-use app\Common\Common;
+use App\Common\Common;
 
 class ServiceController extends Controller
 {

@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Lang;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Illuminate\Support\Facades\Artisan;
 use Abraham\TwitterOAuth\TwitterOAuthException;
-use app\Common\Common;
+use App\Common\Common;
 
 class BenchmarkController extends Controller
 {

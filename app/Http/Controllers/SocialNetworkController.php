@@ -18,7 +18,7 @@ use Session;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Artisan;
-use app\Common\Common;
+use App\Common\Common;
 
 
 /**

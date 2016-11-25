@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Response;
 use Cookie;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
-use app\Common\Common;
+use App\Common\Common;
 
 class PageController extends Controller
 {
@@ -153,7 +153,7 @@ class PageController extends Controller
                             $data[$day] = [
                                 'count' => 0,
                                 'count_compare' => 0,
-                            'count_change' => 0,
+                                'count_change' => 0,
                             ];
                         }
                         $startDateByDb = date('Y-m-d', strtotime($page->created_at));
@@ -161,16 +161,16 @@ class PageController extends Controller
                             $val_condition = $condition[$countType] . '_count';
                             foreach ($pageDetail as $key => $detail){
                                 $data[$detail->date]['count'] = $detail->$val_condition;
-                                if($detail->date > $startDateByDb){
+                                if($detail->date > $startDateByDb && $detail->date > $startDate){
                                     $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($detail->date)));
                                     $compare = $data[$detail->date]['count'] - $data[$beforeDate]['count'];
                                     $data[$detail->date]['count_compare'] = ($compare > 0) ? $compare : 0;
-                                if ($startDate < $startDateByDb) {
-                                    $change = $data[$detail->date]['count'] - $data[$startDateByDb]['count'];
-                                }else {
-                                    $change = $data[$detail->date]['count'] - $data[$startDate]['count'];
-                                }
-                                $data[$detail->date]['count_change'] = ($change > 0) ? $change : 0;
+                                    if ($startDate < $startDateByDb) {
+                                        $change = $data[$detail->date]['count'] - $data[$startDateByDb]['count'];
+                                    }else {
+                                        $change = $data[$detail->date]['count'] - $data[$startDate]['count'];
+                                    }
+                                    $data[$detail->date]['count_change'] = ($change > 0) ? $change : 0;
                                 }
                             }
                             if(isset($data[$startDateByDb])){
@@ -248,13 +248,14 @@ class PageController extends Controller
                             $listPostByDate = $posts->getListPostByDate($page_id, null, $startDate, $endDate);
                         }
 
+                        dd($listPostByDate);
                         if(isset($listPostByDate)){
                             $postPerDay = [];
                             for ($i = 0; $i <= $days; $i++){
                                 $day = date('Y-m-d', strtotime("+" . $i . " day", strtotime($startDate)));
                                 $postPerDay[$day]['total'] = 0;
                                 $postPerDay[$day]['compare'] = 0;
-                            $postPerDay[$day]['change'] = 0;
+                                $postPerDay[$day]['change'] = 0;
 
                             }
                             if($listPostByDate && count($listPostByDate) > 0){
@@ -266,18 +267,18 @@ class PageController extends Controller
                                     }
                                     if($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
                                         $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($postDetail->date)));
-                                    $startDayVal = $postPerDay[$startDate]['total'];
-                                    $startDayDbVal = $postPerDay[$startDateByDb]['total'];
                                         $beforeDayVal = $postPerDay[$beforeDate]['total'];
                                         $thisDayVal = $postPerDay[$postDetail->date]['total'];
                                         $compare = $thisDayVal - $beforeDayVal;
-                                    if ($startDate < $startDateByDb){
-                                        $change = $thisDayVal - $startDayDbVal;
-                                    }else{
-                                        $change = $thisDayVal - $startDayVal;
-                                    }
+                                        if ($startDate < $startDateByDb){
+                                            $startDayDbVal = $postPerDay[$startDateByDb]['total'];
+                                            $change = $thisDayVal - $startDayDbVal;
+                                        }else{
+                                            $startDayVal = $postPerDay[$startDate]['total'];
+                                            $change = $thisDayVal - $startDayVal;
+                                        }
                                         $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
-                                    $postPerDay[$postDetail->date]['change'] = ($change > 0) ? $change : 0;
+                                        $postPerDay[$postDetail->date]['change']  = ($change > 0) ? $change : 0;
                                     }
                                 }
                                 if(isset($postPerDay[$startDateByDb])){

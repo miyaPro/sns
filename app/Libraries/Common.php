@@ -6,7 +6,7 @@
  * Time: 10:23 AM
  */
 
-namespace app\Common;
+namespace App\Common;
 
 
 class Common
