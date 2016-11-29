@@ -199,22 +199,25 @@ class CommandTwitter extends Command
                     'content'           => $posts->text,
                     'image_thumbnail'   => @$posts->entities->media[0]->media_url,
                     'author'            => $posts->user->screen_name,
+                    'retweet_count'     => $posts->retweet_count,
+                    'favorite_count'    => $posts->favorite_count,
                     'created_time'      => date("Y-m-d H:i:s",strtotime($posts->created_at)),
                 ];
                 if($post){
-                    $post = $this->repPostTwitter->update($post, $inputs);
+                    $this->repPostTwitter->update($post, $inputs);
                 }else{
-                    $post = $this->repPostTwitter->store($inputs, $page->id);
+                    $this->repPostTwitter->store($inputs, $page->id);
                 }
-                $this->getPostDetail($posts, $post);
+//                $this->getPostDetail($posts, $post);
             }
+            $this->getPostDetail($page->id);
         } catch (TwitterOAuthException $e) {
             $this->error('message1',"result null");
         } catch (\Exception $e) {
         }
     }
 
-    public function getPostDetail($posts_twitter, $post)
+    /*public function getPostDetail($posts_twitter, $post)
     {
         $current_date        = Carbon::today()->toDateString();
         if(!$this->today) {
@@ -230,6 +233,28 @@ class CommandTwitter extends Command
         }else{
             $inputs['date'] = $current_date;
             $this->repPostTwitterDetail->store($inputs, $post->id);
+        }
+    }*/
+
+    public function getPostDetail($page_id)
+    {
+        $current_date        = Carbon::today()->toDateString();
+        if(!$this->today) {
+            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
+        }
+        $sum = $this->repPostTwitter->getSumByPage($page_id);
+        $postDetail = $this->repPostTwitterDetail->getByDate($page_id, $current_date);
+        if ($sum){
+            $inputs = [
+                'retweet_count'     => $sum[0]['retweet_count'],
+                'favorite_count'    => $sum[0]['favorite_count'],
+            ];
+            if($postDetail){
+                $this->repPostTwitterDetail->update($postDetail, $inputs);
+            }else{
+                $inputs['date'] = $current_date;
+                $this->repPostTwitterDetail->store($inputs, $page_id);
+            }
         }
     }
     

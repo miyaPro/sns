@@ -151,9 +151,9 @@ class ServiceController extends Controller
                     if(isset($repPost)) {
                         //post data by page
                         $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($fromDate)));
-                        $postDetail = $repPost->getListPostByDate($page->id, null, $beforeDate, $toDate);
-                        $postByDay[$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
-                        $maxPost[$page->id] = Common::getMaxGraph($postByDay[$page->id]);
+                       // $postDetail = $repPost->getListPostByDate($page->id, null, $beforeDate, $toDate);
+                       // $postByDay[$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
+                      //  $maxPost[$page->id] = Common::getMaxGraph($postByDay[$page->id]);
                     }
 
                     //get total from page detail
@@ -191,6 +191,7 @@ class ServiceController extends Controller
             $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
             $data[$day]['total']    = 0;
             $data[$day]['compare']  = 0;
+            $data[$day]['total_change']  = 0;
         }
         $page_create_at = date('Y-m-d' ,strtotime($page->created_at));
         foreach ($listDetail as $i => $postDetail) {
@@ -201,13 +202,21 @@ class ServiceController extends Controller
             }
             if($page_create_at >= $postDetail->date || $startDate == $postDetail->date) {
                 $compare    = 0;
+                $change     =0;
             } else {
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
                 $beforeDayVal   = $data[$beforeDate]['total'];
                 $thisDayVal     = $data[$postDetail->date]['total'];
                 $compare    = $thisDayVal - $beforeDayVal;
+                if ($startDate < $page_create_at){
+                    $startDayVal     = $data[$page_create_at]['total'];
+                }else{
+                    $startDayVal     = $data[$startDate]['total'];
+                }
+                $change = $thisDayVal - $startDayVal;
             }
             $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
+            $data[$postDetail->date]['compare'] = ($change > 0) ? $change : 0;
         }
         if (isset($data[$page_create_at])) {
             $data[$page_create_at]['total'] = 0;

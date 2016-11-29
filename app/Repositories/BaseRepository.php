@@ -50,12 +50,12 @@ abstract class BaseRepository {
      */
     public function getOneByField($field, $value)
     {
-        return $this->model->where($field,'=',$value)->first();
+        return $this->model->where($field, $value)->first();
     }
 
 	public function getAllByField($field, $value)
 	{
-		return $this->model->where($field,'=',$value)
+		return $this->model->where($field, $value)
                             ->orderBy('id', 'asc')->get();
 	}
 

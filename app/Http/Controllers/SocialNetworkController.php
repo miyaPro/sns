@@ -227,7 +227,7 @@ class SocialNetworkController extends Controller
 
         if (isset($_REQUEST['oauth_token']) && $request_token['oauth_token'] !== $_REQUEST['oauth_token']) {
             $_SESSION['oauth_status'] = 'oldtoken';
-            die('Oauth token is  not available!');
+            return redirect('/dashboard/'.config('constants.service.twitter'))->with('alert-danger', trans('message.common_error'));
         }
 
         $connection = new TwitterOAuth(
@@ -236,47 +236,48 @@ class SocialNetworkController extends Controller
             $request_token['oauth_token'],
             $request_token['oauth_token_secret']
         );
-        $access_token = $connection->oauth("oauth/access_token", array("oauth_verifier" => $_REQUEST['oauth_verifier']));
+        if ($_REQUEST['oauth_verifier']){
+            $access_token = $connection->oauth("oauth/access_token", array("oauth_verifier" => $_REQUEST['oauth_verifier']));
 
-        $_SESSION['access_token'] = $access_token;
-        unset($_SESSION['oauth_token']);
-        unset($_SESSION['oauth_token_secret']);
+            $_SESSION['access_token'] = $access_token;
+            unset($_SESSION['oauth_token']);
+            unset($_SESSION['oauth_token_secret']);
 
-        /*get info account and store database*/
-        $connection = new TwitterOAuth($client_id, $client_secret, $access_token['oauth_token'], $access_token['oauth_token_secret']);
-        $twitterUser =  $connection->get("account/verify_credentials", array("include_email" => "true"));
-
-        $service = config('constants.service.twitter');
-        $user_id = Auth::user()->id;
-        $input = [
-            'user_id'           => $user_id,
-            'email'             => $twitterUser->email,
-            'account_name'      => $twitterUser->screen_name,
-            'account_id'        => $twitterUser->id,
-            'access_token'      => $access_token['oauth_token'],
-            'refresh_token'     => $access_token['oauth_token_secret'],
-            'service_code'      => $service,
-        ];
-
-        $authUser = $this->repAuth->getAuth($user_id, $twitterUser->id, $service);
-        if ( $authUser ) {
-            $input_update = [
+            /*get info account and store database*/
+            $connection = new TwitterOAuth($client_id, $client_secret, $access_token['oauth_token'], $access_token['oauth_token_secret']);
+            $twitterUser =  $connection->get("account/verify_credentials", array("include_email" => "true"));
+            $service = config('constants.service.twitter');
+            $user_id = Auth::user()->id;
+            $input = [
+                'user_id'           => $user_id,
+                'email'             => $twitterUser->email,
+                'account_name'      => $twitterUser->screen_name,
+                'account_id'        => $twitterUser->id,
                 'access_token'      => $access_token['oauth_token'],
                 'refresh_token'     => $access_token['oauth_token_secret'],
+                'service_code'      => $service,
             ];
-            $this->repAuth->update($authUser, $input_update);
-        } else {
-            $twitter = $this->repAuth->store($input);
-        }
+
+            $authUser = $this->repAuth->getAuth($user_id, $twitterUser->id, $service);
+            if ( $authUser ) {
+                $input_update = [
+                    'access_token'      => $access_token['oauth_token'],
+                    'refresh_token'     => $access_token['oauth_token_secret'],
+                ];
+                $this->repAuth->update($authUser, $input_update);
+            } else {
+                $twitter = $this->repAuth->store($input);
+            }
 
 //        $process = new Process('php '.env('ARTISAN_PATH').'artisan twitter '.$input['account_id']);
 //        $process->start();
-        Artisan::call('twitter', [
-            'today'      => 1,
-            'account_id' => $input['account_id']
-        ]);
-        return redirect('/dashboard/'.config('constants.service.twitter'));
-
+            Artisan::call('twitter', [
+                'today'      => 1,
+                'account_id' => $input['account_id']
+            ]);
+            return redirect('/dashboard/'.config('constants.service.twitter'));
+        }
+        return redirect('/dashboard/'.config('constants.service.twitter'))->with('alert-danger', trans('message.common_error'));
     }
 
     public function handleSnapchat()

@@ -67,21 +67,16 @@ class CommandInstagram extends Command
         $account_id     = $this->argument('account_id');
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth(config('constants.service.instagram'), $account_id);
-        Log::info('instagram');
-        Log::info('--------------------------------------');
         foreach ($auths as $auth){
             if($auth->rival_flg == 0 && !$auth->access_token) {
                 continue;
             }
             if ($auth->rival_flg == 1) {
-                Log::info('------auth 1: '.$auth);
                 $this->getPageRival($auth);
             } else {
-                Log::info('------auth 0: '.$auth);
                 $this->getPage($auth);
             }
         }
-        Log::info('------------------------------------------------------');
     }
 
     public function getPageRival($auth)
@@ -193,9 +188,12 @@ class CommandInstagram extends Command
             foreach ($dataAllPost as $row){
                 $sns_post_id = $row->id;
                 $inputs = array(
-                    'sns_post_id' => $row->id,
-                    'type' => $row->type,
-                    'created_time' => @$date->setTimestamp($row ->created_time)->format('Y-m-d H:i:s'),
+                    'sns_post_id'   => $row->id,
+                    'type'          => $row->type,
+                    'like_count'    => $row->likes->count,
+                    'comment_count' => $row->comments->count,
+                    'created_time'  => @$date->setTimestamp($row ->created_time)->format('Y-m-d H:i:s'),
+                    'date'          => $date,
                     'link' => $row->link,
                     'image_low_resolution' => $row->images->low_resolution->url,
                     'image_thumbnail'               => $row->images->thumbnail->url,
@@ -212,32 +210,35 @@ class CommandInstagram extends Command
                 );
                 $post = $this->repPost->getOneByPost($page->id, $sns_post_id);
                 if($post){
-                    $post = $this->repPost->update($post, $inputs);
+                    $this->repPost->update($post, $inputs);
                 }else{
-                    $post = $this->repPost->store($inputs, $page->id);
+                    $this->repPost->store($inputs, $page->id);
                 }
-                $this->getPostDetail($row, $post);
             }
+            $this->getPostDetail($page->id);
         } else{
             $this->error('message','error_do_not_get_post_instagram');
         }
     }
 
-    public function getPostDetail($row, $post){
-        $current_date = date('Y-m-d');
+    public function getPostDetail($page_id){
+        $current_date        = date('Y-m-d');
         if(!$this->today) {
             $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
         }
-        $post_detail = $this->repPostDetail->getByDate($post->id, $current_date);
-        $inputs = array(
-            'comment_count' => $row->comments->count,
-            'like_count' => $row->likes->count
-        );
-        if($post_detail){
-            $this->repPostDetail->update($post_detail, $inputs);
-        }else{
-            $inputs['date'] = $current_date;
-            $this->repPostDetail->store($inputs, $post->id);
+        $sum = $this->repPost->getSumByPage($page_id);
+        $postDetail = $this->repPostDetail->getByDate($page_id, $current_date);
+        if ($sum){
+            $inputs = [
+                'like_count'     => $sum[0]->like_count,
+                'comment_count'    => $sum[0]->comment_count,
+            ];
+            if($postDetail){
+                $this->repPostDetail->update($postDetail, $inputs);
+            }else{
+                $inputs['date'] = $current_date;
+                $this->repPostDetail->store($inputs, $page_id);
+            }
         }
     }
 }

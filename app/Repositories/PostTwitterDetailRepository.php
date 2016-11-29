@@ -34,10 +34,10 @@ class PostTwitterDetailRepository extends BaseRepository
      * @param  array  $inputs
      * @param  int    $confirmation_code
      */
-    public function store($inputs, $post_id)
+    public function store($inputs, $page_id)
     {
         $postDetail = new $this->model;
-        $postDetail->post_id                   = $post_id;
+        $postDetail->page_id                   = $page_id;
         $postDetail->date                      = $inputs['date'];
         $this->save($postDetail, $inputs);
     }
@@ -47,10 +47,17 @@ class PostTwitterDetailRepository extends BaseRepository
         $this->save($model, $inputs);
     }
 
-    public function getByDate($post_id, $current_date)
+   /* public function getByDate($post_id, $current_date)
     {
         $model = new $this->model();
         $model = $model->where('post_id', $post_id)
+            ->where('date', $current_date);
+        return $model->first();
+    }*/
+    public function getByDate($page_id, $current_date)
+    {
+        $model = new $this->model();
+        $model = $model->where('page_id', $page_id)
             ->where('date', $current_date);
         return $model->first();
     }
@@ -101,6 +108,26 @@ class PostTwitterDetailRepository extends BaseRepository
             $model = $model->Where('pd.date', '>=', $start_date);
             $model = $model->Where('pd.date', '<=', $end_date);
         }
+        return $model->get();
+    }
+
+    public function getPostEngagementByDate($page_id, $date = null, $date_from = null, $date_to = null)
+    {
+        $model = new $this->model();
+        $model = $model->where('page_id', $page_id)
+            ->select(
+                DB::raw('IFNULL(SUM(retweet_count + favorite_count), 0) as post_engagement'),
+                'date'
+            );
+        if($date) {
+            $model = $model->where('date', $date);
+        }
+        if($date_from && $date_to) {
+            $model = $model->where('date', '>=', $date_from)
+                            ->where('date', '<=' , $date_to)
+                            ->orderby('date');
+        }
+        $model = $model->groupBy('date');
         return $model->get();
     }
 }

@@ -222,7 +222,6 @@
                                         loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
                                     }
                                 }else{
-                                    console.log(data.message);
                                     alert(data.message);
                                 }
                             }
@@ -246,7 +245,6 @@
                                     var maxGraph = data.maxValueData
                                     loadGraphPage(dataResponse,dataGraph, typeDrawSubPage, maxGraph);
                                 }else{
-                                    console.log(data.message);
                                     alert(data.message);
                                 }
                             }
@@ -268,7 +266,6 @@
                                     var maxGraph = data.maxValueData
                                     loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
                                 }else{
-                                    console.log( data);
                                     alert(data.message);
                                 }
                             }
@@ -374,6 +371,8 @@
                     var dateFrom = $('#inputDateFrom'), dateTo = $('#inputDateTo');
                     if(Date.parse(dateFrom.val()) <= Date.parse(dateTo.val())){
                         graphDraw(3);
+                    }else{
+                        alert('{{trans('message.error_date_ranger')}}');
                     }
                     return false;
                 })

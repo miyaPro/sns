@@ -36,4 +36,9 @@ class LoginController extends Controller
     {
         $this->middleware('guest', ['except' => 'logout']);
     }
+
+    public function showLoginForm()
+    {
+        return response(view('auth.login'))->withCookie( 'date_search', '', 0);
+    }
 }

@@ -34,7 +34,7 @@
                         <tr role="row">
                             <th class="clientNo">No.</th>
                             <th>{{{ trans('field.site_service') }}}</th>
-                            <th>{{{ trans('field.check_acc') }}}</th>
+                            <th>{{{ trans('field.account_name') }}}</th>
                             <th class="clientAction" width="20%">{{{ trans('default.action') }}}</th>
                         </tr>
                         </thead>

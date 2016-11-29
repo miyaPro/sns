@@ -28,6 +28,10 @@ class PostFacebookRepository extends BaseRepository
         $post->content                   = $inputs['content'];
         $post->type                      = $inputs['type'];
         $post->image_thumbnail           = $inputs['image_thumbnail'];
+        $post->like_count                = $inputs['like_count'];
+        $post->share_count               = $inputs['share_count'];
+        $post->comment_count             = $inputs['comment_count'];
+        $post->updated_at                = date('Y-m-d H:i:s');
         $post->save();
         return $post;
     }
@@ -42,6 +46,7 @@ class PostFacebookRepository extends BaseRepository
         $post = new $this->model;
         $post->page_id                   = $page_id;
         $post->sns_post_id               = $inputs['sns_post_id'];
+        $post->created_time              = $inputs['created_time'];
         return $this->save($post, $inputs);
     }
 
@@ -57,11 +62,9 @@ class PostFacebookRepository extends BaseRepository
         return $model->first();
     }
 
-    public function getListPostByPage($page_id, $date)
-    {
+    public function getListPostByPage($page_id){
         $model = new $this->model();
         $model = $model->where('page_id', $page_id)
-            ->join('post_facebook_details as pd', 'post_facebooks.id', '=', 'pd.post_id')
             ->select(
                 'post_facebooks.id as post_id',
                 'post_facebooks.link',
@@ -69,18 +72,17 @@ class PostFacebookRepository extends BaseRepository
                 'post_facebooks.content',
                 'post_facebooks.image_thumbnail',
                 'post_facebooks.type',
-                'pd.id',
-                'pd.like_count',
-                'pd.comment_count',
-                'pd.share_count',
-                'pd.date',
-                'pd.updated_at'
+                'post_facebooks.like_count',
+                'post_facebooks.comment_count',
+                'post_facebooks.share_count',
+                'post_facebooks.created_at',
+                'post_facebooks.updated_at'
             )
-            ->where('pd.date', $date)
             ->orderBy('post_facebooks.created_time', 'DESC')
             ->limit(10);
         return $model->get();
     }
+
     public function getMaxDate($page_id){
         $model= new $this->model();
         $model= $model->where('page_id', $page_id)
@@ -88,9 +90,9 @@ class PostFacebookRepository extends BaseRepository
             ->select(DB::raw('Max(pd.date) as max_date'));
         return $model->first();
     }
+    
+   /* public function getListPostByDate($page_id, $date = null, $date_from = null, $date_to = null)
 
-
-    public function getListPostByDate($page_id, $date = null, $date_from = null, $date_to = null)
     {
         $model = new $this->model();
         $model = $model->where('page_id', $page_id)
@@ -111,6 +113,15 @@ class PostFacebookRepository extends BaseRepository
             $model->orderby('pd.date');
         }
         return $model->get();
-    }
+    }*/
 
+    public function  getSumByPage($page_id){
+        $model = new $this->model();
+        $model = $model->select(
+            DB::raw('IFNULL(SUM(like_count),0) as like_count'),
+            DB::raw('IFNULL(SUM(comment_count),0) as comment_count'),
+            DB::raw('IFNULL(SUM(share_count),0) as share_count')
+        )->where('page_id', $page_id);
+        return $model->get();
+    }
 }

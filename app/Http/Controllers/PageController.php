@@ -18,7 +18,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
-use Cookie;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
 use App\Common\Common;
@@ -31,7 +30,10 @@ class PageController extends Controller
     protected $repUser;
     protected $repService;
     protected $repPostFb;
+    protected $repPostDetailFb;
     protected $repPostTw;
+    protected $repPostDetailTw;
+    protected $repPostDetailIg;
     protected $repPostIg;
     /**
      * Display a listing of the resource.
@@ -45,18 +47,24 @@ class PageController extends Controller
         UserRepository $user,
         PageDetailRepository $page_detail,
         PostFacebookRepository $post_fb,
+        PostFacebookDetailRepository $post_detail_fb,
         PostTwitterRepository $post_tw,
+        PostTwitterDetailRepository $post_detail_tw,
+        PostInstagramDetailRepository $post_detail_ig,
         PostInstagramRepository $post_ig
     )
     {
-        $this->repPage      = $page;
-        $this->repUser      = $user;
-        $this->repAuth      = $auth;
-        $this->repService   = $service;
-        $this->repPageDetail = $page_detail;
+        $this->repPage          = $page;
+        $this->repUser          = $user;
+        $this->repAuth          = $auth;
+        $this->repService       = $service;
+        $this->repPageDetail    = $page_detail;
         $this->repPostFb        = $post_fb;
+        $this->repPostDetailFb  = $post_detail_fb;
         $this->repPostTw        = $post_tw;
+        $this->repPostDetailTw  = $post_detail_tw;
         $this->repPostIg        = $post_ig;
+        $this->repPostDetailIg = $post_detail_ig;
         $this->middleware('auth');
     }
 
@@ -98,7 +106,7 @@ class PageController extends Controller
                         'account_id' => $auth->account_id,
                     ]);
                 }
-                $listPosts      = $repPost->getListPostByPage($page->id, $current_date);
+                $listPosts      = $repPost->getListPostByPage($page->id);
                 $servicesCode   = $page->auth->service_code;
                 return view('page.index')->with([
                     'pageInfo'      => $pageInfo,
@@ -217,83 +225,55 @@ class PageController extends Controller
                 if($auth && ($auth->user_id == $user->id || $user->authority == config('constants.authority.admin'))){
                     $service_code = $auth->service_code;
                     if($service_code){
-                        $columns = [
-                            'like_count',
-                            'comment_count',
-                            'share_count'
-                        ];
                         if(config('constants.service.facebook') == $service_code){
-                            $columns = [
-                                'like_count',
-                                'comment_count',
-                                'share_count'
-                            ];
-                            $posts = $this->repPostFb;
-                            $listPostByDate = $posts->getListPostByDate($page_id, null, $startDate, $endDate);
+                            $listPostEngagement = $this->repPostDetailFb->getPostEngagementByDate($page_id, null, $startDate, $endDate);
                         }
                         else if(config('constants.service.twitter') == $service_code){
-                            $columns = [
-                                'retweet_count',
-                                'favorite_count'
-                            ];
-                            $posts = $this->repPostTw;
-                            $listPostByDate = $posts->getListPostByDate($page_id, null, $startDate, $endDate);
+                            $listPostEngagement =  $this->repPostDetailTw->getPostEngagementByDate($page_id, null, $startDate, $endDate);
                         }
                         else if(config('constants.service.instagram') == $service_code){
-                            $columns = [
-                                'like_count',
-                                'comment_count'
-                            ];
-                            $posts = $this->repPostIg;
-                            $listPostByDate = $posts->getListPostByDate($page_id, null, $startDate, $endDate);
+                            $listPostEngagement = $this->repPostDetailIg->getPostEngagementByDate($page_id, null, $startDate, $endDate);
                         }
 
-                        dd($listPostByDate);
-                        if(isset($listPostByDate)){
+                        if(isset($listPostEngagement)){
                             $postPerDay = [];
                             for ($i = 0; $i <= $days; $i++){
                                 $day = date('Y-m-d', strtotime("+" . $i . " day", strtotime($startDate)));
                                 $postPerDay[$day]['total'] = 0;
                                 $postPerDay[$day]['compare'] = 0;
                                 $postPerDay[$day]['change'] = 0;
-
                             }
-                            if($listPostByDate && count($listPostByDate) > 0){
-                                $startDateByDb = date('Y-m-d', strtotime($page->created_at));
-                                foreach ($listPostByDate as $i => $postDetail){
-                                    $startDate = date('Y-m-d', strtotime($startDate));
-                                    foreach ($columns as $column){
-                                        $postPerDay[$postDetail->date]['total'] += $postDetail->$column;
+                            $startDateByDb = date('Y-m-d', strtotime($page->created_at));
+                            $startDate = date('Y-m-d', strtotime($startDate));
+                            foreach ($listPostEngagement as $i => $postDetail){
+                                $postPerDay[$postDetail->date]['total'] = $postDetail->post_engagement;
+                                if($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
+                                    $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($postDetail->date)));
+                                    $beforeDayVal = $postPerDay[$beforeDate]['total'];
+                                    $thisDayVal = $postPerDay[$postDetail->date]['total'];
+                                    $compare = $thisDayVal - $beforeDayVal;
+                                    if ($startDate < $startDateByDb){
+                                        $startDayVal = $postPerDay[$startDateByDb]['total'];
+                                    }else{
+                                        $startDayVal = $postPerDay[$startDate]['total'];
                                     }
-                                    if($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
-                                        $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($postDetail->date)));
-                                        $beforeDayVal = $postPerDay[$beforeDate]['total'];
-                                        $thisDayVal = $postPerDay[$postDetail->date]['total'];
-                                        $compare = $thisDayVal - $beforeDayVal;
-                                        if ($startDate < $startDateByDb){
-                                            $startDayDbVal = $postPerDay[$startDateByDb]['total'];
-                                            $change = $thisDayVal - $startDayDbVal;
-                                        }else{
-                                            $startDayVal = $postPerDay[$startDate]['total'];
-                                            $change = $thisDayVal - $startDayVal;
-                                        }
-                                        $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
-                                        $postPerDay[$postDetail->date]['change']  = ($change > 0) ? $change : 0;
-                                    }
+                                    $change = $thisDayVal - $startDayVal;
+                                    $postPerDay[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
+                                    $postPerDay[$postDetail->date]['change']  = ($change > 0) ? $change : 0;
                                 }
-                                if(isset($postPerDay[$startDateByDb])){
-                                    $postPerDay[$startDateByDb]['total'] = 0;
-                                }
-                                if(isset($postPerDay[$startDate])){
-                                    unset($postPerDay[$startDate]);
-                                }
-                                $maxValuePost = Common::getMaxGraph($postPerDay);
-                                return Response::json(array(
-                                    'success' => true,
-                                    'contentCount' => $postPerDay,
-                                    'maxValueData' => $maxValuePost), 200)
-                                    ->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
                             }
+                            if(isset($postPerDay[$startDateByDb])){
+                                $postPerDay[$startDateByDb]['total'] = 0;
+                            }
+                            if(isset($postPerDay[$startDate])){
+                                unset($postPerDay[$startDate]);
+                            }
+                            $maxValuePost = Common::getMaxGraph($postPerDay);
+                            return Response::json(array(
+                                'success' => true,
+                                'contentCount' => $postPerDay,
+                                'maxValueData' => $maxValuePost), 200)
+                                ->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
                         }
                     }
                 }

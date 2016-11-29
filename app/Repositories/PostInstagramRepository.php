@@ -29,21 +29,24 @@ class PostInstagramRepository extends BaseRepository
         $post->type = $inputs['type'];
         $post->created_time = $inputs['created_time'];
         $post->link = $inputs['link'];
+        $post->like_count    = $inputs['like_count'];
+        $post->comment_count = $inputs['comment_count'];
 
-        $post->image_low_resolution= $inputs['image_low_resolution'];
-        $post->image_thumbnail= $inputs['image_thumbnail'];
-        $post->image_standard_resolution= $inputs['image_standard_resolution'];
+        $post->image_low_resolution = $inputs['image_low_resolution'];
+        $post->image_thumbnail = $inputs['image_thumbnail'];
+        $post->image_standard_resolution = $inputs['image_standard_resolution'];
 
         $post->video_low_resolution = $inputs['video_low_resolution'];
-        $post->video_standard_resolution= $inputs['video_standard_resolution'];
+        $post->video_standard_resolution = $inputs['video_standard_resolution'];
         $post->video_low_bandwidth = $inputs['video_low_bandwidth'];
 
         $post->location_id = $inputs['location_id'];
-        $post->location_name= $inputs['location_name'];
-        $post->location_lat= $inputs['location_lat'];
+        $post->location_name = $inputs['location_name'];
+        $post->location_lat = $inputs['location_lat'];
         $post->location_long = $inputs['location_long'];
         $post->content = $inputs['content'];
-        $post->tag= $inputs['tag'];
+        $post->updated_at = date('Y-m-d H:i:s');
+        $post->tag = $inputs['tag'];
         $post->save();
         return $post;
     }
@@ -75,6 +78,13 @@ class PostInstagramRepository extends BaseRepository
         return $this->save($post, $inputs);
     }
 
+    public function get_post_before($page_id, $list_sns_post_id){
+        $model = new $this->model();
+        $model = $model->where('page_id', $page_id)
+            ->whereNotIn('sns_post_id', $list_sns_post_id);
+        return $model->get();
+    }
+
     public function getOneByPost($page_id, $sns_post_id) {
         $model = new $this->model();
         $model = $model->where('page_id', $page_id)
@@ -82,39 +92,26 @@ class PostInstagramRepository extends BaseRepository
         return $model->first();
     }
 
-    public function getListPostByPage($page_id, $date)
+    public function getListPostByPage($page_id)
     {
         $model = new $this->model();
         $model = $model->where('page_id', $page_id)
-            ->join('post_instagram_details as pd', 'post_instagrams.id', '=', 'pd.post_id')
             ->select(
                 'post_instagrams.id as post_id',
                 'post_instagrams.content',
                 'post_instagrams.link',
                 'post_instagrams.type',
-                'post_instagrams.location_id',
-                'post_instagrams.location_name',
-                'post_instagrams.location_lat',
-                'post_instagrams.location_long',
-                'post_instagrams.tag',
+                'post_instagrams.like_count',
+                'post_instagrams.comment_count',
                 'post_instagrams.created_time',
-                'post_instagrams.image_low_resolution',
                 'post_instagrams.image_thumbnail',
-                'post_instagrams.image_standard_resolution',
-                'post_instagrams.video_low_resolution',
-                'post_instagrams.video_standard_resolution',
-                'post_instagrams.video_low_bandwidth',
-                'pd.id',
-                'pd.comment_count',
-                'pd.like_count',
-                'pd.date',
-                'pd.updated_at'
+                'post_instagrams.updated_at'
             )
-            ->where('pd.date', $date)
             ->orderBy('post_instagrams.created_time', 'DESC')
             ->limit(10);
         return $model->get();
     }
+
     public function getMaxDate($page_id){
         $model= new $this->model();
         $model= $model->where('page_id', $page_id)
@@ -123,26 +120,12 @@ class PostInstagramRepository extends BaseRepository
         return $model->first();
     }
 
-    public function getListPostByDate($page_id, $date = null, $date_from = null, $date_to = null)
-    {
+    public function  getSumByPage($page_id){
         $model = new $this->model();
-        $model = $model->where('page_id', $page_id)
-            ->join('post_instagram_details as pd', 'post_instagrams.id', '=', 'pd.post_id')
-            ->select(
-                'post_instagrams.id as post_id',
-                'pd.like_count',
-                'pd.comment_count',
-                'pd.date'
-            );
-        if($date) {
-            $model->where('pd.date', $date);
-        }
-        if($date_from && $date_to) {
-            $model->where('pd.date', '>=', $date_from);
-            $model->where('pd.date', '<=' , $date_to);
-            $model->orderby('pd.date');
-        }
+        $model = $model->select(
+            DB::raw('IFNULL(SUM(like_count),0) as like_count'),
+            DB::raw('IFNULL(SUM(comment_count),0) as comment_count')
+        )->where('page_id', $page_id);
         return $model->get();
     }
-
 }

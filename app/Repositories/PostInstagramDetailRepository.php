@@ -37,10 +37,10 @@ class PostInstagramDetailRepository extends BaseRepository
      * @param  array  $inputs
      * @return App\Post
      */
-    public function store($inputs, $post_id)
+    public function store($inputs, $page_id)
     {
         $model = new $this->model;
-        $model->post_id  = $post_id;
+        $model->page_id  = $page_id;
         $model->date = $inputs['date'];
         $this->save($model,$inputs);
     }
@@ -57,10 +57,10 @@ class PostInstagramDetailRepository extends BaseRepository
         $this->save($model, $inputs);
     }
 
-    public function getByDate($post_id, $current_date)
+    public function getByDate($page_id, $current_date)
     {
         $model = new $this->model();
-        $model = $model->where('post_id', $post_id)
+        $model = $model->where('page_id', $page_id)
             ->where('date', $current_date);
         return $model->first();
     }
@@ -134,6 +134,25 @@ class PostInstagramDetailRepository extends BaseRepository
             $model = $model->Where('pd.date', '>=', $start_date);
             $model = $model->Where('pd.date', '<=', $end_date);
         }
+        return $model->get();
+    }
+
+    public function getPostEngagementByDate($page_id, $date = null, $date_from = null, $date_to = null){
+        $model = new $this->model();
+        $model = $model->where('page_id', $page_id)
+            ->select(
+                DB::raw('IFNULL(SUM(like_count + comment_count), 0) as post_engagement'),
+                'date'
+            );
+        if($date) {
+            $model = $model->where('date', $date);
+        }
+        if($date_from && $date_to) {
+            $model = $model->where('date', '>=', $date_from)
+                        ->where('date', '<=' , $date_to)
+                        ->orderby('date');
+        }
+        $model = $model->groupBy('date');
         return $model->get();
     }
 }

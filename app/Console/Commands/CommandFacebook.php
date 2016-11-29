@@ -151,34 +151,43 @@ class CommandFacebook extends Command
                     'created_time'   => $data['created_time'],
                     'content'        => @$data['message'],
                     'type'           => @$data['type'],
-                    'image_thumbnail'=> @$data['picture']
+                    'image_thumbnail'=> @$data['picture'],
+                    'like_count'    => isset($data['likes']) ? count($data['likes']) : 0,
+                    'comment_count' => isset($data['shares']) ? $data['shares']['count'] : 0,
+                    'share_count'   => isset($data['comments']) ? count($data['comments']) : 0,
 
                 ];
                 $post = $this->repPost->getOneByPost($page->id, $sns_post_id);
                 if($post){
-                    $post = $this->repPost->update($post, $inputs);
+                    $this->repPost->update($post, $inputs);
                 }else{
-                    $post = $this->repPost->store($inputs, $page->id);
+                    $this->repPost->store($inputs, $page->id);
                 }
-                $this->getPostDetail($data, $post);
+                $this->getPostDetail($page->id);
             }
         }
     }
 
-    public function getPostDetail($data, $post){
+    public function getPostDetail($page_id){
         $current_date = date('Y-m-d');
         if(!$this->today) {
             $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
         }
-        $inputs['share_count'] = isset($data['shares']) ? $data['shares']['count'] : 0;
-        $inputs['like_count'] = isset($data['likes']) ? count($data['likes']) : 0;
-        $inputs['comment_count'] = isset($data['comments']) ? count($data['comments']) : 0;
-        $post_detail = $this->repPostDetail->getByDate($post->id, $current_date);
-        if($post_detail){
-            $this->repPostDetail->update($post_detail, $inputs);
-        }else{
-            $inputs['date'] = $current_date;
-            $this->repPostDetail->store($inputs, $post->id);
+        $sum = $this->repPost->getSumByPage($page_id);
+        $post_detail = $this->repPostDetail->getByDate($page_id, $current_date);
+        if ($sum){
+            $inputs = [
+                'like_count' => $sum[0]['like_count'],
+                'share_count' => $sum[0]['share_count'],
+                'comment_count' => $sum[0]['comment_count']
+            ];
+            if($post_detail){
+                $this->repPostDetail->update($post_detail, $inputs);
+            }else{
+                $inputs['date'] = $current_date;
+                $this->repPostDetail->store($inputs, $page_id);
+            }
         }
+
     }
 }
