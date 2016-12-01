@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Repositories\MasterRepository;
 use App\Repositories\AuthRepository;
+use App\Repositories\PostFacebookDetailRepository;
+use App\Repositories\PostInstagramDetailRepository;
+use App\Repositories\PostTwitterDetailRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\PageRepository;
 use App\Repositories\PageDetailRepository;
-use App\Repositories\PostFacebookRepository;
-use App\Repositories\PostTwitterRepository;
-use App\Repositories\PostInstagramRepository;
 use App\Http\Requests;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Artisan;
@@ -22,6 +22,7 @@ use Facebook\Exceptions\FacebookSDKException as FacebookSDKException;
 use Abraham\TwitterOAuth\TwitterOAuthException;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use App\Common\Common;
+use Illuminate\Support\Facades\Response;
 
 class ServiceController extends Controller
 {
@@ -31,9 +32,9 @@ class ServiceController extends Controller
     protected $repService;
     protected $repPage;
     protected $repPageDetail;
-    protected $repPostFb;
-    protected $repPostTw;
-    protected $repPostIg;
+    protected $repPostFbDetail;
+    protected $repPostTwDetail;
+    protected $repPostIgDetail;
     protected $services;
     /**
      * Display a listing of the resource.
@@ -47,9 +48,9 @@ class ServiceController extends Controller
         ServiceRepository $service,
         PageRepository $page,
         PageDetailRepository $pageDetail,
-        PostFacebookRepository $postFb,
-        PostTwitterRepository $postTw,
-        PostInstagramRepository $postIg
+        PostFacebookDetailRepository $postFbDetail,
+        PostTwitterDetailRepository $postTwDetail,
+        PostInstagramDetailRepository $postIgDetail
     )
     {
         $this->repMaster        = $master;
@@ -58,9 +59,9 @@ class ServiceController extends Controller
         $this->repPage          = $page;
         $this->repPageDetail    = $pageDetail;
         $this->repService       = $service;
-        $this->repPostFb        = $postFb;
-        $this->repPostTw        = $postTw;
-        $this->repPostIg        = $postIg;
+        $this->repPostFbDetail  = $postFbDetail;
+        $this->repPostTwDetail  = $postTwDetail;
+        $this->repPostIgDetail  = $postIgDetail;
         $this->middleware(['auth']);
 
         //get all services
@@ -86,14 +87,13 @@ class ServiceController extends Controller
         if($user) {
             $inputs      = $request->all();
             $date        = $request->cookie('date_search');
+
             $inputs['to']   = $request->get("to", isset($date['to']) ? $date['to'] : date('Y/m/d' ,strtotime('-1 day')));
             $inputs['from'] = $request->get("from", isset($date['from']) ? $date['from'] : date('Y/m/d', strtotime($inputs['to']." -2 weeks")));
 
             if($inputs['from'] > $inputs['to']) {
                 return redirect()->back()->with('alert-danger', trans('message.error_date_ranger'));
             }
-            $fromDate   = date('Y-m-d' ,strtotime($inputs['from']));
-            $toDate     = date('Y-m-d' ,strtotime($inputs['to']));
 
             if(!$service_code) {
                 $service_code = config('constants.service.facebook');
@@ -117,7 +117,7 @@ class ServiceController extends Controller
                 }
             }
 
-            $pageList = $postByDay = $totalPage = $authAccount = $pageCompetitor = $maxPost = [];
+            $pageList = $authAccount = $pageCompetitor = $totalPage = [];
             //get data pages by date
             $auths          = $this->repAuth->getUserAuth($user_id, $service_code);
             foreach ($auths as $auth) {
@@ -125,22 +125,6 @@ class ServiceController extends Controller
                     continue;
                 }
                 $authAccount[$auth->service_code][$auth->id] = $auth->email ? $auth->account_name.' ('.$auth->email.')' : $auth->account_name;
-                switch ($auth->service_code) {
-                    case config('constants.service.facebook'): {
-                        $repPost    = $this->repPostFb;
-                        $columns    = ['like_count', 'comment_count', 'share_count'];
-                    } break;
-                    case config('constants.service.twitter'): {
-                        $repPost    = $this->repPostTw;
-                        $columns    = ['retweet_count', 'favorite_count'];
-                    } break;
-                    case config('constants.service.instagram'): {
-                        $repPost    = $this->repPostIg;
-                        $columns    = ['like_count', 'comment_count'];
-                    } break;
-                    default: $request->session()->flash('alert-danger', trans('message.exiting_service'));
-                }
-
                 foreach ($auth->page as $page) {
                     //info page
                     if($auth->rival_flg == 0){
@@ -148,14 +132,6 @@ class ServiceController extends Controller
                     }else{
                         $pageCompetitor[$page->id] = $page;
                     }
-                    if(isset($repPost)) {
-                        //post data by page
-                        $beforeDate = date('Y-m-d' ,strtotime("-1 day", strtotime($fromDate)));
-                       // $postDetail = $repPost->getListPostByDate($page->id, null, $beforeDate, $toDate);
-                       // $postByDay[$page->id] = $this->getData($page, $postDetail, $columns, $beforeDate, $toDate);
-                      //  $maxPost[$page->id] = Common::getMaxGraph($postByDay[$page->id]);
-                    }
-
                     //get total from page detail
                     $pageDetail = $this->repPageDetail->getLastDate($page->id);
                     $totalPage[$page->id] = [
@@ -173,53 +149,94 @@ class ServiceController extends Controller
                 'authAccount'       => $authAccount,
                 'dates'             => $inputs,
                 'pageList'          => $pageList,
-                'postByDay'         => $postByDay,
                 'totalPage'         => $totalPage,
                 'user'              => $user,
                 'pageCompetitor'    => $pageCompetitor,
-                'maxGraph'          => $maxPost
             ]))->withCookie(cookie()->make('date_search', ['from' => $inputs['from'], 'to' => $inputs['to']]));
         } else {
             return redirect('user')->with('alert-danger', trans('message.exiting_error', ['name' => trans('default.user')]));
         }
     }
 
+    public function getGraphData(Request $request, $service_code, $user_id) {
+        if($request->has('dateFrom') && $request->has('dateTo') && $service_code && $user_id){
+            $startDate  = $request->get('dateFrom');
+            $endDate    = $request->get('dateTo');
+            if(strtotime($endDate) < strtotime($startDate)) {
+                return Response::json(array(
+                    'success' => false,
+                    'message' => trans('message.error_date_ranger')), 200);
+            }
+            $postByDay = $maxPost = [];
+            //get data pages by date
+            $user_current   = Auth::user();
+            $user           = $this->repUser->getById($user_id);
+            if($user_current->id == $user_id || ($user_current->authority == config('constants.authority.admin') && $user)) {
+                $startDate  = date('Y-m-d', strtotime($startDate));
+                $endDate    = date('Y-m-d', strtotime($endDate));
+                $auths      = $this->repAuth->getUserAuth($user_id, $service_code);
+                foreach ($auths as $auth) {
+                    if($auth->rival_flg == 0 && !$auth->access_token) {
+                        continue;
+                    }
+                    $columns = ['like_count', 'comment_count', 'share_count'];
+                    switch ($auth->service_code) {
+                        case config('constants.service.facebook'):
+                            $repPostDetail  = $this->repPostFbDetail;
+                            $columns        = ['like_count', 'comment_count', 'share_count'];
+                            break;
+                        case config('constants.service.twitter'):
+                            $repPostDetail  = $this->repPostTwDetail;
+                            $columns        = ['retweet_count', 'favorite_count'];
+                            break;
+                        case config('constants.service.instagram'):
+                            $repPostDetail  = $this->repPostIgDetail;
+                            $columns        = ['like_count', 'comment_count'];
+                            break;
+                        default: $request->session()->flash('alert-danger', trans('message.exiting_service'));
+                    }
+
+                    if(isset($repPostDetail) &&  $auth->rival_flg == 0) {
+                        foreach ($auth->page as $page) {
+                            //get info post of pages of account, competitor page will load ajax to page controller
+                            //post data by page
+                            $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($startDate)));
+                            $postDetail = $repPostDetail->getPostEngagementByDate($page->id, null, $beforeDate, $endDate);
+                            $postByDay[$page->id]   = $this->getData($page, $postDetail, $columns, $beforeDate, $endDate);
+                            $maxPost[$page->id]     = Common::getMaxGraph($postByDay[$page->id]);
+                        }
+                    }
+                }
+                return Response::json(array('success' => true,
+                    'postByDay'         => $postByDay,
+                    'maxGraph'          => $maxPost
+                ), 200)->withCookie(cookie()->make('date_search', ['from' => $startDate, 'to' => $endDate]));
+            }
+            return Response::json(array('success' => false, 'message' => trans('message.exiting_error', ['name' => trans('default.user')])), 200);
+        }
+        return Response::json(array('success' => false, 'message' => trans('message.common_error')), 200);
+    }
+
     public function getData($page, $listDetail, $columns = [], $startDate, $endDate){
         $data       = [];
         $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
         for($i=0; $i <= $days; $i++) {
-            $day = date('Y-m-d' ,strtotime("+".$i." day", strtotime($startDate)));
+            $day = date('Y-m-d', strtotime("+".$i." day", strtotime($startDate)));
             $data[$day]['total']    = 0;
             $data[$day]['compare']  = 0;
-            $data[$day]['total_change']  = 0;
         }
         $page_create_at = date('Y-m-d' ,strtotime($page->created_at));
         foreach ($listDetail as $i => $postDetail) {
-            //total of columns
-            //calculation after first item
-            foreach ($columns as $column) {
-                $data[$postDetail->date]['total'] += $postDetail->$column;
-            }
+            $data[$postDetail->date]['total'] = $postDetail->post_engagement;
             if($page_create_at >= $postDetail->date || $startDate == $postDetail->date) {
                 $compare    = 0;
-                $change     =0;
             } else {
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
                 $beforeDayVal   = $data[$beforeDate]['total'];
                 $thisDayVal     = $data[$postDetail->date]['total'];
-                $compare    = $thisDayVal - $beforeDayVal;
-                if ($startDate < $page_create_at){
-                    $startDayVal     = $data[$page_create_at]['total'];
-                }else{
-                    $startDayVal     = $data[$startDate]['total'];
-                }
-                $change = $thisDayVal - $startDayVal;
+                $compare        = $thisDayVal - $beforeDayVal;
             }
             $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
-            $data[$postDetail->date]['compare'] = ($change > 0) ? $change : 0;
-        }
-        if (isset($data[$page_create_at])) {
-            $data[$page_create_at]['total'] = 0;
         }
         if(@$data[$startDate]) {
             unset($data[$startDate]);

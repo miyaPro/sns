@@ -96,7 +96,7 @@ class CommandInstagram extends Command
         $dataGet = Common::getContent($url,false);
         $dataGet  = @json_decode($dataGet[0]);
         if(!isset($dataGet)){
-            $this->error(trans('message.error_network_connect', ['name' => trans('default.instagram')]));
+            $this->error('Error network connect');
         }
         else if(isset($dataGet->meta) && $dataGet->meta->code == 200){
             $data =  $dataGet->data;
@@ -124,7 +124,7 @@ class CommandInstagram extends Command
             }
         }else{
             $this->repAuth->resetAccessToken($auth->id);
-            $this->error(trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
+            $this->error('Error get access token');
         }
     }
 
@@ -162,7 +162,7 @@ class CommandInstagram extends Command
             $dataAllPost = $dataGet->data;
             if(empty($dataAllPost)){
                 $this->repAuth->resetAccessToken($auth->id);
-                $this->error(trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
+                $this->error('Error get access token');
                 return;
             }
             if(count($dataAllPost) < $numberPost && $numberPost > $maxGetPost) {
@@ -179,7 +179,7 @@ class CommandInstagram extends Command
                         if (isset($dataGet) && $dataGet->meta->code == 200) {
                             $dataAllPost = array_merge($dataAllPost, $dataGet->data);
                         } else {
-                            $this->error('message.error_do_not_get_post_instagram');
+                            $this->error('Error do not get post instagram');
                             break;
                         }
                     }
@@ -217,7 +217,7 @@ class CommandInstagram extends Command
             }
             $this->getPostDetail($page->id);
         } else{
-            $this->error('message','error_do_not_get_post_instagram');
+            $this->error('Error do not get post instagram');
         }
     }
 

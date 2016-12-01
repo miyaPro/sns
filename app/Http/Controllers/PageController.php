@@ -244,8 +244,8 @@ class PageController extends Controller
                                 $postPerDay[$day]['change'] = 0;
                             }
                             $startDateByDb = date('Y-m-d', strtotime($page->created_at));
-                            $startDate = date('Y-m-d', strtotime($startDate));
                             foreach ($listPostEngagement as $i => $postDetail){
+                                $startDate = date('Y-m-d', strtotime($startDate));
                                 $postPerDay[$postDetail->date]['total'] = $postDetail->post_engagement;
                                 if($postDetail->date > $startDate && $postDetail->date > $startDateByDb){
                                     $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($postDetail->date)));

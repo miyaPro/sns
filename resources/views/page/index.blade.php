@@ -18,6 +18,7 @@
     @endif
     <div class="row">
         <div class="col-md-12">
+            <div class="box_message"></div>
             <section class="panel">
                 <header class="panel-heading">
                     <h4>{{{ trans('title.info_detail').' '.$nameService }}}</h4>
@@ -191,8 +192,31 @@
                 var urlGraphPage = '{{ URL::route('site.analytic.graph',  ["$pageInfo->page_id"]) }}';
                 var urlGraphPost = '{{ URL::route('site.analytic.graphPost',  ["$pageInfo->page_id"]) }}';
                 var chartPage,chartPost;
-                $('#typeDrawPage').css('width','200px');
-                var graphDraw = function (typeDraw) {
+                chartPage = generateGraph('chartContainer1',[]);
+                chartPost = generateGraph('chartContainer2',[]);
+                graphDraw(3);
+
+                $('.btn-submit').on('click',function () {
+                    var dateFrom = $('#inputDateFrom'), dateTo = $('#inputDateTo');
+                    if(Date.parse(dateFrom.val()) <= Date.parse(dateTo.val())){
+                        graphDraw(3);
+                    }else{
+                        setErrorMesssage('{{trans('message.error_date_ranger')}}')
+                    }
+                    return false;
+                });
+
+                $('#typeDrawPage, #typeDrawSubPost, #typeDrawSubPage').on('change', function (e) {
+                    e.preventDefault;
+                    var _id = $(this).attr('id');
+                    if(_id == 'typeDrawPage' || _id == 'typeDrawSubPage'){
+                        graphDraw(1);
+                    }else{
+                        graphDraw(2);
+                    }
+                });
+
+                function graphDraw(typeDraw) {
                     var typeDrawPage= parseInt($('#typeDrawPage').val());
                     var typeDrawSubPost = parseInt($('#typeDrawSubPost').val());
                     var typeDrawSubPage = parseInt($('#typeDrawSubPage').val());
@@ -206,7 +230,7 @@
                                 "_token"    : "{{ csrf_token() }}",
                                 'dateFrom'  : dateFrom.val(),
                                 'dateTo'    : dateTo.val(),
-                                "typeDraw"  : typeDrawPage,
+                                "typeDraw"  : typeDrawPage
                             },
                             type: 'POST',
                             context: this,
@@ -216,13 +240,17 @@
                                 var maxGraph = data.maxValueData;
                                 dataGraph = [];
                                 if(data.success){
-                                    if(typeDraw == 1){
-                                        loadGraphPage(dataResponse, dataGraph, typeDrawSubPage, maxGraph);
-                                    }else{
-                                        loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
+                                    if(dataResponse != void 0 && Object.keys(dataResponse).length > 0 &&
+                                       maxGraph     != void 0 && Object.keys(maxGraph).length > 0){
+                                        if(typeDraw == 1){
+                                            loadGraphPage(dataResponse, dataGraph, typeDrawSubPage, maxGraph);
+                                        }else{
+                                            loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
+                                        }
                                     }
+                                    setErrorMesssage(null);
                                 }else{
-                                    alert(data.message);
+                                    setErrorMesssage(data.message)
                                 }
                             }
                         })
@@ -233,7 +261,7 @@
                                 "_token"    : "{{ csrf_token() }}",
                                 'dateFrom'  : dateFrom.val(),
                                 'dateTo'    : dateTo.val(),
-                                "typeDraw"  : typeDrawPage,
+                                "typeDraw"  : typeDrawPage
                             },
                             type: 'POST',
                             context: this,
@@ -242,10 +270,14 @@
                                 dataGraph = [];
                                 if(data.success){
                                     var dataResponse = data.contentCount;
-                                    var maxGraph = data.maxValueData
-                                    loadGraphPage(dataResponse,dataGraph, typeDrawSubPage, maxGraph);
+                                    var maxGraph = data.maxValueData;
+                                    if(dataResponse != void 0 && Object.keys(dataResponse).length > 0 &&
+                                       maxGraph     != void 0 && Object.keys(maxGraph).length > 0) {
+                                        loadGraphPage(dataResponse, dataGraph, typeDrawSubPage, maxGraph);
+                                    }
+                                    setErrorMesssage(null);
                                 }else{
-                                    alert(data.message);
+                                    setErrorMesssage(data.message)
                                 }
                             }
                         })
@@ -261,18 +293,23 @@
                             dataType: 'Json',
                             success: function (data) {
                                 dataGraph = [];
+                                var dataResponse = data.contentCount;
+                                var maxGraph = data.maxValueData;
                                 if(data.success){
-                                    var dataResponse = data.contentCount;
-                                    var maxGraph = data.maxValueData
-                                    loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
+                                    if(dataResponse != void 0 && Object.keys(dataResponse).length > 0 &&
+                                      maxGraph      != void 0 && Object.keys(maxGraph).length > 0) {
+                                        loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph);
+                                    }
+                                    setErrorMesssage(null);
                                 }else{
-                                    alert(data.message);
+                                    setErrorMesssage(data.message)
                                 }
                             }
                         })
                     }
                 }
-                var generateGraph = function(element_id, data){
+
+                function generateGraph(element_id, data){
                     return Morris.Area({
                         element: element_id,
                         data: data,
@@ -293,7 +330,8 @@
                         yLabelFormat: function(y){return y != Math.round(y)?'':parseInt(y).toLocaleString();},
                     });
                 }
-                var loadGraphPage = function(dataResponse, dataGraph, typeDrawSubPage, maxGraph){
+
+                function loadGraphPage(dataResponse, dataGraph, typeDrawSubPage, maxGraph){
                     chartPage.options.labels = [$('#typeDrawPage option:selected').html()];
                     var maxPage;
                     if(typeDrawSubPage == '0'){
@@ -324,7 +362,8 @@
                     chartPage.options.ymax = maxPage;
                     chartPage.setData(dataGraph);
                 }
-                var loadGraphPost = function(dataResponse, dataGraph, typeDrawSubPost, maxGraph){
+
+                function loadGraphPost(dataResponse, dataGraph, typeDrawSubPost, maxGraph){
                     chartPost.options.labels = ["{{trans('field.post_engagement')}}"];
                     var maxPost;
                     if(typeDrawSubPost == '0'){
@@ -355,29 +394,15 @@
                     chartPost.options.ymax = maxPost;
                     chartPost.setData(dataGraph)
                 }
-                $('#typeDrawPage, #typeDrawSubPost, #typeDrawSubPage').on('change', function (e) {
-                    e.preventDefault;
-                    var _id = $(this).attr('id');
-                    if(_id == 'typeDrawPage' || _id == 'typeDrawSubPage'){
-                        graphDraw(1);
-                    }else{
-                        graphDraw(2);
-                    }
-                });
-                chartPage = generateGraph('chartContainer1',[]);
-                chartPost = generateGraph('chartContainer2',[]);
-                graphDraw(3);
-                $('.btn-submit').on('click',function () {
-                    var dateFrom = $('#inputDateFrom'), dateTo = $('#inputDateTo');
-                    if(Date.parse(dateFrom.val()) <= Date.parse(dateTo.val())){
-                        graphDraw(3);
-                    }else{
-                        alert('{{trans('message.error_date_ranger')}}');
-                    }
-                    return false;
-                })
 
-            })
+                function setErrorMesssage(message) {
+                    if(message != '' && message != null) {
+                        $('.box_message').html('<p class="alert alert-danger">' + message + ' <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a></p>');
+                    } else {
+                        $('.box_message').html('');
+                    }
+                }
+            });
         @endif
     </script>
 @endsection

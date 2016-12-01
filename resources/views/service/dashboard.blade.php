@@ -26,7 +26,7 @@
                         @if(Auth::user()->authority == config('constants.authority.admin'))
                             <div class="user-info pull-left">{{$user->company_name.' ('.$user->email.')'}}</div>
                         @endif
-                        {!! Form::open(['class' => 'form-horizontal frm-search', 'method' => 'POST']) !!}
+                        {!! Form::open(['class' => 'form-horizontal frm-search', 'method' => 'POST', 'id' => 'dashboard_search']) !!}
                         <div class="search-box col-md-6">
                             {!! Form::label('inputDateFrom', trans('field.date_range'), ['class' => 'control-label col-md-2']) !!}
                             <div class="input-group input-large col-md-8" data-date="" data-date-format="yyyy/mm/dd">
@@ -43,6 +43,7 @@
                 </div>
             </section>
             @include('flash')
+            <div class="box_message"></div>
             <section class="panel service">
                 <header class="panel-heading tab-bg-dark-navy-blue">
                     <ul class="nav nav-tabs nav-justified ">
@@ -102,23 +103,17 @@
                                             @endif
                                             <div class="page-detail">
                                                 <ul class="clearfix location-earning-stats">
-                                                    <li class="stat-divider change_graph" data-show="friends" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
+                                                    <li class="stat-divider change_graph" data-show="friends">
                                                         {{{ trans('field.'.$service_name.'_friends_count') }}}
                                                         <span class="first-item">{{{ @$thisToday['friends_count'] ? number_format($thisToday['friends_count'], 0, '.', '.') : 0 }}}</span>
                                                     </li>
                                                     @if(config('constants.service.facebook') != $service_code)
-                                                        <li class="stat-divider change_graph" data-show="followers" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
+                                                        <li class="stat-divider change_graph" data-show="followers">
                                                             {{{ trans('field.'.$service_name.'_followers_count') }}}
                                                             <span class="third-item">{{{ @$thisToday['followers_count'] ? number_format($thisToday['followers_count'], 0, '.', '.') : 0 }}}</span>
                                                         </li>
-                                                        {{--@if(config('constants.service.instagram') != $service_code)--}}
-                                                        {{--<li class="change_graph" data-show="favourites" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">--}}
-                                                        {{--{{{ trans('field.'.$service_name.'_favourites_count') }}}--}}
-                                                        {{--<span class="fourth-item">{{{ @$thisToday['favourites_count'] ? number_format($thisToday['favourites_count'], 0, '.', '.') : 0 }}}</span>--}}
-                                                        {{--</li>--}}
-                                                        {{--@endif--}}
                                                     @endif
-                                                    <li class="stat-divider change_graph" data-show="posts" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['page_id'] }}}">
+                                                    <li class="stat-divider change_graph" data-show="posts">
                                                         {{{ trans('field.'.$service_name.'_posts_count') }}}
                                                         <span class="second-item">{{{ @$thisToday['posts_count'] ? number_format($thisToday['posts_count'], 0, '.', '.') : 0 }}}</span>
                                                     </li>
@@ -177,17 +172,17 @@
                                             @endif
                                             <div class="page-detail">
                                                 <ul class="clearfix location-earning-stats">
-                                                    <li class="stat-divider change_data_graph" data-show="friends" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['id'] }}}">
+                                                    <li class="stat-divider change_data_graph" data-show="friends">
                                                         {{{ trans('field.'.$service_name.'_friends_count') }}}
                                                         <span class="first-item">{{{ @$thisToday['friends_count'] ? number_format($thisToday['friends_count'], 0, '.', '.') : 0 }}}</span>
                                                     </li>
                                                     @if(config('constants.service.facebook') != $service_code)
-                                                        <li class="stat-divider change_data_graph" data-show="followers" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['id'] }}}">
+                                                        <li class="stat-divider change_data_graph" data-show="followers">
                                                             {{{ trans('field.'.$service_name.'_followers_count') }}}
                                                             <span class="third-item">{{{ @$thisToday['followers_count'] ? number_format($thisToday['followers_count'], 0, '.', '.') : 0 }}}</span>
                                                         </li>
                                                     @endif
-                                                    <li class="stat-divider change_data_graph" data-show="posts" data-service-name="{{{ $service_name }}}" data-service-code="{{{ $service_code }}}" data-page="{{{ $page['id'] }}}">
+                                                    <li class="stat-divider change_data_graph" data-show="posts">
                                                         {{{ trans('field.'.$service_name.'_posts_count') }}}
                                                         <span class="second-item">{{{ @$thisToday['posts_count'] ? number_format($thisToday['posts_count'], 0, '.', '.') : 0 }}}</span>
                                                     </li>
@@ -237,36 +232,30 @@
     <script>
         //create graph for post detail data
         $(function(){
-            @if(isset($pageList))
-                @foreach($pageList as $page_id => $page)
-                    var data        = [],
-                    label       = ['{{{ trans('field.post_engagement') }}}'],
-                    element_id  = 'graph_line_{{ $service_name.'_'.$page_id }}',
-                    pageListChart = [];
-                    @if(isset($postByDay) && isset($postByDay[$page_id]))
-                        if($('#' + element_id).length > 0) {
-                            @foreach($postByDay[$page_id] as $date => $post)
-                                data.push({
-                                date: '{{{ $date }}}',
-                                value: '{{{ $post['compare'] or 0 }}}'
-                            });
-                            @endforeach
-                            pageListChart['{{$page_id}}'] = generate_graph(element_id);
-                            pageListChart['{{$page_id}}'].options.labels = label;
-                            @if(isset($maxGraph[$page_id]['compare']))
-                                pageListChart['{{$page_id}}'].options.ymax = ['{{$maxGraph[$page_id]['compare']}}'];
-                            @endif
-                            pageListChart['{{$page_id}}'].setData(data);
-                        }
-                    @endif
-                @endforeach
-            @endif
+            //load graph data pages and posts of there pages
+            var pageListChart = [];
+            getDataPageAjax();
+            //load graph data of competitor
+            $('#dashboard_search').on('submit', function (e) {
+                e.preventDefault();
+                getDataPageAjax();
+
+                //load graph data of competitor
+                @if(isset($pageCompetitor))
+                    @foreach($pageCompetitor as $page_id => $page)
+                        var element_chart_id = 'graph_line_Competitor_{{ $service_name.'_'.$page_id }}';
+                        getDataRivalAjax(element_chart_id, '{{{ $page_id }}}', listCompetitorChart['{{{ $page_id }}}']);
+                    @endforeach
+                @endif
+            });
+
+            //load graph data of competitor
             @if(isset($pageCompetitor))
                 var listCompetitorChart = [];
                 @foreach($pageCompetitor as $page_id => $page)
-                    element_id = 'graph_line_Competitor_{{ $service_name.'_'.$page_id }}';
+                    var element_id = 'graph_line_Competitor_{{ $service_name.'_'.$page_id }}';
                     listCompetitorChart['{{$page_id}}'] = generate_graph(element_id);
-                    getDataAjax(element_id, '{{$page_id}}',listCompetitorChart['{{$page_id}}']);
+                    getDataRivalAjax(element_id, '{{$page_id}}',listCompetitorChart['{{$page_id}}']);
                 @endforeach
             @endif
 
@@ -284,11 +273,10 @@
             }
 
             $('.typeDraw, .typeDrawSubPage').on('change', function (e) {
-                e.preventDefault;
+                e.preventDefault();
                 var page_id = $(this).data('page');
-                var element_chart_id = 'graph_line_Competitor_' + $(this).data('service-name') + '_' + $(this).data('page'),
-                        url = '{{url('page')}}/' + $(this).data('page') + '/social/graph';
-                getDataAjax(element_chart_id, page_id, listCompetitorChart[page_id]);
+                var element_chart_id = 'graph_line_Competitor_' + $(this).data('service-name') + '_' + $(this).data('page');
+                getDataRivalAjax(element_chart_id, page_id, listCompetitorChart[page_id]);
 
             });
             var hash = window.location.hash;
@@ -296,6 +284,78 @@
                 setTimeout(function(){
                     $('html, body').animate({ scrollTop: $(hash).offset().top - 100 }, 100);
                 }, 800);
+            }
+
+            //ajax get data for pages and post detail of there pages. corresponding with service and user in url
+            function getDataPageAjax() {
+                var url     = '{{ URL::route('dashboard.graph',  ['service_code' => "$service_code", 'user' => "$user->id"]) }}',
+                    label   = ['{{{ trans('field.post_engagement') }}}'];
+                $.ajax({
+                    url: url,
+                    data: {
+                        "_token"    : "{{ csrf_token() }}",
+                        'dateFrom'  : $('#inputDateFrom').val(),
+                        'dateTo'    : $('#inputDateTo').val()
+                    },
+                    type: 'POST',
+                    success: function (data) {
+                        if(data.success){
+                            //generate graphs
+                            @if(isset($pageList))
+                                @foreach($pageList as $page_id => $page)
+                                    var dataGraph  = [],
+                                        element_id ='graph_line_{{ $service_name.'_'.$page_id }}';
+                                    if(data.postByDay != void 0
+                                        && Object.keys(data.postByDay).length > 0
+                                        && data.postByDay['{{{ $page_id }}}'] != void 0
+                                        && Object.keys(data.postByDay['{{{ $page_id }}}']).length > 0)
+                                    {
+                                        if($('#' + element_id).length > 0) {
+                                            var postByDay = data.postByDay['{{{ $page_id }}}'];
+                                            $.each(postByDay, function(date, value) {
+                                                dataGraph.push({
+                                                    date: date,
+                                                    value: value['compare']
+                                                });
+                                            });
+
+                                            var parent_graph = $('#' + element_id).parents('.panel.page-box'),
+                                                    service_display = parent_graph.css('display');
+                                            if(service_display == 'none') {
+                                                parent_graph.css('display', 'block');
+                                            }
+                                            //create, fill data for graph
+                                            if(pageListChart['{{$page_id}}'] == void 0) {
+                                                pageListChart['{{$page_id}}'] = generate_graph(element_id);
+                                            }
+
+                                            if(data.maxGraph != void 0
+                                                && Object.keys(data.maxGraph).length > 0
+                                                && data.maxGraph['{{{ $page_id }}}'] != void 0
+                                                && data.maxGraph['{{{ $page_id }}}'].compare != void 0)
+                                            {
+                                                pageListChart['{{$page_id}}'].options.ymax = [data.maxGraph['{{{ $page_id }}}'].compare];
+                                            }
+                                            pageListChart['{{$page_id}}'].options.labels = label;
+                                            pageListChart['{{$page_id}}'].setData(dataGraph);
+
+                                            //////////
+                                            if(service_display == 'none') {
+                                                parent_graph.css('display', 'none');
+                                            }
+                                        }
+                                    }
+                                @endforeach
+                            @endif
+                            //clear ajax message
+                            setErrorMesssage(null);
+                        } else {
+                            if(data.message != void 0) {
+                                setErrorMesssage(data.message);
+                            }
+                        }
+                    }
+                });
             }
         });
 
@@ -330,7 +390,7 @@
             });
         }
 
-        function getDataAjax(element_id, page_id, chart){
+        function getDataRivalAjax(element_id, page_id, chart){
             var typeDrawSubPage= parseInt($('#typeDrawSubPage_' + page_id).val());
             var typeDraw = parseInt($('#typeDraw_' + page_id).val());
             var urlGraphPage = '{{url('page')}}/' + page_id + '/social/graph';
@@ -388,9 +448,23 @@
                         if(service_display == 'none') {
                             parent_graph.css('display', 'none');
                         }
+                        //clear ajax message
+                        setErrorMesssage(null);
+                    } else {
+                        if(data.message != void 0) {
+                            setErrorMesssage(data.message);
+                        }
                     }
                 }
             })
+        }
+
+        function setErrorMesssage(message) {
+            if(message != '' && message != null) {
+                $('.box_message').html('<p class="alert alert-danger">' + message + ' <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a></p>');
+            } else {
+                $('.box_message').html('');
+            }
         }
     </script>
     @endif

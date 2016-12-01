@@ -26,6 +26,7 @@ Route::get('/account/edit', 'UserController@accountEdit');
 Route::post('/account/update', 'UserController@accountUpdate');
 Route::resource('master', 'MasterController');
 Route::any('dashboard/{service_code}/{user?}', 'ServiceController@dashboard');
+Route::post('dashboard/graph/{service_code}/{user}', ['uses' => 'ServiceController@getGraphData', 'as' => 'dashboard.graph']);
 Route::resource('page', 'PageController');
 Route::post('/page/{id}/social/graph', ['uses' => 'PageController@getGraphData', 'as' => 'site.analytic.graph']);
 Route::post('/page/{id}/social/graphPost', ['uses' => 'PageController@getGraphDataPost', 'as' => 'site.analytic.graphPost']);
