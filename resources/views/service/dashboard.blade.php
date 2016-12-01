@@ -328,17 +328,12 @@
                                             if(pageListChart['{{$page_id}}'] == void 0) {
                                                 pageListChart['{{$page_id}}'] = generate_graph(element_id);
                                             }
-
-                                            if(data.maxGraph != void 0
-                                                && Object.keys(data.maxGraph).length > 0
-                                                && data.maxGraph['{{{ $page_id }}}'] != void 0
-                                                && data.maxGraph['{{{ $page_id }}}'].compare != void 0)
-                                            {
-                                                pageListChart['{{$page_id}}'].options.ymax = [data.maxGraph['{{{ $page_id }}}'].compare];
-                                            }
                                             pageListChart['{{$page_id}}'].options.labels = label;
                                             pageListChart['{{$page_id}}'].setData(dataGraph);
 
+                                            @if(isset($maxGraph[$page_id]['compare']))
+                                                pageListChart['{{$page_id}}'].options.ymax = ['{{$maxGraph[$page_id]['compare']}}'];
+                                            @endif
                                             //////////
                                             if(service_display == 'none') {
                                                 parent_graph.css('display', 'none');

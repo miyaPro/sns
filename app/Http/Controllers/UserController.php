@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Lang;
+use App\No
 
 
 class UserController extends Controller
@@ -118,6 +119,7 @@ class UserController extends Controller
         try{
             $this->repUser->store($inputs);
             DB::commit();
+            Auth::user()->notify(new notify($user));
             return redirect('user')->with('alert-success', trans('message.save_success', ['name' => trans('default.user')]));
         } catch(\Exception $e){
             DB::rollback();
