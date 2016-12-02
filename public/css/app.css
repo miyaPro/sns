@@ -6716,6 +6716,8 @@ div.tagsinput span.tag {
     .service-content .add-other .btn-group {
       float: right;
       margin-right: 20px; }
+  .service-content .add-grant-access {
+    float: none; }
 
 .btn-white {
   background-clip: padding-box;
@@ -6822,12 +6824,6 @@ div.tagsinput span.tag {
 
 .account-detail {
   margin-bottom: 0px; }
-
-.change_data_graph.active {
-  background-color: beige; }
-
-.change_data_graph {
-  cursor: pointer; }
 
 a.logo {
   margin: 10px 0 0 25px; }

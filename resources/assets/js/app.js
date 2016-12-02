@@ -14,7 +14,15 @@ require('./bootstrap');
  */
 
 Vue.component('example', require('./components/Example.vue'));
+window.Pusher = require('pusher-js');
 
-const app = new Vue({
-    el: 'body'
+var app = new Vue({
+    el: 'body',
+    data() {
+        return {
+            users: [],
+            notifications: []
+        }
+    },
 });
+

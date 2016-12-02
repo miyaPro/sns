@@ -7,6 +7,7 @@
             <div class="clearfix add-btn">
                 <div class="btn-group">
                     <a class="btn btn-primary" href="{{ url('user/create') }}">{{{ trans('button.add') }}}</a>
+                    <a class="btn btn-primary" href="{{ url('Notification/sendBroadcast') }}" style="margin-left: 10px;">{{{ 'BroadCast' }}}</a>
                 </div>
             </div>
             <section class="panel">
@@ -80,3 +81,9 @@
     </div>
     @include('modals.delete')
 @endsection
+<script src="//js.pusher.com/2.2/pusher.min.js"></script>
+<script>
+    Echo.private('App.User.1').notification((notification) => {
+        console.log('test');
+    });
+</script>

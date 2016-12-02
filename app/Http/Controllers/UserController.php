@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\BroadCastNotify;
+use App\Notifications\EmailNotify;
+use App\Notifications\WorkoutAssigned;
 use App\Repositories\UserRepository;
 use App\Repositories\MasterRepository;
 use App\Repositories\AuthRepository;
@@ -10,9 +13,11 @@ use App\Http\Requests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Lang;
-use App\No
+use App\User;
+use Illuminate\Notifications\Notifiable;
 
 
 class UserController extends Controller
@@ -54,6 +59,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+
         $user_id        = Auth::user()->id;
         $keyword        = $request->get('keyword','');
         $perPage        = config('constants.per_page');
@@ -117,9 +123,10 @@ class UserController extends Controller
         $inputs = $request->all();
         DB::beginTransaction();
         try{
-            $this->repUser->store($inputs);
+            $user = $this->repUser->store($inputs);
             DB::commit();
-            Auth::user()->notify(new notify($user));
+//            $user->notify(new EmailNotify($user));
+            event(new BroadCastNotify($user));
             return redirect('user')->with('alert-success', trans('message.save_success', ['name' => trans('default.user')]));
         } catch(\Exception $e){
             DB::rollback();

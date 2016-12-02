@@ -5,6 +5,8 @@ namespace App;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Repositories\NotificationRepository;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
@@ -37,4 +39,16 @@ class User extends Authenticatable
     {
         return $this->hasMany('App\Auth', 'user_id', 'id');
     }
+
+    public function routeNotificationForMail()
+    {
+        return $this->email;
+    }
+
+    public function routeNotificationForDatabase()
+    {
+        Log::info('run route database');
+        return $this;
+    }
+
 }
