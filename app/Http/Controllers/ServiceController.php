@@ -176,34 +176,28 @@ class ServiceController extends Controller
                 $endDate    = date('Y-m-d', strtotime($endDate));
                 $auths      = $this->repAuth->getUserAuth($user_id, $service_code);
                 foreach ($auths as $auth) {
-                    if($auth->rival_flg == 0 && !$auth->access_token) {
-                        continue;
-                    }
-                    $columns = ['like_count', 'comment_count', 'share_count'];
-                    switch ($auth->service_code) {
-                        case config('constants.service.facebook'):
-                            $repPostDetail  = $this->repPostFbDetail;
-                            $columns        = ['like_count', 'comment_count', 'share_count'];
-                            break;
-                        case config('constants.service.twitter'):
-                            $repPostDetail  = $this->repPostTwDetail;
-                            $columns        = ['retweet_count', 'favorite_count'];
-                            break;
-                        case config('constants.service.instagram'):
-                            $repPostDetail  = $this->repPostIgDetail;
-                            $columns        = ['like_count', 'comment_count'];
-                            break;
-                        default: $request->session()->flash('alert-danger', trans('message.exiting_service'));
-                    }
-
-                    if(isset($repPostDetail) &&  $auth->rival_flg == 0) {
-                        foreach ($auth->page as $page) {
-                            //get info post of pages of account, competitor page will load ajax to page controller
-                            //post data by page
-                            $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($startDate)));
-                            $postDetail = $repPostDetail->getPostEngagementByDate($page->id, null, $beforeDate, $endDate);
-                            $postByDay[$page->id]   = $this->getData($page, $postDetail, $columns, $beforeDate, $endDate);
-                            $maxPost[$page->id]     = Common::getMaxGraph($postByDay[$page->id]);
+                    if($auth->rival_flg == 0 && !empty($auth->access_token)) {
+                        switch ($auth->service_code) {
+                            case config('constants.service.facebook'):
+                                $repPostDetail  = $this->repPostFbDetail;
+                                break;
+                            case config('constants.service.twitter'):
+                                $repPostDetail  = $this->repPostTwDetail;
+                                break;
+                            case config('constants.service.instagram'):
+                                $repPostDetail  = $this->repPostIgDetail;
+                                break;
+                            default: $request->session()->flash('alert-danger', trans('message.exiting_service'));
+                        }
+                        if(isset($repPostDetail)) {
+                            foreach ($auth->page as $page) {
+                                //get info post of pages of account, competitor page will load ajax to page controller
+                                //post data by page
+                                $beforeDate = date('Y-m-d', strtotime("-1 day", strtotime($startDate)));
+                                $postDetail = $repPostDetail->getPostEngagementByDate($page->id, null, $beforeDate, $endDate);
+                                $postByDay[$page->id]   = $this->getData($page, $postDetail, $beforeDate, $endDate);
+                                $maxPost[$page->id]     = Common::getMaxGraph($postByDay[$page->id]);
+                            }
                         }
                     }
                 }
@@ -217,7 +211,7 @@ class ServiceController extends Controller
         return Response::json(array('success' => false, 'message' => trans('message.common_error')), 200);
     }
 
-    public function getData($page, $listDetail, $columns = [], $startDate, $endDate){
+    public function getData($page, $listDetail, $startDate, $endDate){
         $data       = [];
         $days       = floor((strtotime($endDate) - strtotime($startDate)) / (60*60*24));
         for($i=0; $i <= $days; $i++) {
@@ -228,15 +222,13 @@ class ServiceController extends Controller
         $page_create_at = date('Y-m-d' ,strtotime($page->created_at));
         foreach ($listDetail as $i => $postDetail) {
             $data[$postDetail->date]['total'] = $postDetail->post_engagement;
-            if($page_create_at >= $postDetail->date || $startDate == $postDetail->date) {
-                $compare    = 0;
-            } else {
+            if($page_create_at < $postDetail->date && $startDate != $postDetail->date) {
                 $beforeDate     = date('Y-m-d' ,strtotime("-1 day", strtotime($postDetail->date)));
                 $beforeDayVal   = $data[$beforeDate]['total'];
                 $thisDayVal     = $data[$postDetail->date]['total'];
                 $compare        = $thisDayVal - $beforeDayVal;
+                $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
             }
-            $data[$postDetail->date]['compare'] = ($compare > 0) ? $compare : 0;
         }
         if(@$data[$startDate]) {
             unset($data[$startDate]);
@@ -265,7 +257,7 @@ class ServiceController extends Controller
             $this->repAuth->resetAccessToken($auth->id);
             $result = false;
         } catch(FacebookSDKException $e) {
-
+            Log::info('Dashboard controller check accesstoken Facebook, auth ID '.$auth->id.': '. $e->getMessage());
         }
 
         return $result;
@@ -283,7 +275,7 @@ class ServiceController extends Controller
                 $result = false;
             }
         } catch (TwitterOAuthException $e) {
-
+            Log::info('Dashboard controller check accesstoken Twitter, auth ID '.$auth->id.': '. $e->getMessage());
         }
         return $result;
     }
@@ -291,13 +283,11 @@ class ServiceController extends Controller
     public function checkAccessTokenInstagram($auth) {
         $result     = true;
         $url        = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$auth->access_token;
-        $dataGet    = Common::getContent($url,false);
-        $dataAccount = @json_decode($dataGet[0]);
-        if(isset($dataGet) && (!isset($dataAccount->meta) || $dataAccount->meta->code != 200)){
+        $dataGet    = Common::getContent($url);
+        if(!$dataGet){
             $this->repAuth->resetAccessToken($auth->id);
             $result = false;
         }
         return $result;
     }
-
 }

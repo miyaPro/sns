@@ -33,4 +33,5 @@ return [
     'not_exiting_service'  => 'SNSは存在しません。',
     'error_page_not_found'    => 'ページは存在しません。',
     'error_date_ranger' => '開始時間は終了時間より前でなければなりません。',
+    'error_private_user_info' => 'ベンチマーク企業のアカウントは非公開になっております。',
 ];

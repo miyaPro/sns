@@ -154,6 +154,14 @@
   .tm-membr .btn-view {
     padding-top: 10px;
   }
+  .tm-page-competitor{
+    width: 100% !important;
+    .private-user{
+      color: #e47578;
+      font-size: 13px;
+      font-weight: bold;
+    }
+  }
   .add-other {
     margin: 0 0 20px 0;
     .sel_account {

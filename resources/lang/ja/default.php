@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'site_title'      => 'WevNAL CTA System',
+    'site_title'      => 'WevNAL SNS System',
     'client'          => 'ユーザ',
     'user'            => 'ユーザ',
     'user_register'   => 'ユーザ登録',

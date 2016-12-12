@@ -9,6 +9,8 @@
 namespace App\Common;
 
 
+use Illuminate\Support\Facades\Log;
+
 class Common
 {
     public static function getMaxGraph($data ){
@@ -60,7 +62,7 @@ class Common
         return $maxValueArr;
     }
 
-    public static function getContent($url,$postdata = false){
+    public static function getContent($url, $postdata = false){
         if (!function_exists('curl_init')){
             return 'Sorry cURL is not installed!';
         }
@@ -79,7 +81,21 @@ class Common
         $contents = curl_exec($ch);
         $headers = curl_getinfo($ch);
         curl_close($ch);
-        return array($contents, $headers);
+        $dataGet =  array($contents, $headers);
+        $data  = @json_decode($dataGet[0]);
+        if(!isset($data)){
+            Log::info('Network connect error url = '.$url);
+            return [];
+        }else if($postdata || (isset($data->meta) && $data->meta->code == 200)){
+            return $data;
+        }else if($postdata || (isset($data->meta) && $data->meta->code == 400)){
+            Log::info('Private user infomation url='.$url);
+            return [
+                "public_flg" => 0
+            ];
+        }else{
+            Log::info('Access token error url = '.$url);
+            return false;
+        }
     }
-
 }

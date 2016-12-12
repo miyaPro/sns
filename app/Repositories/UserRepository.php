@@ -2,13 +2,10 @@
 
 namespace App\Repositories;
 
-use App\Notifications\WorkoutAssigned;
 use App\User;
-use Illuminate\Notifications\Notifiable;
 
 class UserRepository extends BaseRepository
 {
-    use Notifiable;
 	/**
 	 * Create a new UserRepository instance.
 	 *
@@ -35,6 +32,7 @@ class UserRepository extends BaseRepository
         $user->authority       = $inputs['authority'];
         $user->contract_status = $inputs['contract_status'];
         $this->save($user, $inputs);
+
         return $user;
     }
 

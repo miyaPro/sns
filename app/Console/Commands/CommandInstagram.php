@@ -21,7 +21,7 @@ class CommandInstagram extends Command
      *
      * @var string
      */
-    protected $signature = 'instagram {today=0} {account_id?}';
+    protected $signature = 'instagram {today=0} {--queue=default} {account_id?}';
 
     /**
      * The console command description.
@@ -68,13 +68,10 @@ class CommandInstagram extends Command
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth(config('constants.service.instagram'), $account_id);
         foreach ($auths as $auth){
-            if($auth->rival_flg == 0 && !$auth->access_token) {
-                continue;
-            }
-            if ($auth->rival_flg == 1) {
-                $this->getPageRival($auth);
-            } else {
+            if($auth->rival_flg == 0 && !empty($auth->access_token)){
                 $this->getPage($auth);
+            }else if ($auth->rival_flg == 1) {
+                $this->getPageRival($auth);
             }
         }
     }
@@ -83,37 +80,48 @@ class CommandInstagram extends Command
     {
         $authToGet = $this->repAuth->getFirstAuth($auth->user_id, $auth->service_code);
         if ($authToGet) {
-                $this->getPage($auth, $authToGet->access_token);
+            $this->getPage($auth, $authToGet->access_token);
         }
     }
 
-    public function getPage($auth, $access_token=null){
+    public function getPage($auth, $access_token = null){
         if($auth->rival_flg == 1 && isset($access_token)){
             $url = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$access_token;
         }else{
             $url = str_replace('{id}',$auth->account_id,config('instagram.url.user_info')).'?access_token='.$auth->access_token;
         }
-        $dataGet = Common::getContent($url,false);
-        $dataGet  = @json_decode($dataGet[0]);
-        if(!isset($dataGet)){
-            $this->error(trans('message.error_network_connect', ['name' => trans('default.instagram')]));
-        }
-        else if(isset($dataGet->meta) && $dataGet->meta->code == 200){
-            $data =  $dataGet->data;
-            $sns_page_id = $data->id;
-            $inputs = array(
-                'name'          => @$data->full_name,
-                'screen_name'   => $data->username,
-                'link'          => 'https://www.instagram.com/'.$data->username,
-                'access_token'  => $auth->access_token,
-                'sns_page_id'   => $auth->account_id,
-                'category'      => '',
-                'avatar_url'    => $data->profile_picture,
-                'description'   => @$data->bio,
-                'created_time'   => null
-            );
+        $dataGet = Common::getContent($url);
+        $sns_page_id =  $auth->account_id;
+        if($dataGet){
+            if(count($dataGet) == 0) return;
+            else if(is_array($dataGet) && isset($dataGet['public_flg'])){
+                $inputs['public_flg'] = 0;
+                $inputs['access_token'] = '';
+                $inputs['screen_name'] = $auth->account_name;
+                $inputs['link']        ='https://www.instagram.com/'.$auth->account_name;
+                $data = null;
+            }else{
+                $data = $dataGet->data;
+                $inputs = array(
+                    'name'          => @$data->full_name,
+                    'screen_name'   => $data->username,
+                    'link'          => 'https://www.instagram.com/'.$data->username,
+                    'access_token'  => $auth->access_token,
+                    'sns_page_id'   => $auth->account_id,
+                    'category'      => '',
+                    'avatar_url'    => $data->profile_picture,
+                    'description'   => @$data->bio,
+                    'public_flg'    => '1',
+                    'created_time'   => null
+                );
+            }
             $page = $this->repPage->getPage($auth->id, $sns_page_id);
             if($page){
+                if($auth->rival_flg == 1 && $inputs['public_flg'] == 0){
+                    $inputs['name']        = $page->name;
+                    $inputs['avatar_url']  = $page->avatar_url;
+                    $inputs['description'] = $page->description;
+                }
                 $page = $this->repPage->update($page, $inputs);
             }else{
                 $page = $this->repPage->store($inputs, $auth->id);
@@ -124,7 +132,6 @@ class CommandInstagram extends Command
             }
         }else{
             $this->repAuth->resetAccessToken($auth->id);
-            $this->error(trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
         }
     }
 
@@ -134,13 +141,29 @@ class CommandInstagram extends Command
             $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
         }
         $page_detail = $this->repPageDetail->getByDate($page->id, $current_date);
-
-        $inputs = array(
-            'friends_count'     => $data->counts->follows,
-            'posts_count'       => $data->counts->media,
-            'followers_count'   => $data->counts->followed_by,
-            'favourites_count'  => 0
-        );
+        if($page->public_flg == 0 && empty($page->access_token)){
+            if($page_detail){
+                $inputs = array(
+                    'friends_count'     => $page_detail->friends_count,
+                    'posts_count'       => $page_detail->posts_count,
+                    'followers_count'   => $page_detail->followers_count
+                );
+            }else{
+                $page_detail_private = $this->repPageDetail->getByDate($page->id, date('Y-m-d' ,strtotime("-1 day", strtotime($current_date))));
+                $inputs = array(
+                    'friends_count'     => isset($page_detail_private->friends_count) ? $page_detail_private->friends_count : 0,
+                    'posts_count'       => isset($page_detail_private->posts_count) ? $page_detail_private->posts_count : 0,
+                    'followers_count'   => isset($page_detail_private->followers_count) ? $page_detail_private->followers_count : 0
+                );
+            }
+        }else{
+            $inputs = array(
+                'friends_count'     => $data->counts->follows,
+                'posts_count'       => $data->counts->media,
+                'followers_count'   => $data->counts->followed_by
+            );
+        }
+        $inputs['favourites_count'] = 0;
         if($page_detail){
             $this->repPageDetail->update($page_detail, $inputs);
         }else{
@@ -153,39 +176,29 @@ class CommandInstagram extends Command
         $url = str_replace('{id}',$auth->account_id,config('instagram.url.media')).'?access_token='.$auth->access_token;
         $maxGetPost = config('instagram.limit.post_media');
         $date = new \DateTime();
-        if($numberPost < $maxGetPost) {
-            $url .= '&count='.$numberPost;
-        }
-        $dataGet = Common::getContent($url, false);
-        $dataGet  = @json_decode($dataGet[0]);
-        if(isset($dataGet)){
-            $dataAllPost = $dataGet->data;
-            if(empty($dataAllPost)){
+        $arr_result = [];
+        $total = 0;
+        while($total < $numberPost && $url != null){
+            if($numberPost - $total > $maxGetPost){
+                $tmp_url = $url . '&count='.$maxGetPost;
+            }else{
+                $tmp_url = $url . '&count='.($numberPost - $total);
+            }
+            $dataGet = Common::getContent($tmp_url);
+            if($dataGet){
+                if(count($dataGet) == 0) break;
+                $data = $dataGet->data;
+                $total += count($data);
+                $arr_result = array_merge($arr_result, $data);
+                $url = isset($dataGet->pagination->next_url) ? $dataGet->pagination->next_url : null;
+            }else{
                 $this->repAuth->resetAccessToken($auth->id);
-                $this->error(trans('message.error_get_access_token', ['name' => trans('default.instagram')]));
-                return;
+                break;
             }
-            if(count($dataAllPost) < $numberPost && $numberPost > $maxGetPost) {
-                $numberLoop = floor($numberPost / $maxGetPost);
-                for ($i = 0; $i < $numberLoop; $i++) {
-                    $currNumPost = $numberPost - count($dataAllPost);
-                    $nextUrl = @$dataGet->pagination->next_url;
-                    if($nextUrl){
-                        if($currNumPost < $maxGetPost){
-                            $nextUrl .= '&count='.$currNumPost;
-                        }
-                        $dataGet = Common::getContent($nextUrl, false);
-                        $dataGet = @json_decode($dataGet[0]);
-                        if (isset($dataGet) && $dataGet->meta->code == 200) {
-                            $dataAllPost = array_merge($dataAllPost, $dataGet->data);
-                        } else {
-                            $this->error('message.error_do_not_get_post_instagram');
-                            break;
-                        }
-                    }
-                }
-            }
-            foreach ($dataAllPost as $row){
+        }
+
+        if(count($arr_result) > 0){
+            foreach ($arr_result as $row){
                 $sns_post_id = $row->id;
                 $inputs = array(
                     'sns_post_id'   => $row->id,
@@ -216,8 +229,6 @@ class CommandInstagram extends Command
                 }
             }
             $this->getPostDetail($page->id);
-        } else{
-            $this->error('message','error_do_not_get_post_instagram');
         }
     }
 

@@ -1,0 +1,186 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'install',
+1 verbose cli   '-g',
+1 verbose cli   'laravel-echo-server' ]
+2 info using npm@2.15.9
+3 info using node@v4.5.0
+4 verbose install initial load of C:\Users\le.van.hai\AppData\Roaming\npm\package.json
+5 verbose readDependencies loading dependencies from C:\Users\le.van.hai\AppData\Roaming\npm\package.json
+6 silly cache add args [ 'laravel-echo-server', null ]
+7 verbose cache add spec laravel-echo-server
+8 silly cache add parsed spec Result {
+8 silly cache add   raw: 'laravel-echo-server',
+8 silly cache add   scope: null,
+8 silly cache add   name: 'laravel-echo-server',
+8 silly cache add   rawSpec: '',
+8 silly cache add   spec: 'latest',
+8 silly cache add   type: 'tag' }
+9 silly addNamed laravel-echo-server@latest
+10 verbose addNamed "latest" is being treated as a dist-tag for laravel-echo-server
+11 info addNameTag [ 'laravel-echo-server', 'latest' ]
+12 silly mapToRegistry name laravel-echo-server
+13 silly mapToRegistry using default registry
+14 silly mapToRegistry registry https://registry.npmjs.org/
+15 silly mapToRegistry data Result {
+15 silly mapToRegistry   raw: 'laravel-echo-server',
+15 silly mapToRegistry   scope: null,
+15 silly mapToRegistry   name: 'laravel-echo-server',
+15 silly mapToRegistry   rawSpec: '',
+15 silly mapToRegistry   spec: 'latest',
+15 silly mapToRegistry   type: 'tag' }
+16 silly mapToRegistry uri https://registry.npmjs.org/laravel-echo-server
+17 verbose addNameTag registry:https://registry.npmjs.org/laravel-echo-server not in flight; fetching
+18 verbose request uri https://registry.npmjs.org/laravel-echo-server
+19 verbose request no auth needed
+20 info attempt registry request try #1 at 3:04:53 PM
+21 verbose request id 635de07f363e4a3e
+22 verbose etag W/"580b8c28-90da"
+23 verbose lastModified Sat, 22 Oct 2016 15:56:24 GMT
+24 http request GET https://registry.npmjs.org/laravel-echo-server
+25 http 304 https://registry.npmjs.org/laravel-echo-server
+26 verbose headers { date: 'Mon, 05 Dec 2016 08:04:53 GMT',
+26 verbose headers   via: '1.1 varnish',
+26 verbose headers   'cache-control': 'max-age=300',
+26 verbose headers   etag: 'W/"580b8c28-90da"',
+26 verbose headers   age: '0',
+26 verbose headers   connection: 'keep-alive',
+26 verbose headers   'x-served-by': 'cache-hkg6821-HKG',
+26 verbose headers   'x-cache': 'HIT',
+26 verbose headers   'x-cache-hits': '1',
+26 verbose headers   'x-timer': 'S1480925093.878579,VS0,VE180',
+26 verbose headers   vary: 'Accept-Encoding' }
+27 silly get cb [ 304,
+27 silly get   { date: 'Mon, 05 Dec 2016 08:04:53 GMT',
+27 silly get     via: '1.1 varnish',
+27 silly get     'cache-control': 'max-age=300',
+27 silly get     etag: 'W/"580b8c28-90da"',
+27 silly get     age: '0',
+27 silly get     connection: 'keep-alive',
+27 silly get     'x-served-by': 'cache-hkg6821-HKG',
+27 silly get     'x-cache': 'HIT',
+27 silly get     'x-cache-hits': '1',
+27 silly get     'x-timer': 'S1480925093.878579,VS0,VE180',
+27 silly get     vary: 'Accept-Encoding' } ]
+28 verbose etag https://registry.npmjs.org/laravel-echo-server from cache
+29 verbose get saving laravel-echo-server to C:\Users\le.van.hai\AppData\Roaming\npm-cache\registry.npmjs.org\laravel-echo-server\.cache.json
+30 verbose correctMkdir C:\Users\le.van.hai\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+31 silly addNameTag next cb for laravel-echo-server with tag latest
+32 silly addNamed laravel-echo-server@1.1.0
+33 verbose addNamed "1.1.0" is a plain semver version for laravel-echo-server
+34 silly cache afterAdd laravel-echo-server@1.1.0
+35 verbose afterAdd C:\Users\le.van.hai\AppData\Roaming\npm-cache\laravel-echo-server\1.1.0\package\package.json not in flight; writing
+36 verbose correctMkdir C:\Users\le.van.hai\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+37 verbose afterAdd C:\Users\le.van.hai\AppData\Roaming\npm-cache\laravel-echo-server\1.1.0\package\package.json written
+38 silly install resolved [ { name: 'laravel-echo-server',
+38 silly install resolved     version: '1.1.0',
+38 silly install resolved     description: 'Laravel Echo Node JS Server for Socket.io',
+38 silly install resolved     repository:
+38 silly install resolved      { type: 'git',
+38 silly install resolved        url: 'git+https://github.com/tlaverdure/Laravel-Echo-Server.git' },
+38 silly install resolved     main: 'dist/index.js',
+38 silly install resolved     keywords: [ 'laravel', 'socket.io' ],
+38 silly install resolved     author: { name: 'Thiery Laverdure' },
+38 silly install resolved     license: 'MIT',
+38 silly install resolved     jshintConfig: { esversion: 6 },
+38 silly install resolved     scripts:
+38 silly install resolved      { compile: 'tsc',
+38 silly install resolved        'compile watch': 'tsc -w',
+38 silly install resolved        prepublish: 'npm run compile' },
+38 silly install resolved     dependencies:
+38 silly install resolved      { colors: '^1.1.2',
+38 silly install resolved        inquirer: '^1.1.3',
+38 silly install resolved        ioredis: '^1.15.1',
+38 silly install resolved        lodash: '^4.12.0',
+38 silly install resolved        request: '^2.72.0',
+38 silly install resolved        'socket.io': '^1.5.0',
+38 silly install resolved        sqlite3: '^3.1.4',
+38 silly install resolved        yargs: '^5.0.0' },
+38 silly install resolved     devDependencies: { '@types/node': '^6.0.45', typescript: '^2.0.3' },
+38 silly install resolved     bin: { 'laravel-echo-server': 'bin/server.js' },
+38 silly install resolved     gitHead: '81fb903b405064062bf5411c5bad5ee2231f5e2b',
+38 silly install resolved     bugs: { url: 'https://github.com/tlaverdure/Laravel-Echo-Server/issues' },
+38 silly install resolved     homepage: 'https://github.com/tlaverdure/Laravel-Echo-Server#readme',
+38 silly install resolved     _id: 'laravel-echo-server@1.1.0',
+38 silly install resolved     _shasum: 'f192b4d1fabe51a706b5ba37e998059f9b9cfbf8',
+38 silly install resolved     _from: 'laravel-echo-server@latest',
+38 silly install resolved     _npmVersion: '3.10.3',
+38 silly install resolved     _nodeVersion: '6.7.0',
+38 silly install resolved     _npmUser: { name: 'tlaverdure', email: 'thiery@spacestud.io' },
+38 silly install resolved     dist:
+38 silly install resolved      { shasum: 'f192b4d1fabe51a706b5ba37e998059f9b9cfbf8',
+38 silly install resolved        tarball: 'https://registry.npmjs.org/laravel-echo-server/-/laravel-echo-server-1.1.0.tgz' },
+38 silly install resolved     maintainers: [ [Object] ],
+38 silly install resolved     _npmOperationalInternal:
+38 silly install resolved      { host: 'packages-12-west.internal.npmjs.com',
+38 silly install resolved        tmp: 'tmp/laravel-echo-server-1.1.0.tgz_1477151782082_0.41259144339710474' },
+38 silly install resolved     directories: {},
+38 silly install resolved     _resolved: 'https://registry.npmjs.org/laravel-echo-server/-/laravel-echo-server-1.1.0.tgz',
+38 silly install resolved     readme: 'ERROR: No README data found!' } ]
+39 info install laravel-echo-server@1.1.0 into C:\Users\le.van.hai\AppData\Roaming\npm
+40 info installOne laravel-echo-server@1.1.0
+41 verbose installOne of laravel-echo-server to C:\Users\le.van.hai\AppData\Roaming\npm not in flight; installing
+42 verbose correctMkdir C:\Users\le.van.hai\AppData\Roaming\npm-cache\_locks correctMkdir not in flight; initializing
+43 verbose lock using C:\Users\le.van.hai\AppData\Roaming\npm-cache\_locks\laravel-echo-server-dd8c2e41370ab124.lock for C:\Users\le.van.hai\AppData\Roaming\npm\node_modules\laravel-echo-server
+44 silly install write writing laravel-echo-server 1.1.0 to C:\Users\le.van.hai\AppData\Roaming\npm\node_modules\laravel-echo-server
+45 verbose unbuild node_modules\laravel-echo-server
+46 info preuninstall laravel-echo-server@1.1.0
+47 info uninstall laravel-echo-server@1.1.0
+48 verbose unbuild rmStuff laravel-echo-server@1.1.0 from C:\Users\le.van.hai\AppData\Roaming\npm\node_modules
+49 silly gentlyRm C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server.cmd is being gently removed
+50 silly gentlyRm verifying C:\Users\le.van.hai\AppData\Roaming\npm is an npm working directory
+51 silly gentlyRm containing path C:\Users\le.van.hai\AppData\Roaming\npm is under npm's control, in C:\Users\le.van.hai\AppData\Roaming\npm
+52 silly gentlyRm deletion target C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server.cmd is under C:\Users\le.van.hai\AppData\Roaming\npm
+53 verbose gentlyRm vacuuming from C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server.cmd up to C:\Users\le.van.hai\AppData\Roaming\npm
+54 silly gentlyRm C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server is being gently removed
+55 silly gentlyRm verifying C:\Users\le.van.hai\AppData\Roaming\npm is an npm working directory
+56 silly gentlyRm containing path C:\Users\le.van.hai\AppData\Roaming\npm is under npm's control, in C:\Users\le.van.hai\AppData\Roaming\npm
+57 silly gentlyRm deletion target C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server is under C:\Users\le.van.hai\AppData\Roaming\npm
+58 verbose gentlyRm vacuuming from C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server up to C:\Users\le.van.hai\AppData\Roaming\npm
+59 silly vacuum-fs Error: EPERM: operation not permitted, lstat 'C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server'
+59 silly vacuum-fs     at Error (native)
+60 verbose unlock done using C:\Users\le.van.hai\AppData\Roaming\npm-cache\_locks\laravel-echo-server-dd8c2e41370ab124.lock for C:\Users\le.van.hai\AppData\Roaming\npm\node_modules\laravel-echo-server
+61 verbose stack Error: EPERM: operation not permitted, lstat 'C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server'
+61 verbose stack     at Error (native)
+62 verbose cwd E:\wevnal\SNS
+63 error Windows_NT 10.0.14393
+64 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "install" "-g" "laravel-echo-server"
+65 error node v4.5.0
+66 error npm  v2.15.9
+67 error path C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server
+68 error code EPERM
+69 error errno -4048
+70 error syscall lstat
+71 error Error: EPERM: operation not permitted, lstat 'C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server'
+71 error     at Error (native)
+71 error  { [Error: EPERM: operation not permitted, lstat 'C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server']
+71 error   errno: -4048,
+71 error   code: 'EPERM',
+71 error   syscall: 'lstat',
+71 error   path: 'C:\\Users\\le.van.hai\\AppData\\Roaming\\npm\\laravel-echo-server' }
+72 error Please try running this command again as root/Administrator.
+73 verbose exit [ -4048, true ]
+74 verbose unbuild node_modules\laravel-echo-server
+75 info preuninstall laravel-echo-server@1.1.0
+76 info uninstall laravel-echo-server@1.1.0
+77 verbose unbuild rmStuff laravel-echo-server@1.1.0 from C:\Users\le.van.hai\AppData\Roaming\npm\node_modules
+78 silly gentlyRm C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server.cmd is being gently removed
+79 silly gentlyRm verifying C:\Users\le.van.hai\AppData\Roaming\npm is an npm working directory
+80 silly gentlyRm containing path C:\Users\le.van.hai\AppData\Roaming\npm is under npm's control, in C:\Users\le.van.hai\AppData\Roaming\npm
+81 silly gentlyRm deletion target C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server.cmd is under C:\Users\le.van.hai\AppData\Roaming\npm
+82 verbose gentlyRm vacuuming from C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server.cmd up to C:\Users\le.van.hai\AppData\Roaming\npm
+83 silly gentlyRm C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server is being gently removed
+84 silly gentlyRm verifying C:\Users\le.van.hai\AppData\Roaming\npm is an npm working directory
+85 silly gentlyRm containing path C:\Users\le.van.hai\AppData\Roaming\npm is under npm's control, in C:\Users\le.van.hai\AppData\Roaming\npm
+86 silly gentlyRm deletion target C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server is under C:\Users\le.van.hai\AppData\Roaming\npm
+87 verbose gentlyRm vacuuming from C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server up to C:\Users\le.van.hai\AppData\Roaming\npm
+88 silly vacuum-fs Error: EPERM: operation not permitted, lstat 'C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server'
+88 silly vacuum-fs     at Error (native)
+89 error error rolling back Error: EPERM: operation not permitted, lstat 'C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server'
+89 error error rolling back     at Error (native)
+89 error error rolling back  { [Error: EPERM: operation not permitted, lstat 'C:\Users\le.van.hai\AppData\Roaming\npm\laravel-echo-server']
+89 error error rolling back   errno: -4048,
+89 error error rolling back   code: 'EPERM',
+89 error error rolling back   syscall: 'lstat',
+89 error error rolling back   path: 'C:\\Users\\le.van.hai\\AppData\\Roaming\\npm\\laravel-echo-server' }

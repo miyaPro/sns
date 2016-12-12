@@ -13,7 +13,6 @@ use App\Repositories\AuthRepository;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Redirect;
-use Session;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Symfony\Component\Process\Process;
@@ -113,10 +112,15 @@ class SocialNetworkController extends Controller
                 $this->repAuth->store($inputs);
 //                $process = new Process('php '.env('ARTISAN_PATCH').'artisan '.$inputs['account_id']);
 //                $process->start();
-                Artisan::call('facebook', [
+//                Artisan::call('facebook', [
+//                    'today'      => 1,
+//                    'account_id' => $inputs['account_id']
+//
+//                ]);
+                Artisan::queue('facebook', [
                     'today'      => 1,
-                    'account_id' => $inputs['account_id']
-
+                    '--queue' => 'default',
+                    'account_id' =>  $inputs['account_id']
                 ]);
             }
         } catch(FacebookResponseException $e) {
@@ -147,10 +151,9 @@ class SocialNetworkController extends Controller
             'code'=>$request['code'],
         );
         $url = config('instagram.url.token');
-        $dataUser = Common::getContent($url,$postdata);
-        $dataUser =json_decode($dataUser[0]);
+        $dataUser = Common::getContent($url, $postdata);
         $user = Auth::user();
-        if(isset($dataUser) && $dataUser->access_token && $dataUser->user){
+        if($dataUser && isset($dataUser->access_token) && isset($dataUser->user)){
             $oauth = $this->repAuth->getAuth($user->id, $dataUser->user->id, $service);
             $input = array(
                 'user_id'           => $user->id,
@@ -159,7 +162,7 @@ class SocialNetworkController extends Controller
                 'account_id'        => $dataUser->user->id,
                 'access_token'      => $dataUser->access_token,
                 'service_code'      => config('constants.service.instagram'),
-                'refresh_token'     =>''
+                'refresh_token'     => ''
             );
             if($oauth){
                 $this->repAuth->update($oauth, $input);
@@ -168,14 +171,19 @@ class SocialNetworkController extends Controller
             }
 //            $process = new Process('php '.env('ARTISAN_PATH').'artisan instagram '.$input['account_id']);
 //            $process->start();
-            Artisan::call('instagram', [
+//            Artisan::call('instagram', [
+//                'today'      => 1,
+//                'account_id' => $input['account_id']
+//            ]);
+            Artisan::queue('instagram', [
                 'today'      => 1,
+                '--queue' => 'default',
                 'account_id' => $input['account_id']
             ]);
-        }else{
-            Session::flash('alert-danger', trans('message.error_get_access_token_instagram'));
+
+            return redirect('/dashboard/'.config('constants.service.instagram'));
         }
-        return redirect('/dashboard/'.config('constants.service.instagram'));
+        return redirect('/dashboard/'.config('constants.service.instagram'))->with('alert-danger', trans('message.common_error'));
     }
 
     public function handleInstagram($logout = false) {
@@ -271,10 +279,17 @@ class SocialNetworkController extends Controller
 
 //        $process = new Process('php '.env('ARTISAN_PATH').'artisan twitter '.$input['account_id']);
 //        $process->start();
-            Artisan::call('twitter', [
+//            Artisan::call('twitter', [
+//                'today'      => 1,
+//                'account_id' => $input['account_id']
+//            ]);
+
+            Artisan::queue('twitter', [
                 'today'      => 1,
+                '--queue' => 'default',
                 'account_id' => $input['account_id']
             ]);
+
             return redirect('/dashboard/'.config('constants.service.twitter'));
         }
         return redirect('/dashboard/'.config('constants.service.twitter'))->with('alert-danger', trans('message.common_error'));

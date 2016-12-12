@@ -39,7 +39,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('twitter 1')
             ->hourly()->unlessBetween('23:00', '6:00');
         $schedule->command('instagram 1')
-            ->hourly()->unlessBetween('23:00', '6:00');
+            ->everyMinute()->unlessBetween('23:00', '6:00');
     }
 
     /**

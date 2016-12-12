@@ -125,7 +125,7 @@ class BenchmarkController extends Controller
                         'service_code'      => $service,
                         'rival_flg'         => 1,
                     ];
-                    $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service);
+                    $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service, 1);
                     if (!$authUser) {
                         $this->repAuth->store($input_insert);
                         Artisan::call('twitter', [
@@ -158,14 +158,19 @@ class BenchmarkController extends Controller
         $auth               = $this->repAuth->getFirstAuth($user_id, $service);
         if($auth){
             $url = str_replace('{name}',$input['account_name'], config('instagram.url.search')).'&access_token='.$auth->access_token;
-            $dataGet = Common::getContent($url,false);
-            $dataGet  = @json_decode($dataGet[0]);
-            if(!isset($dataGet)){
-                return redirect()->back()->with('alert-danger', trans('message.common_error'))->withInput($input);
-            }
-            else if(isset($dataGet->meta) && $dataGet->meta->code == 200 && isset($dataGet->data)){
-                if(count($dataGet->data) > 0){
-                    $user_detail = $dataGet->data[0];
+            $dataGet = Common::getContent($url);
+            if($dataGet){
+                if(count($dataGet) == 0){
+                    return redirect()->back()->with('alert-danger', trans('message.common_error'))->withInput($input);
+                }
+                $data = $dataGet->data;
+                if(count($data) > 0){
+                    $user_detail = $data[0];
+                    $urlUserInfo = $url = str_replace('{id}',$user_detail->id, config('instagram.url.user_info')).'?access_token='.$auth->access_token;
+                    $dataGetUserInfo = Common::getContent($urlUserInfo);
+                    if($dataGetUserInfo && is_array($dataGetUserInfo) && isset($dataGetUserInfo["public_flg"])){
+                        return redirect("/benchmark")->with('alert-danger', trans('message.error_private_user_info'));
+                    }
                     $input_insert = array(
                         'user_id'           => $user_id,
                         'account_id'        => $user_detail->id,
@@ -173,7 +178,7 @@ class BenchmarkController extends Controller
                         'service_code'      => $service,
                         'rival_flg'         => 1,
                     );
-                    $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service);
+                    $authUser = $this->repAuth->getAuth($user_id, $user_detail->id, $service, 1);
                     if (!$authUser) {
                         $this->repAuth->store($input_insert);
                         Artisan::call('instagram', [
@@ -185,15 +190,10 @@ class BenchmarkController extends Controller
                         return redirect()->back()->with('alert-danger', trans('message.exists_error'))->withInput($input);
                     }
                 }
-                else{
-                    return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);
-                }
             }else{
-                return redirect()->back()->with('alert-danger', trans('message.error_get_info_acc'))->withInput($input);
+                return redirect()->back()->with('alert-danger', trans('message.token_expired'))->withInput($input);
             }
-        }else {
-            return redirect()->back()->with('alert-danger', trans('message.token_expired'))->withInput($input);
         }
+        return redirect()->back()->with('alert-danger', trans('message.token_expired'))->withInput($input);
     }
-
 }

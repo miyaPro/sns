@@ -6709,6 +6709,12 @@ div.tagsinput span.tag {
     float: left; }
   .service-content .tm-membr .btn-view {
     padding-top: 10px; }
+  .service-content .tm-page-competitor {
+    width: 100% !important; }
+    .service-content .tm-page-competitor .private-user {
+      color: #e47578;
+      font-size: 13px;
+      font-weight: bold; }
   .service-content .add-other {
     margin: 0 0 20px 0; }
     .service-content .add-other .sel_account {

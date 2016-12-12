@@ -46,5 +46,3 @@ Route::post('/password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail
 //router check acc
 Route::resource('benchmark', 'BenchmarkController');
 
-Route::get('Notification/sendBroadcast', 'NotificationController@sendBroadCast');
-

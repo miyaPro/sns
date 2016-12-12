@@ -29,7 +29,7 @@ class CommandFacebook extends Command
      *
      * @var string
      */
-    protected $signature = 'facebook {today=0} {account_id?}';
+    protected $signature = 'facebook {today=0} {--queue=default} {account_id?}';
     /**
      * The console command description.
      *
@@ -66,7 +66,9 @@ class CommandFacebook extends Command
         $this->today        = $this->argument('today');
         $arrayAuth          = $this->repAuth->getListInitAuth($service, $account_id);
         foreach ($arrayAuth as $auth) {
-            $this->getPage($auth);
+            if ($auth->access_token != '' && $auth->access_token != null){
+                $this->getPage($auth);
+            }
         }
     }
 
@@ -96,6 +98,7 @@ class CommandFacebook extends Command
                         'link'              => @$row['permalink_url'],
                         'sns_page_id'       => @$row['id'],
                         'access_token'      => @$row['access_token'],
+                        'public_flg'        => '1',
 
                     ];
                     $page = $this->repPage->getPage($auth->id, $sns_page_id);
@@ -114,9 +117,9 @@ class CommandFacebook extends Command
         } catch(FacebookResponseException $e) {
             // When Graph returns an error
             $this->repAuth->resetAccessToken($auth->id);
-            $this->error(trans('message.error_get_access_token', ['name' => trans('default.facebook')]));
+            $this->error($e->getMessage());
         } catch(FacebookSDKException $e) {
-            $this->error(trans('message.error_network_connect', ['name' => trans('default.facebook')]));
+            $this->error($e->getMessage());
         }
     }
 

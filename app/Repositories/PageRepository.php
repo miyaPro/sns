@@ -40,6 +40,7 @@ class PageRepository extends BaseRepository
     {
         $page->access_token = $inputs['access_token'];
         $page->name                      = $inputs['name'];
+        $page->public_flg                = $inputs['public_flg'];
         $page->screen_name               = @$inputs['screen_name'];
         $page->category                  = @$inputs['category'];
         $page->link                      = @$inputs['link'];

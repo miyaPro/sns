@@ -58,22 +58,6 @@
                                         'fa-comment first-city'        => 'comment_count'
                                 )
                         );
-                        $pageDetailService = array(
-                                config('constants.service.facebook') => array(
-                                        'first-city'        => 'friends_count',
-                                        'second-city'       => 'posts_count',
-                                ),
-                                config('constants.service.twitter') => array(
-                                        'first-city'        => 'friends_count',
-                                        'third-city'        => 'followers_count',
-                                        'second-city'       => 'posts_count'
-                                ),
-                                config('constants.service.instagram') => array(
-                                        'first-city'        => 'friends_count',
-                                        'third-city'        => 'followers_count',
-                                        'second-city'       =>  'posts_count'
-                                )
-                        );
                         ?>
                         @unset($conditionPage[array_search('posts', $conditionPage)])
                         @if($serviceCode == config('constants.service.instagram'))
@@ -106,14 +90,20 @@
                                 <div class="col-md-5">
                                     <div class="profile-statistics">
                                         <ul class="clearfix location-earning-stats">
-                                            @if(isset( $pageDetailService[$serviceCode]))
-                                                @foreach( $pageDetailService[$serviceCode] as $key => $value)
-                                                    <li class="stat-divider service-type">
-                                                        {{trans('field.'.$nameService.'_'.$value)}}
-                                                        <span class="statistics {{$key}}">{{ @number_format($pageInfo->$value)}}</span>
-                                                    </li>
-                                                @endforeach
+                                            <li class="stat-divider service-type">
+                                                {{trans('field.'.$nameService.'_friends_count')}}
+                                                <span class="statistics first-city">{{ @number_format($pageInfo->friends_count)}}</span>
+                                            </li>
+                                            @if($serviceCode == '002' || $serviceCode == '003')
+                                                <li class="stat-divider service-type">
+                                                    {{trans('field.'.$nameService.'_followers_count')}}
+                                                    <span class="statistics third-city">{{ @number_format($pageInfo->followers_count)}}</span>
+                                                </li>
                                             @endif
+                                            <li class="stat-divider service-type">
+                                                {{trans('field.'.$nameService.'_posts_count')}}
+                                                <span class="statistics second-city">{{ @number_format($pageInfo->posts_count)}}</span>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>

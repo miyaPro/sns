@@ -74,12 +74,13 @@ class AuthRepository extends BaseRepository
         return $model->get();
     }
 
-    public function getListInitAuth($service_code, $account_id = null) {
+    public function getListInitAuth($service_code, $account_id) {
         $model = new $this->model;
         $model = $model->where('service_code',$service_code);
         if($account_id) {
             $model = $model->where('account_id', $account_id);
         }
+
         return $model->get();
     }
 
@@ -89,12 +90,13 @@ class AuthRepository extends BaseRepository
         return $update;
     }
 
-    public function getAuth($user_id, $account_id, $service_code)
+    public function getAuth($user_id, $account_id, $service_code, $rival_flg = 0)
     {
         $model = new $this->model();
         $model = $model->where('user_id', $user_id)
                        ->where('account_id', $account_id)
-                       ->where('service_code', $service_code);
+                       ->where('service_code', $service_code)
+                       ->where('rival_flg', $rival_flg);
         return $model->first();
     }
 

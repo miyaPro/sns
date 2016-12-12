@@ -77,11 +77,14 @@
                                         {!! Form::select('sel_account',  $authAccount[$service_code], null, ['class' => 'form-control sel_account','id' => 'sel_account_'.$service_name]) !!}
                                     </div>
                                 @endif
-                                <div class="btn-group">
-                                    @if(Auth::user()->authority == config('constants.authority.client'))
-                                        <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)).($service_code == config('constants.service.twitter') ? '' : '/1') }}">{{{ trans('button.add_more_account') }}}</a>
-                                    @endif
-                                </div>
+                                {{--only show when existed page, not is competitor--}}
+                                @if(isset($pageList) && count($pageList) > 0)
+                                    <div class="btn-group">
+                                        @if(Auth::user()->authority == config('constants.authority.client'))
+                                            <a class="btn btn-primary" href="{{ url('social/handle'.ucfirst($service_name)).($service_code == config('constants.service.twitter') ? '' : '/1') }}">{{{ trans('button.add_more_account') }}}</a>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                             @if(isset($pageList) && count($pageList) > 0)
                                 @foreach($pageList as $page)
@@ -159,12 +162,17 @@
                                             </div>
                                         @endif
                                         <div class="panel-body page_name_box">
-                                            <div class="wk-progress tm-membr col-md-8">
+                                            <div class="wk-progress tm-membr tm-page-competitor col-md-8">
                                                 <div class="tm-avatar">
                                                     <img src="{{{ @$page['avatar_url'] }}}" alt="">
                                                 </div>
-                                                <div class="col-md-7 col-xs-7">
-                                                    <span class="tm">{{{ @$page['name'] }}}</span>
+                                                <div class="col-md-8 col-xs-8">
+                                                    <span class="tm">
+                                                        {{{ @$page['name'] }}}
+                                                        @if($page->public_flg == 0)
+                                                            <br><span class="private-user">{{ trans("message.error_private_user_info").' '.date('Y-m-d', strtotime($page->updated_at)) }}</span>
+                                                        @endif
+                                                    </span>
                                                 </div>
                                             </div>
                                             @if(isset($totalPage) && isset($totalPage[$page['id']]))
@@ -328,12 +336,17 @@
                                             if(pageListChart['{{$page_id}}'] == void 0) {
                                                 pageListChart['{{$page_id}}'] = generate_graph(element_id);
                                             }
+
+                                            if(data.maxGraph != void 0
+                                                && Object.keys(data.maxGraph).length > 0
+                                                && data.maxGraph['{{{ $page_id }}}'] != void 0
+                                                && data.maxGraph['{{{ $page_id }}}'].compare != void 0)
+                                            {
+                                                pageListChart['{{$page_id}}'].options.ymax = [data.maxGraph['{{{ $page_id }}}'].compare];
+                                            }
                                             pageListChart['{{$page_id}}'].options.labels = label;
                                             pageListChart['{{$page_id}}'].setData(dataGraph);
 
-                                            @if(isset($maxGraph[$page_id]['compare']))
-                                                pageListChart['{{$page_id}}'].options.ymax = ['{{$maxGraph[$page_id]['compare']}}'];
-                                            @endif
                                             //////////
                                             if(service_display == 'none') {
                                                 parent_graph.css('display', 'none');

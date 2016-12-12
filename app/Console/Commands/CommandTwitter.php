@@ -23,7 +23,7 @@ class CommandTwitter extends Command
      *
      * @var string
      */
-    protected $signature = "twitter {today=0} {account_id?}";
+    protected $signature = "twitter {today=0} {--queue=default} {account_id?}";
 
     /**
      * The console command description.
@@ -72,13 +72,10 @@ class CommandTwitter extends Command
         $this->today    = $this->argument('today');
         $auths          = $this->repAuth->getListInitAuth($service, $account_id);
         foreach ($auths as $auth) {
-            if($auth->rival_flg == 0 && !$auth->access_token) {
-                continue;
-            }
-            if ($auth->rival_flg == 1) {
-                $this->getPageRival($auth);
-            } else {
+            if($auth->rival_flg == 0 && !empty($auth->access_token)){
                 $this->getPage($auth);
+            }else if ($auth->rival_flg == 1) {
+                $this->getPageRival($auth);
             }
         }
     }
@@ -107,6 +104,7 @@ class CommandTwitter extends Command
                         'banner_url'        => @$user_detail->profile_banner_url,
                         'description'       => @$user_detail->description,
                         'created_time'      => date("Y-m-d H:i:s",strtotime(@$user_detail->created_at)),
+                        'public_flg'        => '1',
                     ];
                     if (!$page) {
                         $page = $this->repPage->store($input_insert, $auth->id);
@@ -164,6 +162,7 @@ class CommandTwitter extends Command
                     'banner_url'        => @$page_twitter->profile_banner_url,
                     'description'       => @$page_twitter->description,
                     'created_time'      => date("Y-m-d H:i:s",strtotime(@$page_twitter->created_at)),
+                    'public_flg'        => '1',
                 ];
                 if (!$page) {
                     $page = $this->repPage->store($input_insert, $auth->id);
@@ -176,8 +175,9 @@ class CommandTwitter extends Command
                 $this->repAuth->resetAccessToken($auth->id);
             }
         } catch (TwitterOAuthException $e) {
-            $this->error('message1',"result null");
+            $this->error("error=".$e->getMessage());
         } catch (\Exception $e) {
+            $this->error("error=".$e->getMessage());
         }
 
     }
@@ -208,7 +208,6 @@ class CommandTwitter extends Command
                 }else{
                     $this->repPostTwitter->store($inputs, $page->id);
                 }
-//                $this->getPostDetail($posts, $post);
             }
             $this->getPostDetail($page->id);
         } catch (TwitterOAuthException $e) {
@@ -216,25 +215,6 @@ class CommandTwitter extends Command
         } catch (\Exception $e) {
         }
     }
-
-    /*public function getPostDetail($posts_twitter, $post)
-    {
-        $current_date        = Carbon::today()->toDateString();
-        if(!$this->today) {
-            $current_date = date('Y-m-d' ,strtotime("-1 day", strtotime($current_date)));
-        }
-        $postDetail = $this->repPostTwitterDetail->getByDate($post->id, $current_date);
-        $inputs = [
-            'retweet_count'     => $posts_twitter->retweet_count,
-            'favorite_count'    => $posts_twitter->favorite_count,
-        ];
-        if($postDetail){
-            $this->repPostTwitterDetail->update($postDetail, $inputs);
-        }else{
-            $inputs['date'] = $current_date;
-            $this->repPostTwitterDetail->store($inputs, $post->id);
-        }
-    }*/
 
     public function getPostDetail($page_id)
     {
