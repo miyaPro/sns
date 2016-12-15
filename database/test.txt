@@ -1,0 +1,180 @@
+15/12/2016
+
+<?php if(isset($sites) && count($sites) > 0): ?>
+						<?php foreach($sites as $site): ?>
+							<?php $arrReport=null;?>
+							<?php if(!empty($site['Report']['filenamefull'])):?>
+								<?php $typeReport = @explode(',',$site['Report']['filenamefull']);?>
+							<?php else:?>
+								<?php $typeReport='';?>
+							<?php endif?>
+							<?php if(!empty($typeReport)) :?>
+								<?php foreach($typeReport as $key=>$row):?>
+									<?php $file = @explode(':',$row);?>
+									<?php if(@!empty($file[1])):?>
+										<?php if($file[1]==$makeReports['lite']):?>
+											<?php $arrReport['lite'] = array(
+																			'status'=>@$file[0],
+																			'type_make_report'=>@$file[1],
+																			'filename'=>@$file[2]
+																		);?>
+										<?php else:?>
+											<?php $arrReport['full'] = array(
+																			'status'=>@$file[0],
+																			'type_make_report'=>@$file[1],
+																			'filename'=>@$file[2]
+																		);?>
+										<?php endif?>
+
+									<?php endif;?>
+								<?php endforeach; ?>
+							<?php endif;?>
+							<?php $complete = array(); ?>
+							<?php if(isset($arrReport['lite']['status'])): ?>
+								<?php if($arrReport['lite']['status'] === $statusReport['inprogress'] || $arrReport['lite']['status'] === $statusReport['waiting']): ?>
+									<?php $complete['lite'] = false;?>
+								<?php elseif($arrReport['lite']['status'] === $statusReport['done']): ?>
+									<?php $complete['lite'] = true;?>
+								<?php elseif($arrReport['lite']['status'] === $statusReport['error']): ?>
+									<?php $complete['lite'] = null;?>
+								<?php endif; ?>
+							<?php else: ?>
+								<?php $complete['lite'] = null; ?>
+							<?php endif ?>
+							<?php if(isset($arrReport['full']['status'])): ?>
+								<?php if($arrReport['full']['status'] === $statusReport['inprogress'] || $arrReport['full']['status'] === $statusReport['waiting']): ?>
+									<?php $complete['full'] = false;?>
+								<?php elseif($arrReport['full']['status'] === $statusReport['done']): ?>
+									<?php $complete['full'] = true;?>
+								<?php elseif($arrReport['full']['status'] === $statusReport['error']): ?>
+									<?php $complete['full'] = null;?>
+								<?php endif; ?>
+							<?php else: ?>
+								<?php $complete['full'] = null; ?>
+							<?php endif ?>
+							<tr>
+								<td><?php echo @$site['User']['username']; ?></td>
+								<td><?php echo @$site['Account']['ga_account_name']; ?></td>
+								<td><?php echo $site['User']['companyname']; ?></td>
+								<td><?php echo $site['User']['service']; ?></td>
+								<td class="col-md-5 col-sm-2"><div class="ctWordWrapUrl text-left"><?php echo $site['Site']['url']; ?></div></td>
+								<td id="tdMake<?php echo $site['Site']['id'];?>" class="action-make">
+									<?php if(isset($complete['full']) && isset($complete['lite'])): ?>
+										<?php if($complete['full'] && $complete['lite']): ?>
+											<div class="complete">
+												<a href="/download-report/<?php echo $arrReport['lite']['filename']?>" class="btn btn-sm btn-success btnDownloadReport" >
+													<?php echo __d('button', 'download_report_lite'); ?>
+												</a>
+												<a href="/download-report/<?php echo $arrReport['full']['filename']?>" class="btn btn-sm btn-success btnDownloadReport" >
+													<?php echo __d('button', 'download'); ?>
+												</a>
+											</div>
+											<div class="incomplete">
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnReMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','remake_report_lite'); ?>
+												</button>
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnReMakeReport" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','remake_report'); ?>
+												</button>
+											</div>
+										<?php elseif($complete['full']): ?>
+											<div class="complete">
+												<a href="/download-report/<?php echo $arrReport['full']['filename']?>" class="btn btn-sm btn-success btnDownloadReport" >
+													<?php echo __d('button', 'download'); ?>
+												</a>
+											</div>
+											<div class="incomplete">
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnReMakeReport" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','remake_report'); ?>
+												</button>
+												<a><span class="label label-primary"><?php echo __d('button','in_progress_report_lite'); ?></span></a>
+											</div>
+										<?php elseif($complete['lite']): ?>
+											<div class="complete">
+												<a href="/download-report/<?php echo $arrReport['lite']['filename']?>" class="btn btn-sm btn-success btnDownloadReport" >
+													<?php echo __d('button', 'download_report_lite'); ?>
+												</a>
+											</div>
+											<div class="incomplete">
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnReMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','remake_report_lite'); ?>
+												</button>
+												<a><span class="label label-primary"><?php echo __d('button','in_progress'); ?></span></a>
+											</div>
+										<?php else: ?>
+											<div class="incomplete">
+												<a><span class="label label-primary"><?php echo __d('button','in_progress_report_lite'); ?></span></a>
+												<a><span class="label label-primary"><?php echo __d('button','in_progress'); ?></span></a>
+											</div>
+										<?php endif; ?>
+									<?php elseif(isset($complete['full'])): ?>
+										<?php if($complete['full']):?>
+											<div class="complete">
+												<a href="/download-report/<?php echo $arrReport['full']['filename']?>" class="btn btn-sm btn-success btnDownloadReport" >
+													<?php echo __d('button', 'download'); ?>
+												</a>
+											</div>
+											<div class="incomplete">
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','make_report_lite'); ?>
+												</button>
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnReMakeReport" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','remake_report'); ?>
+												</button>
+											</div>
+										<?php else: ?>
+											<div class="complete"></div>
+											<div class="incomplete">
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','make_report_lite'); ?>
+												</button>
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReport" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','make_report'); ?>
+												</button>
+											</div>
+										<?php endif; ?>
+									<?php elseif(isset($complete['lite'])): ?>
+										<?php if($complete['lite']): ?>
+											<div class="complete">
+												<a href="/download-report/<?php echo $arrReport['lite']['filename']?>" class="btn btn-sm btn-success btnDownloadReport" >
+													<?php echo __d('button', 'download_report_lite'); ?>
+												</a>
+											</div>
+											<div class="incomplete">
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnReMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','remake_report_lite'); ?>
+												</button>
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReport" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','make_report'); ?>
+												</button>
+											</div>
+										<?php else: ?>
+											<div class="complete"></div>
+											<div class="incomplete">
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','make_report_lite'); ?>
+												</button>
+												<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReport" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','make_report'); ?>
+												</button>
+											</div>
+										<?php endif; ?>
+									<?php else: ?>
+										<div class="incomplete">
+											<?php if(isset($group) && $group == 1) :?>
+												<button id="butMake_test<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnTestMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+													<?php echo __d('button','test_make_report'); ?>
+												</button>
+											<?php endif;?>
+											<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReportLite" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+												<?php echo __d('button','make_report_lite'); ?>
+											</button>
+											<button id="butMake<?php echo $site['Site']['id'];?>" class="btn btn-primary btn-sm  btnMakeReport" data-siteid = "<?php echo $site['Site']['id']; ?>" data-status="0">
+												<?php echo __d('button','make_report'); ?>
+											</button>
+										</div>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach ?>
+					<?php endif ?>
