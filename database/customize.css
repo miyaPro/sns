@@ -1,0 +1,163 @@
+.ln_solid{
+    border-top: 1px solid #d8d7d8;
+    color: #ffffff;
+    background-color: #ffffff;
+    height: 1px;
+    margin: 20px 0;
+}
+
+.incomplete .progress-full, .incomplete .progress-lite{
+    margin: 7px auto !important;
+    display: inline-block;
+}
+.url-width{
+    min-width: 300px;
+}
+.main.box-cp{
+    margin-top: 50px;
+}
+.cedit_name{
+    padding-top: 7px;
+}
+.form-account-cedit .label-cedit, .form-account-cedit .cedit_name{
+    padding-top: 0px !important;
+}
+.form-account-cedit label{
+    font-weight: 700 !important;
+    text-align: left !important;
+    /*margin-left: 5px !important;*/
+}
+.oauth-grp{
+    clear: both;
+}
+.form-account-cedit .form-group{
+    margin-left: 0px !important;
+}
+.search-box .label-period{
+    float: right;
+}
+.search-box .control-label{
+    padding-top: 5px;
+}
+.top-nav .nav-language{
+    float: left;
+}
+.top-nav .nav-user-name{
+    float: right;
+    padding: 7px;
+}
+td[id^=tdMake] .label-primary, td[id^=tdButton] .label-primary, td[id^=tdButton] .label-danger{
+    font-size: 11px;
+    padding: 5px 5px 8px 5px;
+}
+.incomplete .label-progress{
+    font-weight: normal !important;
+    font-size: 12px !important;
+    padding: 10px 5px;
+}
+.search-box{
+    float: left !important;
+}
+.search-box .xs-period{
+    width: auto !important;
+}
+.table-responsive{
+    border-top: 0px !important; ;
+}
+.table-bordered{
+    border: 1px solid #ddd !important;
+}
+.search-box .xs-period{
+    float: left;
+}
+#durationpicker, #datepicker {
+    cursor: pointer;
+}
+.btnDownloadReportLite, .btnDownloadReport, .btnReMakeReportLite{
+    margin-bottom: 2px;
+}
+@media (min-width: 981px){
+    .btnTestMakeReportLite, .btnMakeReportLite, .btnMakeReport{
+        margin-bottom: 2px;
+    }
+    .keyword{
+        float: right;
+    }
+    .search-box .xs-period{
+        padding-left: 0px !important;
+    }
+    .xs-period.col-keyword{
+        padding-left: 10px !important;
+    }
+    .form-report-list{
+        position: relative;
+    }
+    #inputDateFrom, #inputDateTo, #keyword{
+        width: auto !important;
+    }
+    .search-box{
+        width: 998px;
+    }
+    .search-box .input-group.input-large{
+        padding-bottom: 10px;
+    }
+    .search-box .input-space{
+        padding-bottom: 10px;
+    }
+
+}
+
+@media (min-width: 768px) and (max-width: 980px){
+    .btnTestMakeReportLite, .btnMakeReportLite, .btnMakeReport{
+        margin-bottom: 2px;
+    }
+    .search-box .xs-period{
+        clear: both;
+    }
+    .search-box .input-space{
+        padding-bottom: 10px;
+    }
+    .search-box .button-box{
+        float: right !important;
+        margin-right: 40px;
+    }
+}
+
+@media (min-width: 480px) and (max-width: 767px){
+    .search-box .input-space{
+        padding-bottom: 10px;
+    }
+    .search-box .button-box{
+        float: right !important;
+        margin: 0px 20px 0px 0px;
+        padding: 0px;
+    }
+}
+
+@media (max-width:767px){
+    .search-box .input-space{
+        padding-bottom: 10px;
+    }
+    .search-box .button-box{
+        float: right !important;
+    }
+}
+
+@media (max-width: 479px){
+    #inputDateFrom, #inputDateTo, #keyword{
+        /*width: auto !important;*/
+    }
+    .search-box .control-label{
+        padding-bottom: 10px;
+    }
+    .search-box .label-period{
+        width: 200px;
+    }
+    .search-box .button-box{
+        float: right !important;
+        margin: 0px 10px 0px 0px !important;
+    }
+    .search-box .xs-period{
+        width: 50%;
+    }
+}
